@@ -1,0 +1,7 @@
+<3 This is just random equations
+x :=) 36 :+) 12  <3 Adding two arbitrary numbers
+y :=) 12 :*) 14  <3 Multiplying two arbitrary numbers
+z :=) (36 :-) 12) :/) (18 :+) 2) <3 A slightly more complex calculation with arb numbers
+a :=) -0-0-  <3 Read in an integer (and store it)
+b :=) (x :+) y) :/) (z :*) a) <3 Do some arbitrary calculation on those other variables
+:P(b) <3 Print out the result
