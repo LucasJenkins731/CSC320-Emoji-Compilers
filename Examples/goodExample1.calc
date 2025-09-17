@@ -1,0 +1,25 @@
+<3 This is just random equations
+x :=) 36 :+) 12  <3 Adding two arbitrary numbers
+y :=) 12 :*) 14  <3 Multiplying two arbitrary numbers
+z :=) (36 :-) 12) :/) (18 :+) 2) <3 A slightly more complex calculation with arb numbers
+a :=) -0-0-  <3 Read in an integer (and store it)
+b :=) (x :+) y) :/) (z :*) a) <3 Do some arbitrary calculation on those other variables
+
+:P(b) <3 Print out the result
+:) (1 :==) 0) :P (a)
+:| (1 :==) 1) :P (b)
+:( (1 :==) 1) :P (c)
+
+>:( (i :=) 1; i :==) 1; i :+) 1) :P(a) <3 For loop that will print a
+
+D:< (i :==) 1) :P(z) <3 While loop that will print z
+
+=^._.^= testFunction () :P(y) <3 Makes a function
+
+(o_o) testArray :=) [10] :P(a) <3 Makes an array
+
+hi :=) 'Test string' <3 Set variable hi as string
+
+OWO 
+    This should not appear in testing
+UWU
