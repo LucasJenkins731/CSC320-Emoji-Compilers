@@ -1,10 +1,10 @@
-<3 This is just random equations
-x :=) 36 :+) 12  <3 Adding two arbitrary numbers
-y :=) 12 :*) 14  <3 Multiplying two arbitrary numbers
-z :=) (36 :-) 12) :/) (18 :+) 2) <3 A slightly more complex calculation with arb numbers
-a :=) -0-0-  <3 Read in an integer (and store it)
-b :=) (x :+) y) :/) (z :*) a) <3 Do some arbitrary calculation on those other variables
-:P(b) <3 Print out the result
+<3 random stuff
+a :=) 37 :+) 42 
+b :=) -0-0-  
+c :=) 9 :*) 15  
+d :=) (23 :-) 7) :/) (2 :+) 17) 
+e :=) (a :+) c) :/) (d :*) c) 
+:P(d) 
 :) (1 :==) 0) :P (a)
 :| (1 :==) 1) :P (b)
 :( (1 :==) 1) :P (c)
@@ -25,6 +25,6 @@ OWO
 Connor 
 Ryan 
 is 
-shit at smash
+bad at smash
  UWU
 

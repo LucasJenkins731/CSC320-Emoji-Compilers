@@ -37,25 +37,25 @@ RBRACE : '}';
 //program : s+ EOF;
 
  program  : s+ EOF;
-s : as | ps | expr | if | else | for | while | function | array | string;
+s : as | ps | expr | ifstmt | elsestmt | forstmt | whilestmt | functionstmt | arraystmt | stringstmt;
 
 as : IDENT ':=)' ( expr | KW_READ) ;
 ps : KW_PRINT '(' expr ')' ;
-if : KW_IF '(' expr ')' s 
-   | KW_IF '(' expr ')' else ;
+ifstmt : KW_IF '(' expr ')' s 
+   | KW_IF '(' expr ')' elsestmt ;
 
-else : KW_ELSE_IF '(' expr ')' s else
+elsestmt : KW_ELSE_IF '(' expr ')' s elsestmt
     | KW_ELSE s ;
 
-for : KW_FOR '(' as ';' expr ';' expr ')' s;
+forstmt : KW_FOR '(' as ';' expr ';' expr ')' s;
 
-while : KW_WHILE '(' expr ')' s;
+whilestmt : KW_WHILE '(' expr ')' s;
 
-function : KW_FUNCTION IDENT '(' IDENT ')' s;
+functionstmt : KW_FUNCTION IDENT '(' IDENT ')' s;
 
-array : KW_ARRAY IDENT ':=)' '[' INT ']' s;
+arraystmt : KW_ARRAY IDENT ':=)' '[' INT ']' s;
 
-string : IDENT ':=)' STRING;
+stringstmt : IDENT ':=)' STRING;
 
 
 op : ADD | SUBTRACT | MULTIPLY | DIVIDE;

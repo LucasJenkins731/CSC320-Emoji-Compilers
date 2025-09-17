@@ -22,13 +22,14 @@ public class EmoticonParser extends Parser {
 		RPAREN=22, COMMENT=23, COMMENT_BLOCK=24, COMPARISON=25, ASSIGNMENT=26, 
 		LBRACE=27, RBRACE=28;
 	public static final int
-		RULE_program = 0, RULE_s = 1, RULE_as = 2, RULE_ps = 3, RULE_if = 4, RULE_else = 5, 
-		RULE_for = 6, RULE_while = 7, RULE_function = 8, RULE_array = 9, RULE_string = 10, 
-		RULE_op = 11, RULE_comp = 12, RULE_expr = 13;
+		RULE_program = 0, RULE_s = 1, RULE_as = 2, RULE_ps = 3, RULE_ifstmt = 4, 
+		RULE_elsestmt = 5, RULE_forstmt = 6, RULE_whilestmt = 7, RULE_functionstmt = 8, 
+		RULE_arraystmt = 9, RULE_stringstmt = 10, RULE_op = 11, RULE_comp = 12, 
+		RULE_expr = 13;
 	private static String[] makeRuleNames() {
 		return new String[] {
-			"program", "s", "as", "ps", "if", "else", "for", "while", "function", 
-			"array", "string", "op", "comp", "expr"
+			"program", "s", "as", "ps", "ifstmt", "elsestmt", "forstmt", "whilestmt", 
+			"functionstmt", "arraystmt", "stringstmt", "op", "comp", "expr"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
@@ -163,26 +164,26 @@ public class EmoticonParser extends Parser {
 		public ExprContext expr() {
 			return getRuleContext(ExprContext.class,0);
 		}
-		public IfContext if_() {
-			return getRuleContext(IfContext.class,0);
+		public IfstmtContext ifstmt() {
+			return getRuleContext(IfstmtContext.class,0);
 		}
-		public ElseContext else_() {
-			return getRuleContext(ElseContext.class,0);
+		public ElsestmtContext elsestmt() {
+			return getRuleContext(ElsestmtContext.class,0);
 		}
-		public ForContext for_() {
-			return getRuleContext(ForContext.class,0);
+		public ForstmtContext forstmt() {
+			return getRuleContext(ForstmtContext.class,0);
 		}
-		public WhileContext while_() {
-			return getRuleContext(WhileContext.class,0);
+		public WhilestmtContext whilestmt() {
+			return getRuleContext(WhilestmtContext.class,0);
 		}
-		public FunctionContext function() {
-			return getRuleContext(FunctionContext.class,0);
+		public FunctionstmtContext functionstmt() {
+			return getRuleContext(FunctionstmtContext.class,0);
 		}
-		public ArrayContext array() {
-			return getRuleContext(ArrayContext.class,0);
+		public ArraystmtContext arraystmt() {
+			return getRuleContext(ArraystmtContext.class,0);
 		}
-		public StringContext string() {
-			return getRuleContext(StringContext.class,0);
+		public StringstmtContext stringstmt() {
+			return getRuleContext(StringstmtContext.class,0);
 		}
 		public SContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -222,49 +223,49 @@ public class EmoticonParser extends Parser {
 				enterOuterAlt(_localctx, 4);
 				{
 				setState(38);
-				if_();
+				ifstmt();
 				}
 				break;
 			case 5:
 				enterOuterAlt(_localctx, 5);
 				{
 				setState(39);
-				else_();
+				elsestmt();
 				}
 				break;
 			case 6:
 				enterOuterAlt(_localctx, 6);
 				{
 				setState(40);
-				for_();
+				forstmt();
 				}
 				break;
 			case 7:
 				enterOuterAlt(_localctx, 7);
 				{
 				setState(41);
-				while_();
+				whilestmt();
 				}
 				break;
 			case 8:
 				enterOuterAlt(_localctx, 8);
 				{
 				setState(42);
-				function();
+				functionstmt();
 				}
 				break;
 			case 9:
 				enterOuterAlt(_localctx, 9);
 				{
 				setState(43);
-				array();
+				arraystmt();
 				}
 				break;
 			case 10:
 				enterOuterAlt(_localctx, 10);
 				{
 				setState(44);
-				string();
+				stringstmt();
 				}
 				break;
 			}
@@ -379,7 +380,7 @@ public class EmoticonParser extends Parser {
 	}
 
 	@SuppressWarnings("CheckReturnValue")
-	public static class IfContext extends ParserRuleContext {
+	public static class IfstmtContext extends ParserRuleContext {
 		public TerminalNode KW_IF() { return getToken(EmoticonParser.KW_IF, 0); }
 		public TerminalNode LPAREN() { return getToken(EmoticonParser.LPAREN, 0); }
 		public ExprContext expr() {
@@ -389,18 +390,18 @@ public class EmoticonParser extends Parser {
 		public SContext s() {
 			return getRuleContext(SContext.class,0);
 		}
-		public ElseContext else_() {
-			return getRuleContext(ElseContext.class,0);
+		public ElsestmtContext elsestmt() {
+			return getRuleContext(ElsestmtContext.class,0);
 		}
-		public IfContext(ParserRuleContext parent, int invokingState) {
+		public IfstmtContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_if; }
+		@Override public int getRuleIndex() { return RULE_ifstmt; }
 	}
 
-	public final IfContext if_() throws RecognitionException {
-		IfContext _localctx = new IfContext(_ctx, getState());
-		enterRule(_localctx, 8, RULE_if);
+	public final IfstmtContext ifstmt() throws RecognitionException {
+		IfstmtContext _localctx = new IfstmtContext(_ctx, getState());
+		enterRule(_localctx, 8, RULE_ifstmt);
 		try {
 			setState(70);
 			_errHandler.sync(this);
@@ -432,7 +433,7 @@ public class EmoticonParser extends Parser {
 				setState(67);
 				match(RPAREN);
 				setState(68);
-				else_();
+				elsestmt();
 				}
 				break;
 			}
@@ -449,7 +450,7 @@ public class EmoticonParser extends Parser {
 	}
 
 	@SuppressWarnings("CheckReturnValue")
-	public static class ElseContext extends ParserRuleContext {
+	public static class ElsestmtContext extends ParserRuleContext {
 		public TerminalNode KW_ELSE_IF() { return getToken(EmoticonParser.KW_ELSE_IF, 0); }
 		public TerminalNode LPAREN() { return getToken(EmoticonParser.LPAREN, 0); }
 		public ExprContext expr() {
@@ -459,19 +460,19 @@ public class EmoticonParser extends Parser {
 		public SContext s() {
 			return getRuleContext(SContext.class,0);
 		}
-		public ElseContext else_() {
-			return getRuleContext(ElseContext.class,0);
+		public ElsestmtContext elsestmt() {
+			return getRuleContext(ElsestmtContext.class,0);
 		}
 		public TerminalNode KW_ELSE() { return getToken(EmoticonParser.KW_ELSE, 0); }
-		public ElseContext(ParserRuleContext parent, int invokingState) {
+		public ElsestmtContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_else; }
+		@Override public int getRuleIndex() { return RULE_elsestmt; }
 	}
 
-	public final ElseContext else_() throws RecognitionException {
-		ElseContext _localctx = new ElseContext(_ctx, getState());
-		enterRule(_localctx, 10, RULE_else);
+	public final ElsestmtContext elsestmt() throws RecognitionException {
+		ElsestmtContext _localctx = new ElsestmtContext(_ctx, getState());
+		enterRule(_localctx, 10, RULE_elsestmt);
 		try {
 			setState(81);
 			_errHandler.sync(this);
@@ -490,7 +491,7 @@ public class EmoticonParser extends Parser {
 				setState(76);
 				s();
 				setState(77);
-				else_();
+				elsestmt();
 				}
 				break;
 			case KW_ELSE:
@@ -518,7 +519,7 @@ public class EmoticonParser extends Parser {
 	}
 
 	@SuppressWarnings("CheckReturnValue")
-	public static class ForContext extends ParserRuleContext {
+	public static class ForstmtContext extends ParserRuleContext {
 		public TerminalNode KW_FOR() { return getToken(EmoticonParser.KW_FOR, 0); }
 		public TerminalNode LPAREN() { return getToken(EmoticonParser.LPAREN, 0); }
 		public AsContext as() {
@@ -534,15 +535,15 @@ public class EmoticonParser extends Parser {
 		public SContext s() {
 			return getRuleContext(SContext.class,0);
 		}
-		public ForContext(ParserRuleContext parent, int invokingState) {
+		public ForstmtContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_for; }
+		@Override public int getRuleIndex() { return RULE_forstmt; }
 	}
 
-	public final ForContext for_() throws RecognitionException {
-		ForContext _localctx = new ForContext(_ctx, getState());
-		enterRule(_localctx, 12, RULE_for);
+	public final ForstmtContext forstmt() throws RecognitionException {
+		ForstmtContext _localctx = new ForstmtContext(_ctx, getState());
+		enterRule(_localctx, 12, RULE_forstmt);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
@@ -578,7 +579,7 @@ public class EmoticonParser extends Parser {
 	}
 
 	@SuppressWarnings("CheckReturnValue")
-	public static class WhileContext extends ParserRuleContext {
+	public static class WhilestmtContext extends ParserRuleContext {
 		public TerminalNode KW_WHILE() { return getToken(EmoticonParser.KW_WHILE, 0); }
 		public TerminalNode LPAREN() { return getToken(EmoticonParser.LPAREN, 0); }
 		public ExprContext expr() {
@@ -588,15 +589,15 @@ public class EmoticonParser extends Parser {
 		public SContext s() {
 			return getRuleContext(SContext.class,0);
 		}
-		public WhileContext(ParserRuleContext parent, int invokingState) {
+		public WhilestmtContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_while; }
+		@Override public int getRuleIndex() { return RULE_whilestmt; }
 	}
 
-	public final WhileContext while_() throws RecognitionException {
-		WhileContext _localctx = new WhileContext(_ctx, getState());
-		enterRule(_localctx, 14, RULE_while);
+	public final WhilestmtContext whilestmt() throws RecognitionException {
+		WhilestmtContext _localctx = new WhilestmtContext(_ctx, getState());
+		enterRule(_localctx, 14, RULE_whilestmt);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
@@ -624,7 +625,7 @@ public class EmoticonParser extends Parser {
 	}
 
 	@SuppressWarnings("CheckReturnValue")
-	public static class FunctionContext extends ParserRuleContext {
+	public static class FunctionstmtContext extends ParserRuleContext {
 		public TerminalNode KW_FUNCTION() { return getToken(EmoticonParser.KW_FUNCTION, 0); }
 		public List<TerminalNode> IDENT() { return getTokens(EmoticonParser.IDENT); }
 		public TerminalNode IDENT(int i) {
@@ -635,15 +636,15 @@ public class EmoticonParser extends Parser {
 		public SContext s() {
 			return getRuleContext(SContext.class,0);
 		}
-		public FunctionContext(ParserRuleContext parent, int invokingState) {
+		public FunctionstmtContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_function; }
+		@Override public int getRuleIndex() { return RULE_functionstmt; }
 	}
 
-	public final FunctionContext function() throws RecognitionException {
-		FunctionContext _localctx = new FunctionContext(_ctx, getState());
-		enterRule(_localctx, 16, RULE_function);
+	public final FunctionstmtContext functionstmt() throws RecognitionException {
+		FunctionstmtContext _localctx = new FunctionstmtContext(_ctx, getState());
+		enterRule(_localctx, 16, RULE_functionstmt);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
@@ -673,7 +674,7 @@ public class EmoticonParser extends Parser {
 	}
 
 	@SuppressWarnings("CheckReturnValue")
-	public static class ArrayContext extends ParserRuleContext {
+	public static class ArraystmtContext extends ParserRuleContext {
 		public TerminalNode KW_ARRAY() { return getToken(EmoticonParser.KW_ARRAY, 0); }
 		public TerminalNode IDENT() { return getToken(EmoticonParser.IDENT, 0); }
 		public TerminalNode ASSIGNMENT() { return getToken(EmoticonParser.ASSIGNMENT, 0); }
@@ -681,15 +682,15 @@ public class EmoticonParser extends Parser {
 		public SContext s() {
 			return getRuleContext(SContext.class,0);
 		}
-		public ArrayContext(ParserRuleContext parent, int invokingState) {
+		public ArraystmtContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_array; }
+		@Override public int getRuleIndex() { return RULE_arraystmt; }
 	}
 
-	public final ArrayContext array() throws RecognitionException {
-		ArrayContext _localctx = new ArrayContext(_ctx, getState());
-		enterRule(_localctx, 18, RULE_array);
+	public final ArraystmtContext arraystmt() throws RecognitionException {
+		ArraystmtContext _localctx = new ArraystmtContext(_ctx, getState());
+		enterRule(_localctx, 18, RULE_arraystmt);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
@@ -721,19 +722,19 @@ public class EmoticonParser extends Parser {
 	}
 
 	@SuppressWarnings("CheckReturnValue")
-	public static class StringContext extends ParserRuleContext {
+	public static class StringstmtContext extends ParserRuleContext {
 		public TerminalNode IDENT() { return getToken(EmoticonParser.IDENT, 0); }
 		public TerminalNode ASSIGNMENT() { return getToken(EmoticonParser.ASSIGNMENT, 0); }
 		public TerminalNode STRING() { return getToken(EmoticonParser.STRING, 0); }
-		public StringContext(ParserRuleContext parent, int invokingState) {
+		public StringstmtContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_string; }
+		@Override public int getRuleIndex() { return RULE_stringstmt; }
 	}
 
-	public final StringContext string() throws RecognitionException {
-		StringContext _localctx = new StringContext(_ctx, getState());
-		enterRule(_localctx, 20, RULE_string);
+	public final StringstmtContext stringstmt() throws RecognitionException {
+		StringstmtContext _localctx = new StringstmtContext(_ctx, getState());
+		enterRule(_localctx, 20, RULE_stringstmt);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
