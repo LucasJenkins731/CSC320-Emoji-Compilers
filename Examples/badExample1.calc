@@ -1,28 +1,10 @@
-//Assignments do not have face so no variables will be assigned and this comment is written wrong
-<3 This is just random equations
-x = 36 :+) 12  <3 Adding two arbitrary numbers
-y = 12 :*) 14  <3 Multiplying two arbitrary numbers
-z = (36 :-) 12) :/) (18 :+) 2) <3 A slightly more complex calculation with arb numbers
-a = -0-0-  <3 Read in an integer (and store it)
-b = (x :+) y) :/) (z :*) a) <3 Do some arbitrary calculation on those other variables
+<3 Example of some bad math. (line 10)
 
-:P(b) <3 Print out the result
-:) (1 :==) 0) :P (a)
-:| (1 :==) 1) :P (b)
-:( (1 :==) 1) :P (c)
+num :=) 1
+thing :=) 'a thing'
 
->:( (i = 1; i :==) 1; i :+) 1) :P(a) <3 For loop that will print a
+<3 just some math
+math :=) 5 :+) 4
 
-D:< (i :==) 1) :P(z) <3 While loop that will print z
-
-=^._.^= testFunction () { <3 Has curly braces so will not be recognized
-    :P(y)
-}  
-
-(o_o) testArray = [10] :P(a) <3 Makes an array
-
-hi = 'Test string' <3 Set variable hi as string
-
-OWO 
-    This should not appear in testing
-UWU
+<3 uh oh...
+maths :=) 4 :) 23

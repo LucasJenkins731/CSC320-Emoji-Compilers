@@ -16,31 +16,39 @@ public class EmoticonParser extends Parser {
 	protected static final PredictionContextCache _sharedContextCache =
 		new PredictionContextCache();
 	public static final int
-		KW_READ=1, KW_PRINT=2, KW_IF=3, KW_ELSE=4, KW_ELSE_IF=5, IDENT=6, ADD=7, 
-		SUBTRACT=8, MULTIPLY=9, DIVIDE=10, INT=11, WS=12, LPAREN=13, RPAREN=14, 
-		COMMENT=15, COMMENT_BLOCK=16, COMPARISON=17, ASSIGNMENT=18;
+		T__0=1, T__1=2, T__2=3, KW_READ=4, KW_PRINT=5, KW_IF=6, KW_ELSE=7, KW_ELSE_IF=8, 
+		KW_FOR=9, KW_WHILE=10, KW_FUNCTION=11, KW_ARRAY=12, IDENT=13, ADD=14, 
+		SUBTRACT=15, MULTIPLY=16, DIVIDE=17, INT=18, STRING=19, WS=20, LPAREN=21, 
+		RPAREN=22, COMMENT=23, COMMENT_BLOCK=24, COMPARISON=25, ASSIGNMENT=26, 
+		LBRACE=27, RBRACE=28;
 	public static final int
-		RULE_program = 0, RULE_s = 1, RULE_as = 2, RULE_ps = 3, RULE_if = 4, RULE_op = 5, 
-		RULE_comp = 6, RULE_expr = 7;
+		RULE_program = 0, RULE_s = 1, RULE_as = 2, RULE_ps = 3, RULE_ifstmt = 4, 
+		RULE_elsestmt = 5, RULE_forstmt = 6, RULE_whilestmt = 7, RULE_functionstmt = 8, 
+		RULE_arraystmt = 9, RULE_stringstmt = 10, RULE_op = 11, RULE_comp = 12, 
+		RULE_expr = 13;
 	private static String[] makeRuleNames() {
 		return new String[] {
-			"program", "s", "as", "ps", "if", "op", "comp", "expr"
+			"program", "s", "as", "ps", "ifstmt", "elsestmt", "forstmt", "whilestmt", 
+			"functionstmt", "arraystmt", "stringstmt", "op", "comp", "expr"
 		};
 	}
 	public static final String[] ruleNames = makeRuleNames();
 
 	private static String[] makeLiteralNames() {
 		return new String[] {
-			null, "'-0-0-'", "':P'", "':)'", "':('", "':|'", null, "':+)'", "':-)'", 
-			"':*)'", "':/)'", null, null, "'('", "')'", null, null, "':==)'", "'='"
+			null, "';'", "'['", "']'", "'-0-0-'", "':P'", "':)'", "':('", "':|'", 
+			"'>:('", "'D:<'", "'=^._.^='", "'(o_o)'", null, "':+)'", "':-)'", "':*)'", 
+			"':/)'", null, null, null, "'('", "')'", null, null, "':==)'", "':=)'", 
+			"'{'", "'}'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
 	private static String[] makeSymbolicNames() {
 		return new String[] {
-			null, "KW_READ", "KW_PRINT", "KW_IF", "KW_ELSE", "KW_ELSE_IF", "IDENT", 
-			"ADD", "SUBTRACT", "MULTIPLY", "DIVIDE", "INT", "WS", "LPAREN", "RPAREN", 
-			"COMMENT", "COMMENT_BLOCK", "COMPARISON", "ASSIGNMENT"
+			null, null, null, null, "KW_READ", "KW_PRINT", "KW_IF", "KW_ELSE", "KW_ELSE_IF", 
+			"KW_FOR", "KW_WHILE", "KW_FUNCTION", "KW_ARRAY", "IDENT", "ADD", "SUBTRACT", 
+			"MULTIPLY", "DIVIDE", "INT", "STRING", "WS", "LPAREN", "RPAREN", "COMMENT", 
+			"COMMENT_BLOCK", "COMPARISON", "ASSIGNMENT", "LBRACE", "RBRACE"
 		};
 	}
 	private static final String[] _SYMBOLIC_NAMES = makeSymbolicNames();
@@ -124,21 +132,21 @@ public class EmoticonParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(17); 
+			setState(29); 
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			do {
 				{
 				{
-				setState(16);
+				setState(28);
 				s();
 				}
 				}
-				setState(19); 
+				setState(31); 
 				_errHandler.sync(this);
 				_la = _input.LA(1);
-			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & 10308L) != 0) );
-			setState(21);
+			} while ( (((_la) & ~0x3f) == 0 && ((1L << _la) & 2375648L) != 0) );
+			setState(33);
 			match(EOF);
 			}
 		}
@@ -164,6 +172,27 @@ public class EmoticonParser extends Parser {
 		public ExprContext expr() {
 			return getRuleContext(ExprContext.class,0);
 		}
+		public IfstmtContext ifstmt() {
+			return getRuleContext(IfstmtContext.class,0);
+		}
+		public ElsestmtContext elsestmt() {
+			return getRuleContext(ElsestmtContext.class,0);
+		}
+		public ForstmtContext forstmt() {
+			return getRuleContext(ForstmtContext.class,0);
+		}
+		public WhilestmtContext whilestmt() {
+			return getRuleContext(WhilestmtContext.class,0);
+		}
+		public FunctionstmtContext functionstmt() {
+			return getRuleContext(FunctionstmtContext.class,0);
+		}
+		public ArraystmtContext arraystmt() {
+			return getRuleContext(ArraystmtContext.class,0);
+		}
+		public StringstmtContext stringstmt() {
+			return getRuleContext(StringstmtContext.class,0);
+		}
 		public SContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -182,28 +211,77 @@ public class EmoticonParser extends Parser {
 		SContext _localctx = new SContext(_ctx, getState());
 		enterRule(_localctx, 2, RULE_s);
 		try {
-			setState(26);
+			setState(45);
 			_errHandler.sync(this);
 			switch ( getInterpreter().adaptivePredict(_input,1,_ctx) ) {
 			case 1:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(23);
+				setState(35);
 				as();
 				}
 				break;
 			case 2:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(24);
+				setState(36);
 				ps();
 				}
 				break;
 			case 3:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(25);
+				setState(37);
 				expr(0);
+				}
+				break;
+			case 4:
+				enterOuterAlt(_localctx, 4);
+				{
+				setState(38);
+				ifstmt();
+				}
+				break;
+			case 5:
+				enterOuterAlt(_localctx, 5);
+				{
+				setState(39);
+				elsestmt();
+				}
+				break;
+			case 6:
+				enterOuterAlt(_localctx, 6);
+				{
+				setState(40);
+				forstmt();
+				}
+				break;
+			case 7:
+				enterOuterAlt(_localctx, 7);
+				{
+				setState(41);
+				whilestmt();
+				}
+				break;
+			case 8:
+				enterOuterAlt(_localctx, 8);
+				{
+				setState(42);
+				functionstmt();
+				}
+				break;
+			case 9:
+				enterOuterAlt(_localctx, 9);
+				{
+				setState(43);
+				arraystmt();
+				}
+				break;
+			case 10:
+				enterOuterAlt(_localctx, 10);
+				{
+				setState(44);
+				stringstmt();
 				}
 				break;
 			}
@@ -247,24 +325,24 @@ public class EmoticonParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(28);
+			setState(47);
 			match(IDENT);
-			setState(29);
+			setState(48);
 			match(ASSIGNMENT);
-			setState(32);
+			setState(51);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case IDENT:
 			case INT:
 			case LPAREN:
 				{
-				setState(30);
+				setState(49);
 				expr(0);
 				}
 				break;
 			case KW_READ:
 				{
-				setState(31);
+				setState(50);
 				match(KW_READ);
 				}
 				break;
@@ -312,13 +390,13 @@ public class EmoticonParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(34);
+			setState(53);
 			match(KW_PRINT);
-			setState(35);
+			setState(54);
 			match(LPAREN);
-			setState(36);
+			setState(55);
 			expr(0);
-			setState(37);
+			setState(56);
 			match(RPAREN);
 			}
 		}
@@ -334,7 +412,7 @@ public class EmoticonParser extends Parser {
 	}
 
 	@SuppressWarnings("CheckReturnValue")
-	public static class IfContext extends ParserRuleContext {
+	public static class IfstmtContext extends ParserRuleContext {
 		public TerminalNode KW_IF() { return getToken(EmoticonParser.KW_IF, 0); }
 		public TerminalNode LPAREN() { return getToken(EmoticonParser.LPAREN, 0); }
 		public ExprContext expr() {
@@ -344,36 +422,437 @@ public class EmoticonParser extends Parser {
 		public SContext s() {
 			return getRuleContext(SContext.class,0);
 		}
-		public IfContext(ParserRuleContext parent, int invokingState) {
+		public ElsestmtContext elsestmt() {
+			return getRuleContext(ElsestmtContext.class,0);
+		}
+		public IfstmtContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
-		@Override public int getRuleIndex() { return RULE_if; }
+		@Override public int getRuleIndex() { return RULE_ifstmt; }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterIf(this);
+			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterIfstmt(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitIf(this);
+			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitIfstmt(this);
 		}
 	}
 
-	public final IfContext if_() throws RecognitionException {
-		IfContext _localctx = new IfContext(_ctx, getState());
-		enterRule(_localctx, 8, RULE_if);
+	public final IfstmtContext ifstmt() throws RecognitionException {
+		IfstmtContext _localctx = new IfstmtContext(_ctx, getState());
+		enterRule(_localctx, 8, RULE_ifstmt);
+		try {
+			setState(70);
+			_errHandler.sync(this);
+			switch ( getInterpreter().adaptivePredict(_input,3,_ctx) ) {
+			case 1:
+				enterOuterAlt(_localctx, 1);
+				{
+				setState(58);
+				match(KW_IF);
+				setState(59);
+				match(LPAREN);
+				setState(60);
+				expr(0);
+				setState(61);
+				match(RPAREN);
+				setState(62);
+				s();
+				}
+				break;
+			case 2:
+				enterOuterAlt(_localctx, 2);
+				{
+				setState(64);
+				match(KW_IF);
+				setState(65);
+				match(LPAREN);
+				setState(66);
+				expr(0);
+				setState(67);
+				match(RPAREN);
+				setState(68);
+				elsestmt();
+				}
+				break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ElsestmtContext extends ParserRuleContext {
+		public TerminalNode KW_ELSE_IF() { return getToken(EmoticonParser.KW_ELSE_IF, 0); }
+		public TerminalNode LPAREN() { return getToken(EmoticonParser.LPAREN, 0); }
+		public ExprContext expr() {
+			return getRuleContext(ExprContext.class,0);
+		}
+		public TerminalNode RPAREN() { return getToken(EmoticonParser.RPAREN, 0); }
+		public SContext s() {
+			return getRuleContext(SContext.class,0);
+		}
+		public ElsestmtContext elsestmt() {
+			return getRuleContext(ElsestmtContext.class,0);
+		}
+		public TerminalNode KW_ELSE() { return getToken(EmoticonParser.KW_ELSE, 0); }
+		public ElsestmtContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_elsestmt; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterElsestmt(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitElsestmt(this);
+		}
+	}
+
+	public final ElsestmtContext elsestmt() throws RecognitionException {
+		ElsestmtContext _localctx = new ElsestmtContext(_ctx, getState());
+		enterRule(_localctx, 10, RULE_elsestmt);
+		try {
+			setState(81);
+			_errHandler.sync(this);
+			switch (_input.LA(1)) {
+			case KW_ELSE_IF:
+				enterOuterAlt(_localctx, 1);
+				{
+				setState(72);
+				match(KW_ELSE_IF);
+				setState(73);
+				match(LPAREN);
+				setState(74);
+				expr(0);
+				setState(75);
+				match(RPAREN);
+				setState(76);
+				s();
+				setState(77);
+				elsestmt();
+				}
+				break;
+			case KW_ELSE:
+				enterOuterAlt(_localctx, 2);
+				{
+				setState(79);
+				match(KW_ELSE);
+				setState(80);
+				s();
+				}
+				break;
+			default:
+				throw new NoViableAltException(this);
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ForstmtContext extends ParserRuleContext {
+		public TerminalNode KW_FOR() { return getToken(EmoticonParser.KW_FOR, 0); }
+		public TerminalNode LPAREN() { return getToken(EmoticonParser.LPAREN, 0); }
+		public List<AsContext> as() {
+			return getRuleContexts(AsContext.class);
+		}
+		public AsContext as(int i) {
+			return getRuleContext(AsContext.class,i);
+		}
+		public ExprContext expr() {
+			return getRuleContext(ExprContext.class,0);
+		}
+		public TerminalNode RPAREN() { return getToken(EmoticonParser.RPAREN, 0); }
+		public SContext s() {
+			return getRuleContext(SContext.class,0);
+		}
+		public ForstmtContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_forstmt; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterForstmt(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitForstmt(this);
+		}
+	}
+
+	public final ForstmtContext forstmt() throws RecognitionException {
+		ForstmtContext _localctx = new ForstmtContext(_ctx, getState());
+		enterRule(_localctx, 12, RULE_forstmt);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(39);
-			match(KW_IF);
-			setState(40);
+			setState(83);
+			match(KW_FOR);
+			setState(84);
 			match(LPAREN);
-			setState(41);
+			setState(85);
+			as();
+			setState(86);
+			match(T__0);
+			setState(87);
 			expr(0);
-			setState(42);
+			setState(88);
+			match(T__0);
+			setState(89);
+			as();
+			setState(90);
 			match(RPAREN);
-			setState(43);
+			setState(91);
 			s();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class WhilestmtContext extends ParserRuleContext {
+		public TerminalNode KW_WHILE() { return getToken(EmoticonParser.KW_WHILE, 0); }
+		public TerminalNode LPAREN() { return getToken(EmoticonParser.LPAREN, 0); }
+		public ExprContext expr() {
+			return getRuleContext(ExprContext.class,0);
+		}
+		public TerminalNode RPAREN() { return getToken(EmoticonParser.RPAREN, 0); }
+		public SContext s() {
+			return getRuleContext(SContext.class,0);
+		}
+		public WhilestmtContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_whilestmt; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterWhilestmt(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitWhilestmt(this);
+		}
+	}
+
+	public final WhilestmtContext whilestmt() throws RecognitionException {
+		WhilestmtContext _localctx = new WhilestmtContext(_ctx, getState());
+		enterRule(_localctx, 14, RULE_whilestmt);
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(93);
+			match(KW_WHILE);
+			setState(94);
+			match(LPAREN);
+			setState(95);
+			expr(0);
+			setState(96);
+			match(RPAREN);
+			setState(97);
+			s();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class FunctionstmtContext extends ParserRuleContext {
+		public TerminalNode KW_FUNCTION() { return getToken(EmoticonParser.KW_FUNCTION, 0); }
+		public List<TerminalNode> IDENT() { return getTokens(EmoticonParser.IDENT); }
+		public TerminalNode IDENT(int i) {
+			return getToken(EmoticonParser.IDENT, i);
+		}
+		public TerminalNode LPAREN() { return getToken(EmoticonParser.LPAREN, 0); }
+		public TerminalNode RPAREN() { return getToken(EmoticonParser.RPAREN, 0); }
+		public SContext s() {
+			return getRuleContext(SContext.class,0);
+		}
+		public FunctionstmtContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_functionstmt; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterFunctionstmt(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitFunctionstmt(this);
+		}
+	}
+
+	public final FunctionstmtContext functionstmt() throws RecognitionException {
+		FunctionstmtContext _localctx = new FunctionstmtContext(_ctx, getState());
+		enterRule(_localctx, 16, RULE_functionstmt);
+		try {
+			setState(110);
+			_errHandler.sync(this);
+			switch ( getInterpreter().adaptivePredict(_input,5,_ctx) ) {
+			case 1:
+				enterOuterAlt(_localctx, 1);
+				{
+				setState(99);
+				match(KW_FUNCTION);
+				setState(100);
+				match(IDENT);
+				setState(101);
+				match(LPAREN);
+				setState(102);
+				match(IDENT);
+				setState(103);
+				match(RPAREN);
+				setState(104);
+				s();
+				}
+				break;
+			case 2:
+				enterOuterAlt(_localctx, 2);
+				{
+				setState(105);
+				match(KW_FUNCTION);
+				setState(106);
+				match(IDENT);
+				setState(107);
+				match(LPAREN);
+				setState(108);
+				match(RPAREN);
+				setState(109);
+				s();
+				}
+				break;
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class ArraystmtContext extends ParserRuleContext {
+		public TerminalNode KW_ARRAY() { return getToken(EmoticonParser.KW_ARRAY, 0); }
+		public TerminalNode IDENT() { return getToken(EmoticonParser.IDENT, 0); }
+		public TerminalNode ASSIGNMENT() { return getToken(EmoticonParser.ASSIGNMENT, 0); }
+		public TerminalNode INT() { return getToken(EmoticonParser.INT, 0); }
+		public SContext s() {
+			return getRuleContext(SContext.class,0);
+		}
+		public ArraystmtContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_arraystmt; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterArraystmt(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitArraystmt(this);
+		}
+	}
+
+	public final ArraystmtContext arraystmt() throws RecognitionException {
+		ArraystmtContext _localctx = new ArraystmtContext(_ctx, getState());
+		enterRule(_localctx, 18, RULE_arraystmt);
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(112);
+			match(KW_ARRAY);
+			setState(113);
+			match(IDENT);
+			setState(114);
+			match(ASSIGNMENT);
+			setState(115);
+			match(T__1);
+			setState(116);
+			match(INT);
+			setState(117);
+			match(T__2);
+			setState(118);
+			s();
+			}
+		}
+		catch (RecognitionException re) {
+			_localctx.exception = re;
+			_errHandler.reportError(this, re);
+			_errHandler.recover(this, re);
+		}
+		finally {
+			exitRule();
+		}
+		return _localctx;
+	}
+
+	@SuppressWarnings("CheckReturnValue")
+	public static class StringstmtContext extends ParserRuleContext {
+		public TerminalNode IDENT() { return getToken(EmoticonParser.IDENT, 0); }
+		public TerminalNode ASSIGNMENT() { return getToken(EmoticonParser.ASSIGNMENT, 0); }
+		public TerminalNode STRING() { return getToken(EmoticonParser.STRING, 0); }
+		public StringstmtContext(ParserRuleContext parent, int invokingState) {
+			super(parent, invokingState);
+		}
+		@Override public int getRuleIndex() { return RULE_stringstmt; }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterStringstmt(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitStringstmt(this);
+		}
+	}
+
+	public final StringstmtContext stringstmt() throws RecognitionException {
+		StringstmtContext _localctx = new StringstmtContext(_ctx, getState());
+		enterRule(_localctx, 20, RULE_stringstmt);
+		try {
+			enterOuterAlt(_localctx, 1);
+			{
+			setState(120);
+			match(IDENT);
+			setState(121);
+			match(ASSIGNMENT);
+			setState(122);
+			match(STRING);
 			}
 		}
 		catch (RecognitionException re) {
@@ -409,14 +888,14 @@ public class EmoticonParser extends Parser {
 
 	public final OpContext op() throws RecognitionException {
 		OpContext _localctx = new OpContext(_ctx, getState());
-		enterRule(_localctx, 10, RULE_op);
+		enterRule(_localctx, 22, RULE_op);
 		int _la;
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(45);
+			setState(124);
 			_la = _input.LA(1);
-			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 1920L) != 0)) ) {
+			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 245760L) != 0)) ) {
 			_errHandler.recoverInline(this);
 			}
 			else {
@@ -456,11 +935,11 @@ public class EmoticonParser extends Parser {
 
 	public final CompContext comp() throws RecognitionException {
 		CompContext _localctx = new CompContext(_ctx, getState());
-		enterRule(_localctx, 12, RULE_comp);
+		enterRule(_localctx, 24, RULE_comp);
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(47);
+			setState(126);
 			match(COMPARISON);
 			}
 		}
@@ -516,34 +995,34 @@ public class EmoticonParser extends Parser {
 		int _parentState = getState();
 		ExprContext _localctx = new ExprContext(_ctx, _parentState);
 		ExprContext _prevctx = _localctx;
-		int _startState = 14;
-		enterRecursionRule(_localctx, 14, RULE_expr, _p);
+		int _startState = 26;
+		enterRecursionRule(_localctx, 26, RULE_expr, _p);
 		try {
 			int _alt;
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(56);
+			setState(135);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case INT:
 				{
-				setState(50);
+				setState(129);
 				match(INT);
 				}
 				break;
 			case IDENT:
 				{
-				setState(51);
+				setState(130);
 				match(IDENT);
 				}
 				break;
 			case LPAREN:
 				{
-				setState(52);
+				setState(131);
 				match(LPAREN);
-				setState(53);
+				setState(132);
 				expr(0);
-				setState(54);
+				setState(133);
 				match(RPAREN);
 				}
 				break;
@@ -551,26 +1030,26 @@ public class EmoticonParser extends Parser {
 				throw new NoViableAltException(this);
 			}
 			_ctx.stop = _input.LT(-1);
-			setState(68);
+			setState(147);
 			_errHandler.sync(this);
-			_alt = getInterpreter().adaptivePredict(_input,5,_ctx);
+			_alt = getInterpreter().adaptivePredict(_input,8,_ctx);
 			while ( _alt!=2 && _alt!=org.antlr.v4.runtime.atn.ATN.INVALID_ALT_NUMBER ) {
 				if ( _alt==1 ) {
 					if ( _parseListeners!=null ) triggerExitRuleEvent();
 					_prevctx = _localctx;
 					{
-					setState(66);
+					setState(145);
 					_errHandler.sync(this);
-					switch ( getInterpreter().adaptivePredict(_input,4,_ctx) ) {
+					switch ( getInterpreter().adaptivePredict(_input,7,_ctx) ) {
 					case 1:
 						{
 						_localctx = new ExprContext(_parentctx, _parentState);
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
-						setState(58);
+						setState(137);
 						if (!(precpred(_ctx, 2))) throw new FailedPredicateException(this, "precpred(_ctx, 2)");
-						setState(59);
+						setState(138);
 						op();
-						setState(60);
+						setState(139);
 						expr(3);
 						}
 						break;
@@ -578,20 +1057,20 @@ public class EmoticonParser extends Parser {
 						{
 						_localctx = new ExprContext(_parentctx, _parentState);
 						pushNewRecursionContext(_localctx, _startState, RULE_expr);
-						setState(62);
+						setState(141);
 						if (!(precpred(_ctx, 1))) throw new FailedPredicateException(this, "precpred(_ctx, 1)");
-						setState(63);
+						setState(142);
 						comp();
-						setState(64);
+						setState(143);
 						expr(2);
 						}
 						break;
 					}
 					} 
 				}
-				setState(70);
+				setState(149);
 				_errHandler.sync(this);
-				_alt = getInterpreter().adaptivePredict(_input,5,_ctx);
+				_alt = getInterpreter().adaptivePredict(_input,8,_ctx);
 			}
 			}
 		}
@@ -608,7 +1087,7 @@ public class EmoticonParser extends Parser {
 
 	public boolean sempred(RuleContext _localctx, int ruleIndex, int predIndex) {
 		switch (ruleIndex) {
-		case 7:
+		case 13:
 			return expr_sempred((ExprContext)_localctx, predIndex);
 		}
 		return true;
@@ -624,49 +1103,91 @@ public class EmoticonParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001\u0012H\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
-		"\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004\u0002"+
-		"\u0005\u0007\u0005\u0002\u0006\u0007\u0006\u0002\u0007\u0007\u0007\u0001"+
-		"\u0000\u0004\u0000\u0012\b\u0000\u000b\u0000\f\u0000\u0013\u0001\u0000"+
-		"\u0001\u0000\u0001\u0001\u0001\u0001\u0001\u0001\u0003\u0001\u001b\b\u0001"+
-		"\u0001\u0002\u0001\u0002\u0001\u0002\u0001\u0002\u0003\u0002!\b\u0002"+
-		"\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0004"+
-		"\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0005"+
-		"\u0001\u0005\u0001\u0006\u0001\u0006\u0001\u0007\u0001\u0007\u0001\u0007"+
-		"\u0001\u0007\u0001\u0007\u0001\u0007\u0001\u0007\u0003\u00079\b\u0007"+
-		"\u0001\u0007\u0001\u0007\u0001\u0007\u0001\u0007\u0001\u0007\u0001\u0007"+
-		"\u0001\u0007\u0001\u0007\u0005\u0007C\b\u0007\n\u0007\f\u0007F\t\u0007"+
-		"\u0001\u0007\u0000\u0001\u000e\b\u0000\u0002\u0004\u0006\b\n\f\u000e\u0000"+
-		"\u0001\u0001\u0000\u0007\nG\u0000\u0011\u0001\u0000\u0000\u0000\u0002"+
-		"\u001a\u0001\u0000\u0000\u0000\u0004\u001c\u0001\u0000\u0000\u0000\u0006"+
-		"\"\u0001\u0000\u0000\u0000\b\'\u0001\u0000\u0000\u0000\n-\u0001\u0000"+
-		"\u0000\u0000\f/\u0001\u0000\u0000\u0000\u000e8\u0001\u0000\u0000\u0000"+
-		"\u0010\u0012\u0003\u0002\u0001\u0000\u0011\u0010\u0001\u0000\u0000\u0000"+
-		"\u0012\u0013\u0001\u0000\u0000\u0000\u0013\u0011\u0001\u0000\u0000\u0000"+
-		"\u0013\u0014\u0001\u0000\u0000\u0000\u0014\u0015\u0001\u0000\u0000\u0000"+
-		"\u0015\u0016\u0005\u0000\u0000\u0001\u0016\u0001\u0001\u0000\u0000\u0000"+
-		"\u0017\u001b\u0003\u0004\u0002\u0000\u0018\u001b\u0003\u0006\u0003\u0000"+
-		"\u0019\u001b\u0003\u000e\u0007\u0000\u001a\u0017\u0001\u0000\u0000\u0000"+
-		"\u001a\u0018\u0001\u0000\u0000\u0000\u001a\u0019\u0001\u0000\u0000\u0000"+
-		"\u001b\u0003\u0001\u0000\u0000\u0000\u001c\u001d\u0005\u0006\u0000\u0000"+
-		"\u001d \u0005\u0012\u0000\u0000\u001e!\u0003\u000e\u0007\u0000\u001f!"+
-		"\u0005\u0001\u0000\u0000 \u001e\u0001\u0000\u0000\u0000 \u001f\u0001\u0000"+
-		"\u0000\u0000!\u0005\u0001\u0000\u0000\u0000\"#\u0005\u0002\u0000\u0000"+
-		"#$\u0005\r\u0000\u0000$%\u0003\u000e\u0007\u0000%&\u0005\u000e\u0000\u0000"+
-		"&\u0007\u0001\u0000\u0000\u0000\'(\u0005\u0003\u0000\u0000()\u0005\r\u0000"+
-		"\u0000)*\u0003\u000e\u0007\u0000*+\u0005\u000e\u0000\u0000+,\u0003\u0002"+
-		"\u0001\u0000,\t\u0001\u0000\u0000\u0000-.\u0007\u0000\u0000\u0000.\u000b"+
-		"\u0001\u0000\u0000\u0000/0\u0005\u0011\u0000\u00000\r\u0001\u0000\u0000"+
-		"\u000012\u0006\u0007\uffff\uffff\u000029\u0005\u000b\u0000\u000039\u0005"+
-		"\u0006\u0000\u000045\u0005\r\u0000\u000056\u0003\u000e\u0007\u000067\u0005"+
-		"\u000e\u0000\u000079\u0001\u0000\u0000\u000081\u0001\u0000\u0000\u0000"+
-		"83\u0001\u0000\u0000\u000084\u0001\u0000\u0000\u00009D\u0001\u0000\u0000"+
-		"\u0000:;\n\u0002\u0000\u0000;<\u0003\n\u0005\u0000<=\u0003\u000e\u0007"+
-		"\u0003=C\u0001\u0000\u0000\u0000>?\n\u0001\u0000\u0000?@\u0003\f\u0006"+
-		"\u0000@A\u0003\u000e\u0007\u0002AC\u0001\u0000\u0000\u0000B:\u0001\u0000"+
-		"\u0000\u0000B>\u0001\u0000\u0000\u0000CF\u0001\u0000\u0000\u0000DB\u0001"+
-		"\u0000\u0000\u0000DE\u0001\u0000\u0000\u0000E\u000f\u0001\u0000\u0000"+
-		"\u0000FD\u0001\u0000\u0000\u0000\u0006\u0013\u001a 8BD";
+		"\u0004\u0001\u001c\u0097\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001"+
+		"\u0002\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004"+
+		"\u0002\u0005\u0007\u0005\u0002\u0006\u0007\u0006\u0002\u0007\u0007\u0007"+
+		"\u0002\b\u0007\b\u0002\t\u0007\t\u0002\n\u0007\n\u0002\u000b\u0007\u000b"+
+		"\u0002\f\u0007\f\u0002\r\u0007\r\u0001\u0000\u0004\u0000\u001e\b\u0000"+
+		"\u000b\u0000\f\u0000\u001f\u0001\u0000\u0001\u0000\u0001\u0001\u0001\u0001"+
+		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
+		"\u0001\u0001\u0001\u0001\u0003\u0001.\b\u0001\u0001\u0002\u0001\u0002"+
+		"\u0001\u0002\u0001\u0002\u0003\u00024\b\u0002\u0001\u0003\u0001\u0003"+
+		"\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0004\u0001\u0004\u0001\u0004"+
+		"\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004"+
+		"\u0001\u0004\u0001\u0004\u0001\u0004\u0003\u0004G\b\u0004\u0001\u0005"+
+		"\u0001\u0005\u0001\u0005\u0001\u0005\u0001\u0005\u0001\u0005\u0001\u0005"+
+		"\u0001\u0005\u0001\u0005\u0003\u0005R\b\u0005\u0001\u0006\u0001\u0006"+
+		"\u0001\u0006\u0001\u0006\u0001\u0006\u0001\u0006\u0001\u0006\u0001\u0006"+
+		"\u0001\u0006\u0001\u0006\u0001\u0007\u0001\u0007\u0001\u0007\u0001\u0007"+
+		"\u0001\u0007\u0001\u0007\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001"+
+		"\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0003\bo\b\b\u0001\t\u0001"+
+		"\t\u0001\t\u0001\t\u0001\t\u0001\t\u0001\t\u0001\t\u0001\n\u0001\n\u0001"+
+		"\n\u0001\n\u0001\u000b\u0001\u000b\u0001\f\u0001\f\u0001\r\u0001\r\u0001"+
+		"\r\u0001\r\u0001\r\u0001\r\u0001\r\u0003\r\u0088\b\r\u0001\r\u0001\r\u0001"+
+		"\r\u0001\r\u0001\r\u0001\r\u0001\r\u0001\r\u0005\r\u0092\b\r\n\r\f\r\u0095"+
+		"\t\r\u0001\r\u0000\u0001\u001a\u000e\u0000\u0002\u0004\u0006\b\n\f\u000e"+
+		"\u0010\u0012\u0014\u0016\u0018\u001a\u0000\u0001\u0001\u0000\u000e\u0011"+
+		"\u009a\u0000\u001d\u0001\u0000\u0000\u0000\u0002-\u0001\u0000\u0000\u0000"+
+		"\u0004/\u0001\u0000\u0000\u0000\u00065\u0001\u0000\u0000\u0000\bF\u0001"+
+		"\u0000\u0000\u0000\nQ\u0001\u0000\u0000\u0000\fS\u0001\u0000\u0000\u0000"+
+		"\u000e]\u0001\u0000\u0000\u0000\u0010n\u0001\u0000\u0000\u0000\u0012p"+
+		"\u0001\u0000\u0000\u0000\u0014x\u0001\u0000\u0000\u0000\u0016|\u0001\u0000"+
+		"\u0000\u0000\u0018~\u0001\u0000\u0000\u0000\u001a\u0087\u0001\u0000\u0000"+
+		"\u0000\u001c\u001e\u0003\u0002\u0001\u0000\u001d\u001c\u0001\u0000\u0000"+
+		"\u0000\u001e\u001f\u0001\u0000\u0000\u0000\u001f\u001d\u0001\u0000\u0000"+
+		"\u0000\u001f \u0001\u0000\u0000\u0000 !\u0001\u0000\u0000\u0000!\"\u0005"+
+		"\u0000\u0000\u0001\"\u0001\u0001\u0000\u0000\u0000#.\u0003\u0004\u0002"+
+		"\u0000$.\u0003\u0006\u0003\u0000%.\u0003\u001a\r\u0000&.\u0003\b\u0004"+
+		"\u0000\'.\u0003\n\u0005\u0000(.\u0003\f\u0006\u0000).\u0003\u000e\u0007"+
+		"\u0000*.\u0003\u0010\b\u0000+.\u0003\u0012\t\u0000,.\u0003\u0014\n\u0000"+
+		"-#\u0001\u0000\u0000\u0000-$\u0001\u0000\u0000\u0000-%\u0001\u0000\u0000"+
+		"\u0000-&\u0001\u0000\u0000\u0000-\'\u0001\u0000\u0000\u0000-(\u0001\u0000"+
+		"\u0000\u0000-)\u0001\u0000\u0000\u0000-*\u0001\u0000\u0000\u0000-+\u0001"+
+		"\u0000\u0000\u0000-,\u0001\u0000\u0000\u0000.\u0003\u0001\u0000\u0000"+
+		"\u0000/0\u0005\r\u0000\u000003\u0005\u001a\u0000\u000014\u0003\u001a\r"+
+		"\u000024\u0005\u0004\u0000\u000031\u0001\u0000\u0000\u000032\u0001\u0000"+
+		"\u0000\u00004\u0005\u0001\u0000\u0000\u000056\u0005\u0005\u0000\u0000"+
+		"67\u0005\u0015\u0000\u000078\u0003\u001a\r\u000089\u0005\u0016\u0000\u0000"+
+		"9\u0007\u0001\u0000\u0000\u0000:;\u0005\u0006\u0000\u0000;<\u0005\u0015"+
+		"\u0000\u0000<=\u0003\u001a\r\u0000=>\u0005\u0016\u0000\u0000>?\u0003\u0002"+
+		"\u0001\u0000?G\u0001\u0000\u0000\u0000@A\u0005\u0006\u0000\u0000AB\u0005"+
+		"\u0015\u0000\u0000BC\u0003\u001a\r\u0000CD\u0005\u0016\u0000\u0000DE\u0003"+
+		"\n\u0005\u0000EG\u0001\u0000\u0000\u0000F:\u0001\u0000\u0000\u0000F@\u0001"+
+		"\u0000\u0000\u0000G\t\u0001\u0000\u0000\u0000HI\u0005\b\u0000\u0000IJ"+
+		"\u0005\u0015\u0000\u0000JK\u0003\u001a\r\u0000KL\u0005\u0016\u0000\u0000"+
+		"LM\u0003\u0002\u0001\u0000MN\u0003\n\u0005\u0000NR\u0001\u0000\u0000\u0000"+
+		"OP\u0005\u0007\u0000\u0000PR\u0003\u0002\u0001\u0000QH\u0001\u0000\u0000"+
+		"\u0000QO\u0001\u0000\u0000\u0000R\u000b\u0001\u0000\u0000\u0000ST\u0005"+
+		"\t\u0000\u0000TU\u0005\u0015\u0000\u0000UV\u0003\u0004\u0002\u0000VW\u0005"+
+		"\u0001\u0000\u0000WX\u0003\u001a\r\u0000XY\u0005\u0001\u0000\u0000YZ\u0003"+
+		"\u0004\u0002\u0000Z[\u0005\u0016\u0000\u0000[\\\u0003\u0002\u0001\u0000"+
+		"\\\r\u0001\u0000\u0000\u0000]^\u0005\n\u0000\u0000^_\u0005\u0015\u0000"+
+		"\u0000_`\u0003\u001a\r\u0000`a\u0005\u0016\u0000\u0000ab\u0003\u0002\u0001"+
+		"\u0000b\u000f\u0001\u0000\u0000\u0000cd\u0005\u000b\u0000\u0000de\u0005"+
+		"\r\u0000\u0000ef\u0005\u0015\u0000\u0000fg\u0005\r\u0000\u0000gh\u0005"+
+		"\u0016\u0000\u0000ho\u0003\u0002\u0001\u0000ij\u0005\u000b\u0000\u0000"+
+		"jk\u0005\r\u0000\u0000kl\u0005\u0015\u0000\u0000lm\u0005\u0016\u0000\u0000"+
+		"mo\u0003\u0002\u0001\u0000nc\u0001\u0000\u0000\u0000ni\u0001\u0000\u0000"+
+		"\u0000o\u0011\u0001\u0000\u0000\u0000pq\u0005\f\u0000\u0000qr\u0005\r"+
+		"\u0000\u0000rs\u0005\u001a\u0000\u0000st\u0005\u0002\u0000\u0000tu\u0005"+
+		"\u0012\u0000\u0000uv\u0005\u0003\u0000\u0000vw\u0003\u0002\u0001\u0000"+
+		"w\u0013\u0001\u0000\u0000\u0000xy\u0005\r\u0000\u0000yz\u0005\u001a\u0000"+
+		"\u0000z{\u0005\u0013\u0000\u0000{\u0015\u0001\u0000\u0000\u0000|}\u0007"+
+		"\u0000\u0000\u0000}\u0017\u0001\u0000\u0000\u0000~\u007f\u0005\u0019\u0000"+
+		"\u0000\u007f\u0019\u0001\u0000\u0000\u0000\u0080\u0081\u0006\r\uffff\uffff"+
+		"\u0000\u0081\u0088\u0005\u0012\u0000\u0000\u0082\u0088\u0005\r\u0000\u0000"+
+		"\u0083\u0084\u0005\u0015\u0000\u0000\u0084\u0085\u0003\u001a\r\u0000\u0085"+
+		"\u0086\u0005\u0016\u0000\u0000\u0086\u0088\u0001\u0000\u0000\u0000\u0087"+
+		"\u0080\u0001\u0000\u0000\u0000\u0087\u0082\u0001\u0000\u0000\u0000\u0087"+
+		"\u0083\u0001\u0000\u0000\u0000\u0088\u0093\u0001\u0000\u0000\u0000\u0089"+
+		"\u008a\n\u0002\u0000\u0000\u008a\u008b\u0003\u0016\u000b\u0000\u008b\u008c"+
+		"\u0003\u001a\r\u0003\u008c\u0092\u0001\u0000\u0000\u0000\u008d\u008e\n"+
+		"\u0001\u0000\u0000\u008e\u008f\u0003\u0018\f\u0000\u008f\u0090\u0003\u001a"+
+		"\r\u0002\u0090\u0092\u0001\u0000\u0000\u0000\u0091\u0089\u0001\u0000\u0000"+
+		"\u0000\u0091\u008d\u0001\u0000\u0000\u0000\u0092\u0095\u0001\u0000\u0000"+
+		"\u0000\u0093\u0091\u0001\u0000\u0000\u0000\u0093\u0094\u0001\u0000\u0000"+
+		"\u0000\u0094\u001b\u0001\u0000\u0000\u0000\u0095\u0093\u0001\u0000\u0000"+
+		"\u0000\t\u001f-3FQn\u0087\u0091\u0093";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

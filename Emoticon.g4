@@ -14,8 +14,7 @@ KW_ARRAY : '(o_o)';
 
 
 //Other tokens
-
-IDENT : [A-Za-z_][A-Za-z0-9_]*;
+IDENT : [A-Za-z][A-Za-z0-9_]* | [_][A-Za-z0-9_]+;
 ADD : ':+)';
 SUBTRACT : ':-)';
 MULTIPLY : ':*)';
@@ -45,13 +44,14 @@ ifstmt : KW_IF '(' expr ')' s
    | KW_IF '(' expr ')' elsestmt ;
 
 elsestmt : KW_ELSE_IF '(' expr ')' s elsestmt
-    | KW_ELSE s ;
+         | KW_ELSE s ;
 
-forstmt : KW_FOR '(' as ';' expr ';' expr ')' s;
+forstmt : KW_FOR '(' as ';' expr ';' as ')' s;
 
 whilestmt : KW_WHILE '(' expr ')' s;
 
-functionstmt : KW_FUNCTION IDENT '(' IDENT ')' s;
+functionstmt : KW_FUNCTION IDENT '(' IDENT ')' s
+             | KW_FUNCTION IDENT '('')' s;
 
 arraystmt : KW_ARRAY IDENT ':=)' '[' INT ']' s;
 
