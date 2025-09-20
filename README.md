@@ -20,3 +20,6 @@ This line creates a gui of the grammar.
 Alternatively if the gui does not load run this line instead
 
 antlr4-parse.exe Emoticon.g4 program -tree [Example file path]
+
+Emoticon Cheat Sheet:
+https://quinnipiacuniversity-my.sharepoint.com/:w:/g/personal/lgjenkins_quinnipiac_edu/EQX40YidXydMp9gg33d_NaYBfDYWCMoBeLag5HEhVlo5rA?e=BcfYGb
