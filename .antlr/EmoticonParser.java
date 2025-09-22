@@ -98,6 +98,22 @@ public class EmoticonParser extends Parser {
 	@Override
 	public ATN getATN() { return _ATN; }
 
+
+	    // for the variables that are assigned (self explanatory)
+	    set<string> assigned = new hashTable<>();
+
+	    //used?
+
+	    // diagnostics
+
+	    // lhs stuff
+
+	    // error stuff
+
+	    
+
+	    // need more gng
+
 	public EmoticonParser(TokenStream input) {
 		super(input);
 		_interp = new ParserATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);

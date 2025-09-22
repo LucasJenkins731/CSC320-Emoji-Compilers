@@ -3,6 +3,25 @@ grammar Emoticon;
 
 @ header { import java.util.*; }
 
+@ members {
+    // for the variables that are assigned (self explanatory)
+    set<string> assigned = new hashTable<>();
+
+    //used?
+
+    // diagnostics
+
+    // lhs stuff
+
+    // error stuff
+
+    
+
+    // need more gng
+}
+
+
+
 //Keywords
 KW_READ : '-0-0-';
 KW_PRINT : ':P';

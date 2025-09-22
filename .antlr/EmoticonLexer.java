@@ -92,6 +92,22 @@ public class EmoticonLexer extends Lexer {
 	}
 
 
+	    // for the variables that are assigned (self explanatory)
+	    set<string> assigned = new hashTable<>();
+
+	    //used?
+
+	    // diagnostics
+
+	    // lhs stuff
+
+	    // error stuff
+
+	    
+
+	    // need more gng
+
+
 	public EmoticonLexer(CharStream input) {
 		super(input);
 		_interp = new LexerATNSimulator(this,_ATN,_decisionToDFA,_sharedContextCache);
