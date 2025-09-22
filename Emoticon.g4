@@ -1,5 +1,8 @@
 grammar Emoticon;
 
+
+@ header { import java.util.*; }
+
 //Keywords
 KW_READ : '-0-0-';
 KW_PRINT : ':P';
