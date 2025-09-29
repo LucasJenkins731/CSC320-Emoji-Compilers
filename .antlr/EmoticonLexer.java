@@ -92,6 +92,17 @@ public class EmoticonLexer extends Lexer {
 	}
 
 
+
+	  class Identifier {
+	    String id;
+	    float value;
+	    boolean hasKnown;
+	    boolean hasBeenUsed;
+	  }
+
+	  class SymbolTable {
+	    Map<String, Identifier> table = new HashMap<>();
+	  }
 	    // for the variables that are assigned (self explanatory)
 	    set<string> assigned = new hashTable<>();
 

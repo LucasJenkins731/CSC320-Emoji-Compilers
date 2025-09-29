@@ -1,4 +1,5 @@
 // Generated from Emoticon.g4 by ANTLR 4.13.2
+ import java.util.*; 
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
 /**
@@ -16,6 +17,66 @@ public interface EmoticonListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitProgram(EmoticonParser.ProgramContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link EmoticonParser#statement}.
+	 * @param ctx the parse tree
+	 */
+	void enterStatement(EmoticonParser.StatementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link EmoticonParser#statement}.
+	 * @param ctx the parse tree
+	 */
+	void exitStatement(EmoticonParser.StatementContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link EmoticonParser#assignStatement}.
+	 * @param ctx the parse tree
+	 */
+	void enterAssignStatement(EmoticonParser.AssignStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link EmoticonParser#assignStatement}.
+	 * @param ctx the parse tree
+	 */
+	void exitAssignStatement(EmoticonParser.AssignStatementContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link EmoticonParser#printStatement}.
+	 * @param ctx the parse tree
+	 */
+	void enterPrintStatement(EmoticonParser.PrintStatementContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link EmoticonParser#printStatement}.
+	 * @param ctx the parse tree
+	 */
+	void exitPrintStatement(EmoticonParser.PrintStatementContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link EmoticonParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void enterExpr(EmoticonParser.ExprContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link EmoticonParser#expr}.
+	 * @param ctx the parse tree
+	 */
+	void exitExpr(EmoticonParser.ExprContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link EmoticonParser#term}.
+	 * @param ctx the parse tree
+	 */
+	void enterTerm(EmoticonParser.TermContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link EmoticonParser#term}.
+	 * @param ctx the parse tree
+	 */
+	void exitTerm(EmoticonParser.TermContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link EmoticonParser#factor}.
+	 * @param ctx the parse tree
+	 */
+	void enterFactor(EmoticonParser.FactorContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link EmoticonParser#factor}.
+	 * @param ctx the parse tree
+	 */
+	void exitFactor(EmoticonParser.FactorContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link EmoticonParser#s}.
 	 * @param ctx the parse tree
@@ -117,16 +178,6 @@ public interface EmoticonListener extends ParseTreeListener {
 	 */
 	void exitStringstmt(EmoticonParser.StringstmtContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link EmoticonParser#op}.
-	 * @param ctx the parse tree
-	 */
-	void enterOp(EmoticonParser.OpContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link EmoticonParser#op}.
-	 * @param ctx the parse tree
-	 */
-	void exitOp(EmoticonParser.OpContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link EmoticonParser#comp}.
 	 * @param ctx the parse tree
 	 */
@@ -136,14 +187,4 @@ public interface EmoticonListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitComp(EmoticonParser.CompContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link EmoticonParser#expr}.
-	 * @param ctx the parse tree
-	 */
-	void enterExpr(EmoticonParser.ExprContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link EmoticonParser#expr}.
-	 * @param ctx the parse tree
-	 */
-	void exitExpr(EmoticonParser.ExprContext ctx);
 }

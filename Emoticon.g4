@@ -4,6 +4,17 @@ grammar Emoticon;
 @ header { import java.util.*; }
 
 @ members {
+
+  class Identifier {
+    String id;
+    float value;
+    boolean hasKnown;
+    boolean hasBeenUsed;
+  }
+
+  class SymbolTable {
+    Map<String, Identifier> table = new HashMap<>();
+  }
     // for the variables that are assigned (self explanatory)
     set<string> assigned = new hashTable<>();
 
@@ -70,10 +81,45 @@ RBRACE : '}';
 //GRAMMAR
 //program : s+ EOF;
 
- program  : s+ EOF;
+program  : s+ EOF;
 s : as | ps | expr | ifstmt | elsestmt | forstmt | whilestmt | functionstmt | arraystmt | stringstmt;
 
-as : IDENT ':=)' ( expr | KW_READ) ;
+as 
+  : IDENT 
+    {
+      pendingLHS = $IDENT.getText();
+      lhsExistedBefore = assigned.contains(pendingLHS);
+    }
+      ':=)' ( {
+            // Successful RHS parse: consider variable now assigned.
+            assigned.add(pendingLHS);
+            Identifier newId = new Identifier();
+            newId.id = pendingLHS;
+            newId.value = $expr.value;
+            newId.hasKnown = $expr.hasKnownValue;
+            newId.hasBeenUsed = false;
+            mainTable.table.put(newId.id, newId);
+
+            // Clear LHS context.
+            pendingLHS = null;
+          }
+        | KW_READ
+          {
+            // Successful RHS parse: consider variable now assigned.
+            assigned.add(pendingLHS);
+            Identifier newId = new Identifier();
+            newId.id = pendingLHS;
+            newId.value = 0;
+            newId.hasKnown = false;
+            newId.hasBeenUsed = false;
+            mainTable.table.put(newId.id, newId);
+            // Clear LHS context.
+            pendingLHS = null;
+          }
+      ) 
+  ;
+    
+
 ps : KW_PRINT '(' expr ')' ;
 ifstmt : KW_IF '(' expr ')' s 
    | KW_IF '(' expr ')' elsestmt ;
@@ -104,7 +150,6 @@ expr : INT
     | expr comp expr
     ;
 
-    
 
 
 
