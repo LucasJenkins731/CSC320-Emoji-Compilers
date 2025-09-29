@@ -84,13 +84,15 @@ RBRACE : '}';
 program  : s+ EOF;
 s : as | ps | expr | ifstmt | elsestmt | forstmt | whilestmt | functionstmt | arraystmt | stringstmt;
 
-as 
+as
   : IDENT 
     {
+      // We're entering an assignment: record LHS and whether it existed before.
       pendingLHS = $IDENT.getText();
-      lhsExistedBefore = assigned.contains(pendingLHS);
+      lhsExistedBefore = mainTable.table.containsKey(pendingLHS);
     }
-      ':=)' ( {
+    ':=)' ( expr 
+          {
             // Successful RHS parse: consider variable now assigned.
             assigned.add(pendingLHS);
             Identifier newId = new Identifier();
@@ -116,11 +118,122 @@ as
             // Clear LHS context.
             pendingLHS = null;
           }
-      ) 
+        ) 
   ;
     
 
-ps : KW_PRINT '(' expr ')' ;
+ps : KW_PRINT '(' expr ')' 
+    {
+      if ($expr.hasKnownValue) {
+        // Let us print it out (for debugging purposes really)
+        System.out.println("DEBUG: Line " + $KW_PRINT.getLine() + ": Printing known value: " + $expr.value);
+      } else {
+        System.out.println("DEBUG: Line " + $KW_PRINT.getLine() + ": Can't print this value. Need to evaluate further.");
+      }
+    }
+;
+
+
+// expr : INT 
+//     | IDENT {}
+//     | '(' expr ')' {}
+//     | expr op expr{}
+//     | expr comp expr{}
+//     ;
+
+
+expr returns [boolean hasKnownValue, float value]
+  : a=term
+    {
+      if ($a.hasKnownValue) {
+        $hasKnownValue = true;
+        $value = $a.value;
+      } else {
+        $hasKnownValue = false;
+      } 
+    }
+    (op=(ADD | SUBTRACT) b=term
+    {
+      if ($hasKnownValue && $b.hasKnownValue) {
+        if ($op.getText().equals(ADD)) {
+          $value = $value + $b.value;
+        } else {
+          $value = $value - $b.value;
+        }
+      } else {
+        $hasKnownValue = false;
+      }
+    }
+    )*
+  ;
+
+    term returns [boolean hasKnownValue, float value]
+  : a=factor 
+    {
+      if ($a.hasKnownValue) {
+        $hasKnownValue = true;
+        $value = $a.value;
+      } else $hasKnownValue = false;
+    }
+  ( op=(MULTIPLY|DIVIDE) b=factor
+    {
+        // First check for division by zero when b has value 0 (and /).
+        if ($b.hasKnownValue && $op.getText().equals(DIVIDE) && $b.value == 0) {
+          error($op, "division by zero");
+          $hasKnownValue = false;  // Error anyway so stopping there
+        } else if ($hasKnownValue && $b.hasKnownValue) {
+          if ($op.getText().equals(MULTIPLY)) {
+            $value = $value * $b.value;
+          } else {
+            $value = $value / $b.value;
+          }
+        } else {
+          $hasKnownValue = false;
+        }
+      }
+    )*
+  ;
+
+  factor returns [boolean hasKnownValue, float value]
+  : INT 
+      { $hasKnownValue = true; $value = Integer.parseInt($INT.getText()); }
+  | IDENT 
+      {
+        String id = $IDENT.getText();
+        used.add(id);
+
+        Identifier currentId = mainTable.table.get(id);
+        if (currentId == null) {
+          // Variable used before declaration error
+          if (pendingLHS != null && !lhsExistedBefore && id.equals(pendingLHS)) {
+            error($IDENT, "self-reference on first assignment of '" + pendingLHS + "'");
+          } else {
+            error($IDENT, "use of variable '" + id + "' before assignment");
+          }
+          $hasKnownValue = false;
+        } else {
+          currentId.hasBeenUsed = true;
+          $hasKnownValue = currentId.hasKnown;
+          $value = currentId.value;
+        }
+      }
+  | '(' expr ')' 
+      { 
+        if ($expr.hasKnownValue) {
+          $hasKnownValue = true;
+          $value = $expr.value;
+        } else {
+          $hasKnownValue = false;
+        }
+      }
+  ;
+
+
+
+
+
+
+
 ifstmt : KW_IF '(' expr ')' s 
    | KW_IF '(' expr ')' elsestmt ;
 
@@ -139,16 +252,11 @@ arraystmt : KW_ARRAY IDENT ':=)' '[' INT ']' s;
 stringstmt : IDENT ':=)' STRING;
 
 
-op : ADD | SUBTRACT | MULTIPLY | DIVIDE;
+operators : ADD | SUBTRACT | MULTIPLY | DIVIDE;
 
 comp : COMPARISON;
 
-expr : INT 
-    | IDENT 
-    | '(' expr ')' 
-    | expr op expr
-    | expr comp expr
-    ;
+
 
 
 
