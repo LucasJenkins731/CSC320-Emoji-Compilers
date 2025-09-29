@@ -8,16 +8,29 @@ grammar Emoticon;
     set<string> assigned = new hashTable<>();
 
     //used?
-
+    set<string> used = new hashTable<>();
     // diagnostics
-
+    set<string> diagnostics = new hashTable<>();
     // lhs stuff
-
+    String pendingLHS = null;
     // error stuff
-
+    boolean lhsExistedBefore = false;
     
+    void error(Token t, String msg) {
+        diagnostics.add("line " + t.getLine() + ":" + t.getCharPositionInLine() + " " + msg);
+    }
 
-    // need more gng
+    void printDiagnostics() {
+      // After parsing the whole file: report unused variables and print errors.
+      for (String v : assigned) {
+        if (!used.contains(v)) {
+          System.err.println("warning: variable '" + v + "' assigned but never used");
+        }
+      }
+      for (String d : diagnostics) {
+        System.err.println("error: " + d);
+      }
+    }
 }
 
 
