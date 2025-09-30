@@ -85,7 +85,7 @@ RBRACE : '}';
 program  : s+ EOF;
 s : as | ps | expr | arraystmt | stringstmt | blockStatement | ifstmt | forstmt | whilestmt | functionstmt ;
 
-blockStatement: '{' { actionA } (s)* '}' {actionB} ;
+blockStatement : LBRACE { actionA } (s)* RBRACE {actionB} ;
 
 actionA 
   : s
