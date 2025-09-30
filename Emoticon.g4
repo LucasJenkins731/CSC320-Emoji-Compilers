@@ -82,7 +82,9 @@ RBRACE : '}';
 //program : s+ EOF;
 
 program  : s+ EOF;
-s : as | ps | expr | ifstmt | elsestmt | forstmt | whilestmt | functionstmt | arraystmt | stringstmt;
+s : as | ps | expr | arraystmt | stringstmt | blockStatement;
+
+blockStatement: ifstmt | elsestmt | forstmt | whilestmt | functionstmt ;
 
 as
   : IDENT 
@@ -115,6 +117,7 @@ as
             newId.hasKnown = false;
             newId.hasBeenUsed = false;
             mainTable.table.put(newId.id, newId);
+
             // Clear LHS context.
             pendingLHS = null;
           }
