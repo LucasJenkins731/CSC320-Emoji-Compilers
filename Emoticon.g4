@@ -12,6 +12,8 @@ grammar Emoticon;
     boolean hasBeenUsed;
   }
 
+  Stack<SymbolTable> symbolStack = new Stack<>();
+
   class SymbolTable {
     Map<String, Identifier> table = new HashMap<>();
   }
@@ -79,12 +81,27 @@ RBRACE : '}';
 
 
 //GRAMMAR
-//program : s+ EOF;
 
 program  : s+ EOF;
-s : as | ps | expr | arraystmt | stringstmt | blockStatement;
+s : as | ps | expr | arraystmt | stringstmt | blockStatement | ifstmt | forstmt | whilestmt | functionstmt ;
 
-blockStatement: ifstmt | elsestmt | forstmt | whilestmt | functionstmt ;
+blockStatement: '{' { actionA } (s)* '}' {actionB} ;
+
+actionA 
+  : s
+    { 
+      SymbolTable currentSymbolTable = new SymbolTable();
+      System.out.println("DEBUG: Pushing new symbol table for block at line " + $s.start.getLine());
+      symbolStack.push(currentSymbolTable); 
+    }
+  ;
+actionB 
+  : s
+    {
+      symbolStack.pop(currentSymbolTable);
+      System.out.println("DEBUG: Popping symbol table for block at line " + $s.stop.getLine());
+    }
+  ;
 
 as
   : IDENT 

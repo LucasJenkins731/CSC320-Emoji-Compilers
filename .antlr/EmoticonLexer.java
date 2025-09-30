@@ -100,6 +100,8 @@ public class EmoticonLexer extends Lexer {
 	    boolean hasBeenUsed;
 	  }
 
+	  Stack<SymbolTable> symbolStack = new Stack<>();
+
 	  class SymbolTable {
 	    Map<String, Identifier> table = new HashMap<>();
 	  }
