@@ -58,6 +58,8 @@ KW_FOR : '>:(';
 KW_WHILE : 'D:<';
 KW_FUNCTION : '=^._.^=';
 KW_ARRAY : '(o_o)';
+LBRACE : 'BEGIN';
+RBRACE : 'END';
 
 
 
@@ -76,8 +78,7 @@ COMMENT : '<3'~[\n\r]* -> skip;
 COMMENT_BLOCK : 'OWO' .*? 'UWU' -> skip;
 COMPARISON : ':==)';
 ASSIGNMENT : ':=)';
-LBRACE : '{';
-RBRACE : '}';
+
 
 
 //GRAMMAR
