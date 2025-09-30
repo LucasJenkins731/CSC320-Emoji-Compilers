@@ -3,6 +3,7 @@ grammar Emoticon;
 
 @ header { import java.util.*; }
 
+
 @ members {
 
   class Identifier {
@@ -49,6 +50,7 @@ grammar Emoticon;
 
 
 //Keywords
+
 KW_READ : '-0-0-';
 KW_PRINT : ':P';
 KW_IF : ':)';
@@ -60,6 +62,7 @@ KW_FUNCTION : '=^._.^=';
 KW_ARRAY : '(o_o)';
 LBRACE : 'BEGIN';
 RBRACE : 'END';
+TESTONE : '<.)))><';
 
 
 
@@ -86,7 +89,7 @@ ASSIGNMENT : ':=)';
 program  : s+ EOF;
 s : as | ps | expr | arraystmt | stringstmt | blockStatement | ifstmt | forstmt | whilestmt | functionstmt ;
 
-blockStatement : LBRACE 
+blockStatement : TESTONE
   {  
     SymbolTable currentSymbolTable = new SymbolTable();
     System.out.println("DEBUG: Pushing new symbol table for block at line " + $s.start.getLine());
@@ -97,6 +100,7 @@ blockStatement : LBRACE
     symbolStack.pop(currentSymbolTable);
     System.out.println("DEBUG: Popping symbol table for block at line " + $s.stop.getLine());
   } ;
+
 
 // actionA 
 //   : s
