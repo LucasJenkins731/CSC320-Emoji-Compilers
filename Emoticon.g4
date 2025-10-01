@@ -60,9 +60,8 @@ KW_FOR : '>:(';
 KW_WHILE : 'D:<';
 KW_FUNCTION : '=^._.^=';
 KW_ARRAY : '(o_o)';
-LBRACE : 'BEGIN';
-RBRACE : 'END';
-TESTONE : '<.)))><';
+LBRACE : '><(((.>';
+RBRACE : '<.)))><';
 
 
 
@@ -86,10 +85,15 @@ ASSIGNMENT : ':=)';
 
 //GRAMMAR
 
-program  : s+ EOF;
+program  : 
+  {
+    SymbolTable globalSymbolTable = new SymbolTable();
+  }
+  s+ EOF;
+
 s : as | ps | expr | arraystmt | stringstmt | blockStatement | ifstmt | forstmt | whilestmt | functionstmt ;
 
-blockStatement : TESTONE
+blockStatement : LBRACE
   {  
     SymbolTable currentSymbolTable = new SymbolTable();
     System.out.println("DEBUG: Pushing new symbol table for block at line " + $s.start.getLine());
@@ -97,26 +101,9 @@ blockStatement : TESTONE
   } 
   (s)* RBRACE 
   { 
-    symbolStack.pop(currentSymbolTable);
+    symbolStack.pop();
     System.out.println("DEBUG: Popping symbol table for block at line " + $s.stop.getLine());
   } ;
-
-
-// actionA 
-//   : s
-//     { 
-//       SymbolTable currentSymbolTable = new SymbolTable();
-//       System.out.println("DEBUG: Pushing new symbol table for block at line " + $s.start.getLine());
-//       symbolStack.push(currentSymbolTable); 
-//     }
-//   ;
-// actionB 
-//   : s
-//     {
-//       symbolStack.pop(currentSymbolTable);
-//       System.out.println("DEBUG: Popping symbol table for block at line " + $s.stop.getLine());
-//     }
-//   ;
 
 as
   : IDENT 
