@@ -13,18 +13,20 @@ grammar Emoticon;
     boolean hasBeenUsed;
   }
 
-  Stack<SymbolTable> symbolStack = new Stack<>();
+
 
   class SymbolTable {
     Map<String, Identifier> table = new HashMap<>();
   }
+    Stack<SymbolTable> symbolStack = new Stack<>();
+    SymbolTable mainTable = new SymbolTable();
     // for the variables that are assigned (self explanatory)
-    set<string> assigned = new hashTable<>();
+    Map<String, Object> assigned = new Hashtable<>();
 
     //used?
-    set<string> used = new hashTable<>();
+    Set<String> used = new HashSet<>();
     // diagnostics
-    set<string> diagnostics = new hashTable<>();
+    List<String> diagnostics = new ArrayList<>();
     // lhs stuff
     String pendingLHS = null;
     // error stuff
@@ -36,7 +38,7 @@ grammar Emoticon;
 
     void printDiagnostics() {
       // After parsing the whole file: report unused variables and print errors.
-      for (String v : assigned) {
+      for (String v : assigned.keySet()) {
         if (!used.contains(v)) {
           System.err.println("warning: variable '" + v + "' assigned but never used");
         }
@@ -62,6 +64,9 @@ KW_FUNCTION : '=^._.^=';
 KW_ARRAY : '(o_o)';
 LBRACE : '><(((.>';
 RBRACE : '<.)))><';
+KW_INT : 'int';
+KW_STRING : 'string';
+KW_CHAR : 'char';
 
 
 
@@ -105,7 +110,10 @@ blockStatement : LBRACE
     System.out.println("DEBUG: Popping symbol table for block at line " + $s.stop.getLine());
   } ;
 
+  
+
 as
+
   : IDENT 
     {
       // We're entering an assignment: record LHS and whether it existed before.
@@ -115,13 +123,14 @@ as
     ':=)' ( expr 
           {
             // Successful RHS parse: consider variable now assigned.
-            assigned.add(pendingLHS);
+            
             Identifier newId = new Identifier();
             newId.id = pendingLHS;
             newId.value = $expr.value;
             newId.hasKnown = $expr.hasKnownValue;
             newId.hasBeenUsed = false;
             mainTable.table.put(newId.id, newId);
+            assigned.put(pendingLHS, newId.value);
 
             // Clear LHS context.
             pendingLHS = null;
@@ -129,13 +138,14 @@ as
         | KW_READ
           {
             // Successful RHS parse: consider variable now assigned.
-            assigned.add(pendingLHS);
+            
             Identifier newId = new Identifier();
             newId.id = pendingLHS;
             newId.value = 0;
             newId.hasKnown = false;
             newId.hasBeenUsed = false;
             mainTable.table.put(newId.id, newId);
+            assigned.put(pendingLHS, newId.value);
 
             // Clear LHS context.
             pendingLHS = null;
@@ -177,7 +187,7 @@ expr returns [boolean hasKnownValue, float value]
     (op=(ADD | SUBTRACT) b=term
     {
       if ($hasKnownValue && $b.hasKnownValue) {
-        if ($op.getText().equals(ADD)) {
+        if ($op.getText().equals(":+)")) {
           $value = $value + $b.value;
         } else {
           $value = $value - $b.value;
@@ -200,11 +210,11 @@ expr returns [boolean hasKnownValue, float value]
   ( op=(MULTIPLY|DIVIDE) b=factor
     {
         // First check for division by zero when b has value 0 (and /).
-        if ($b.hasKnownValue && $op.getText().equals(DIVIDE) && $b.value == 0) {
+        if ($b.hasKnownValue && $op.getText().equals(":/)") && $b.value == 0) {
           error($op, "division by zero");
           $hasKnownValue = false;  // Error anyway so stopping there
         } else if ($hasKnownValue && $b.hasKnownValue) {
-          if ($op.getText().equals(MULTIPLY)) {
+          if ($op.getText().equals(":*)")) {
             $value = $value * $b.value;
           } else {
             $value = $value / $b.value;
@@ -218,7 +228,11 @@ expr returns [boolean hasKnownValue, float value]
 
   factor returns [boolean hasKnownValue, float value]
   : INT 
-      { $hasKnownValue = true; $value = Integer.parseInt($INT.getText()); }
+      { 
+        $hasKnownValue = true; $value = Integer.parseInt($INT.getText());
+
+        
+         }
   | IDENT 
       {
         String id = $IDENT.getText();
