@@ -62,8 +62,9 @@ KW_FOR : '>:(';
 KW_WHILE : 'D:<';
 KW_FUNCTION : '=^._.^=';
 KW_ARRAY : '(o_o)';
-LBRACE : '><(((.>';
-RBRACE : '<.)))><';
+LBRACE : '><(((,^>';
+RBRACE : '<^,)))><';
+// <.)))><
 KW_INT : 'int';
 KW_STRING : 'string';
 KW_CHAR : 'char';
@@ -99,16 +100,18 @@ program  :
 s : as | ps | expr | arraystmt | stringstmt | blockStatement | ifstmt | forstmt | whilestmt | functionstmt ;
 
 blockStatement : LBRACE
-  {  
-    SymbolTable currentSymbolTable = new SymbolTable();
-    System.out.println("DEBUG: Pushing new symbol table for block at line " + $s.start.getLine());
-    symbolStack.push(currentSymbolTable); 
-  } 
+   {  
+     SymbolTable currentSymbolTable = new SymbolTable();
+     System.out.println("DEBUG: Pushing new symbol table");
+     symbolStack.push(currentSymbolTable); 
+   } 
   (s)* RBRACE 
   { 
     symbolStack.pop();
-    System.out.println("DEBUG: Popping symbol table for block at line " + $s.stop.getLine());
-  } ;
+    System.out.println("DEBUG: Popping symbol table");
+  } 
+  ;
+
 
   
 

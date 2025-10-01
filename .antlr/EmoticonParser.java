@@ -39,9 +39,9 @@ public class EmoticonParser extends Parser {
 	private static String[] makeLiteralNames() {
 		return new String[] {
 			null, "';'", "'['", "']'", "'-0-0-'", "':P'", "':)'", "':('", "':|'", 
-			"'>:('", "'D:<'", "'=^._.^='", "'(o_o)'", "'><(((.>'", "'<.)))><'", "'int'", 
-			"'string'", "'char'", null, "':+)'", "':-)'", "':*)'", "':/)'", null, 
-			null, null, "'('", "')'", null, null, "':==)'", "':=)'"
+			"'>:('", "'D:<'", "'=^._.^='", "'(o_o)'", "'><(((,^>'", "'<^,)))><'", 
+			"'int'", "'string'", "'char'", null, "':+)'", "':-)'", "':*)'", "':/)'", 
+			null, null, null, "'('", "')'", null, null, "':==)'", "':=)'"
 		};
 	}
 	private static final String[] _LITERAL_NAMES = makeLiteralNames();
@@ -333,7 +333,6 @@ public class EmoticonParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class BlockStatementContext extends ParserRuleContext {
-		public SContext s;
 		public TerminalNode LBRACE() { return getToken(EmoticonParser.LBRACE, 0); }
 		public TerminalNode RBRACE() { return getToken(EmoticonParser.RBRACE, 0); }
 		public List<SContext> s() {
@@ -358,10 +357,10 @@ public class EmoticonParser extends Parser {
 			setState(54);
 			match(LBRACE);
 			  
-			    SymbolTable currentSymbolTable = new SymbolTable();
-			    System.out.println("DEBUG: Pushing new symbol table for block at line " + (((BlockStatementContext)_localctx).s!=null?(((BlockStatementContext)_localctx).s.start):null).getLine());
-			    symbolStack.push(currentSymbolTable); 
-			  
+			     SymbolTable currentSymbolTable = new SymbolTable();
+			     System.out.println("DEBUG: Pushing new symbol table");
+			     symbolStack.push(currentSymbolTable); 
+			   
 			setState(59);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
@@ -369,7 +368,7 @@ public class EmoticonParser extends Parser {
 				{
 				{
 				setState(56);
-				((BlockStatementContext)_localctx).s = s();
+				s();
 				}
 				}
 				setState(61);
@@ -380,7 +379,7 @@ public class EmoticonParser extends Parser {
 			match(RBRACE);
 			 
 			    symbolStack.pop();
-			    System.out.println("DEBUG: Popping symbol table for block at line " + (((BlockStatementContext)_localctx).s!=null?(((BlockStatementContext)_localctx).s.stop):null).getLine());
+			    System.out.println("DEBUG: Popping symbol table");
 			  
 			}
 		}
