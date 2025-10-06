@@ -671,6 +671,7 @@ public class EmoticonParser extends Parser {
 			        ((TermContext)_localctx).hasKnownValue =  true;
 			        ((TermContext)_localctx).value =  ((TermContext)_localctx).a.value;
 			      } else ((TermContext)_localctx).hasKnownValue =  false;
+
 			    
 			setState(100);
 			_errHandler.sync(this);
@@ -759,7 +760,7 @@ public class EmoticonParser extends Parser {
 				((FactorContext)_localctx).INT = match(INT);
 				 
 				        ((FactorContext)_localctx).hasKnownValue =  true; ((FactorContext)_localctx).value =  Integer.parseInt(((FactorContext)_localctx).INT.getText());
-
+				        
 				        
 				         
 				}
@@ -782,6 +783,8 @@ public class EmoticonParser extends Parser {
 				            error(((FactorContext)_localctx).IDENT, "use of variable '" + id + "' before assignment");
 				          }
 				          ((FactorContext)_localctx).hasKnownValue =  false;
+				        } else if(id.getClass() == Integer.class){
+				          error(((FactorContext)_localctx).IDENT, id + "is not of type int");
 				        } else {
 				          currentId.hasBeenUsed = true;
 				          ((FactorContext)_localctx).hasKnownValue =  currentId.hasKnown;
