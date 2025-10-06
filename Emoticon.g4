@@ -51,6 +51,8 @@ grammar Emoticon;
 
 
 
+
+
 //Keywords
 
 KW_READ : '-0-0-';
@@ -113,7 +115,7 @@ blockStatement : LBRACE
   ;
 
 
-  
+ 
 
 as
 
@@ -209,6 +211,7 @@ expr returns [boolean hasKnownValue, float value]
         $hasKnownValue = true;
         $value = $a.value;
       } else $hasKnownValue = false;
+
     }
   ( op=(MULTIPLY|DIVIDE) b=factor
     {
@@ -233,7 +236,7 @@ expr returns [boolean hasKnownValue, float value]
   : INT 
       { 
         $hasKnownValue = true; $value = Integer.parseInt($INT.getText());
-
+        
         
          }
   | IDENT 
@@ -250,6 +253,8 @@ expr returns [boolean hasKnownValue, float value]
             error($IDENT, "use of variable '" + id + "' before assignment");
           }
           $hasKnownValue = false;
+        } else if(id.getClass() == Integer.class){
+          error($IDENT, id + "is not of type int");
         } else {
           currentId.hasBeenUsed = true;
           $hasKnownValue = currentId.hasKnown;
