@@ -6,6 +6,10 @@ grammar Emoticon;
 
 @ members {
 
+  enum Type {
+    INT, STRING, CHAR
+  }
+
   class Identifier {
     String id;
     float value;
@@ -47,6 +51,19 @@ grammar Emoticon;
         System.err.println("error: " + d);
       }
     }
+
+    void typeCheck(String text) {
+      if (text.matches(INT)) {
+        Type varType = Type.INT;
+      } else if (text.matches(CHAR)){
+        Type varType = Type.CHAR;
+      }
+      
+      else if (text.matches(STRING)) {
+        Type varType = Type.STRING;
+      }
+      return varType;
+    }
 }
 
 
@@ -80,7 +97,8 @@ SUBTRACT : ':-)';
 MULTIPLY : ':*)';
 DIVIDE : ':/)';
 INT : ('+'|'-')? ('0'|[1-9][0-9]*);
-STRING : '\'' .*? '\'';
+CHAR : ('\''|'"') . ('\''|'"');
+STRING : ('\''|'"') .*? ('\''|'"');
 WS : [ \t\r\n]+ -> skip;
 LPAREN : '(';
 RPAREN : ')';
