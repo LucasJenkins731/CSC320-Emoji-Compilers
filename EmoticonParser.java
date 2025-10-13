@@ -164,6 +164,10 @@ public class EmoticonParser extends Parser {
 	        System.err.println("Variable '" + entry.getKey() + "' declared but never used");
 	      }
 	    }
+<<<<<<< HEAD
+=======
+	  }
+>>>>>>> 8837788995e5ce0c65a4fff55d7c4f8ec6a6d31a
 	//SHOULD BE CALLED IN ASSIGNMENT STATEMENT AND WHEN CALLING VARIABLES.
 	//NVM WHEN CALLING VARIABLES WE SHOULD BE SAVING THE TYPE OF THE VARIABLE IN THE IDENTIFIER CLASS AND THEREFORE DONT NEED TO DO THAT.
 	    Type typeCheck(String text) {
@@ -633,6 +637,15 @@ public class EmoticonParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
+<<<<<<< HEAD
+=======
+			setState(76);
+			match(KW_PRINT);
+			setState(77);
+			match(LPAREN);
+			setState(78);
+			((PsContext)_localctx).expr = expr();
+>>>>>>> 8837788995e5ce0c65a4fff55d7c4f8ec6a6d31a
 			setState(79);
 			match(KW_PRINT);
 			setState(80);

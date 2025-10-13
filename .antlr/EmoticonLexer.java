@@ -157,6 +157,7 @@ public class EmoticonLexer extends Lexer {
 	        System.err.println("Variable '" + entry.getKey() + "' declared but never used");
 	      }
 	    }
+	  }
 	//SHOULD BE CALLED IN ASSIGNMENT STATEMENT AND WHEN CALLING VARIABLES.
 	//NVM WHEN CALLING VARIABLES WE SHOULD BE SAVING THE TYPE OF THE VARIABLE IN THE IDENTIFIER CLASS AND THEREFORE DONT NEED TO DO THAT.
 	    Type typeCheck(String text) {
@@ -207,7 +208,6 @@ public class EmoticonLexer extends Lexer {
 	      return symbolStack.peek().table.containsKey(name);
 	    }
 	  }
-	}
 
 
 	public EmoticonLexer(CharStream input) {
