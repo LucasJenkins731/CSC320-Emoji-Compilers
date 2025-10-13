@@ -158,6 +158,7 @@ as
             newId.id = pendingLHS;
             newId.value = $expr.value;
             //TYPE CHECK HERE
+            newId.type = typeCheck(newId.value);
             newId.hasKnown = $expr.hasKnownValue;
             newId.hasBeenUsed = false;
             mainTable.table.put(newId.id, newId);

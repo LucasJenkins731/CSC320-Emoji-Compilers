@@ -464,6 +464,7 @@ public class EmoticonParser extends Parser {
 				            newId.id = pendingLHS;
 				            newId.value = ((AsContext)_localctx).expr.value;
 				            //TYPE CHECK HERE
+				            newId.type = typeCheck(newId.value);
 				            newId.hasKnown = ((AsContext)_localctx).expr.hasKnownValue;
 				            newId.hasBeenUsed = false;
 				            mainTable.table.put(newId.id, newId);
