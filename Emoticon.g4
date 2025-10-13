@@ -12,22 +12,26 @@ grammar Emoticon;
 
   class Identifier {
     String id;
-    float value;
-    boolean hasKnown;
-    boolean hasBeenUsed;
+    Object value; //This line should be an object since we dont know its type can vary.
+    String Type; //Type of the value
+    boolean hasKnown; // is the variable known when calling it i think
+    boolean hasBeenUsed; // used for error checks for if the variable has been used.
   }
-
-
 
   class SymbolTable {
     Map<String, Identifier> table = new HashMap<>();
   }
-    Stack<SymbolTable> symbolStack = new Stack<>();
-    SymbolTable mainTable = new SymbolTable();
-    // for the variables that are assigned (self explanatory)
+  SymbolTable mainTable = new SymbolTable();
+
+    Stack<SymbolTable> symbolStack = new Stack<>(); // I feel like a linked list might work better here. stack seems weird.
+    //WE SHOULD MAKE THE DATATYPE INSIDE THE 'STACK' A DATATYPE THAT HAS A .CONTAINS OR .HAS METHOD. THIS WAY WE CAN CALL THIS METHOD ON THE ARRAY/DATASTRUCTURE AS A WHOLE
+    //THIS WILL SAVE A LOT OF TIME AND EFFORT WITH NESTED FOR LOOPS.
+    //linked list will probably work best for this.
+    
+    // for the variables that are assigned (self explanatory) SHOULD DEPRECIATE THIS
     Map<String, Object> assigned = new Hashtable<>();
 
-    //used?
+    //used? SHOULD DEPRECIATE THIS
     Set<String> used = new HashSet<>();
     // diagnostics
     List<String> diagnostics = new ArrayList<>();
@@ -52,6 +56,8 @@ grammar Emoticon;
       }
     }
 
+//SHOULD BE CALLED IN ASSIGNMENT STATEMENT AND WHEN CALLING VARIABLES.
+//NVM WHEN CALLING VARIABLES WE SHOULD BE SAVING THE TYPE OF THE VARIABLE IN THE IDENTIFIER CLASS AND THEREFORE DONT NEED TO DO THAT.
     void typeCheck(String text) {
       if (text.matches(INT)) {
         Type varType = Type.INT;
@@ -67,7 +73,8 @@ grammar Emoticon;
 }
 
 
-
+// make a symbol stack look through method here CHANNELS
+//should recursively move through the linked list until either the value is found or we reach the end of the linked list. (next is null)
 
 
 //Keywords
@@ -150,6 +157,7 @@ as
             Identifier newId = new Identifier();
             newId.id = pendingLHS;
             newId.value = $expr.value;
+            //TYPE CHECK HERE
             newId.hasKnown = $expr.hasKnownValue;
             newId.hasBeenUsed = false;
             mainTable.table.put(newId.id, newId);
@@ -164,7 +172,7 @@ as
             
             Identifier newId = new Identifier();
             newId.id = pendingLHS;
-            newId.value = 0;
+            newId.value = 0; //??????? MAYBE READING HASNT BEEN PROPERLY IMPLEMENTED AT THIS TIME
             newId.hasKnown = false;
             newId.hasBeenUsed = false;
             mainTable.table.put(newId.id, newId);
@@ -196,7 +204,8 @@ ps : KW_PRINT '(' expr ')'
 //     | expr comp expr{}
 //     ;
 
-
+//SHOULD TYPE CHECK SOMEWHERE IN HERE 
+//SCRATCH THIS TYPE HECKING ONLY REALLY NEEDS TO BE DONE AT THE LOWEST LEVEL OF FACTOR 
 expr returns [boolean hasKnownValue, float value]
   : a=term
     {
@@ -250,6 +259,7 @@ expr returns [boolean hasKnownValue, float value]
     )*
   ;
 
+//type checking goes here 
   factor returns [boolean hasKnownValue, float value]
   : INT 
       { 
