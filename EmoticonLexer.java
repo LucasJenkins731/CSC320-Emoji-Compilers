@@ -102,7 +102,11 @@ public class EmoticonLexer extends Lexer {
 	  class Identifier {
 	    String id;
 	    Object value; //This line should be an object since we dont know its type can vary.
+<<<<<<< HEAD
 	    Type type; //Type of the value
+=======
+	    String Type; //Type of the value
+>>>>>>> ed5fb0ef62f9db6041b9148b0edf7c57fb44dede
 	    boolean hasKnown; // is the variable known when calling it i think
 	    boolean hasBeenUsed; // used for error checks for if the variable has been used.
 	  }
@@ -116,12 +120,16 @@ public class EmoticonLexer extends Lexer {
 	    //WE SHOULD MAKE THE DATATYPE INSIDE THE 'STACK' A DATATYPE THAT HAS A .CONTAINS OR .HAS METHOD. THIS WAY WE CAN CALL THIS METHOD ON THE ARRAY/DATASTRUCTURE AS A WHOLE
 	    //THIS WILL SAVE A LOT OF TIME AND EFFORT WITH NESTED FOR LOOPS.
 	    //linked list will probably work best for this.
+<<<<<<< HEAD
 	    
 	    // for the variables that are assigned (self explanatory) SHOULD DEPRECIATE THIS
 	    Map<String, Object> assigned = new Hashtable<>();
 
 	    //used? SHOULD DEPRECIATE THIS
 	    Set<String> used = new HashSet<>();
+=======
+
+>>>>>>> ed5fb0ef62f9db6041b9148b0edf7c57fb44dede
 	    // diagnostics
 	    List<String> diagnostics = new ArrayList<>();
 	    // lhs stuff
@@ -134,12 +142,6 @@ public class EmoticonLexer extends Lexer {
 	    }
 
 	    void printDiagnostics() {
-	      // After parsing the whole file: report unused variables and print errors.
-	      for (String v : assigned.keySet()) {
-	        if (!used.contains(v)) {
-	          System.err.println("warning: variable '" + v + "' assigned but never used");
-	        }
-	      }
 	      for (String d : diagnostics) {
 	        System.err.println("error: " + d);
 	      }
