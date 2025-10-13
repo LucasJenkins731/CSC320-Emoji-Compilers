@@ -5,7 +5,7 @@ grammar Emoticon;
 @members {
 
   enum Type {
-    INT, STRING, CHAR
+    INT, STRING, CHAR, UNKNOWN
   }
 
   class Identifier {
@@ -66,6 +66,18 @@ grammar Emoticon;
         System.err.println("Variable '" + entry.getKey() + "' declared but never used");
       }
     }
+//SHOULD BE CALLED IN ASSIGNMENT STATEMENT AND WHEN CALLING VARIABLES.
+//NVM WHEN CALLING VARIABLES WE SHOULD BE SAVING THE TYPE OF THE VARIABLE IN THE IDENTIFIER CLASS AND THEREFORE DONT NEED TO DO THAT.
+    Type typeCheck(String text) {
+      Type varType = Type.UNKNOWN;
+      if (text.matches("[+-]?(0|[1-9][0-9]*)")) {
+        varType = Type.INT;
+      } else if (text.matches("'(\\\\.|[^\\\\'])'")){
+        varType = Type.CHAR;
+      } else if (text.matches("(['\"']).*?(['\"])")) {
+        varType = Type.STRING;
+      }
+      return varType;
   }
 
   // Lookup a variable by searching through the scope stack (innermost first)
@@ -105,6 +117,7 @@ grammar Emoticon;
     }
   }
 }
+}
 
 // Keywords
 KW_READ : '-0-0-';
@@ -129,7 +142,7 @@ SUBTRACT : ':-)';
 MULTIPLY : ':*)';
 DIVIDE : ':/)';
 INT : ('+'|'-')? ('0'|[1-9][0-9]*);
-CHAR : ('\''|'"') . ('\''|'"');
+CHAR : '\'' ( '\\' . | ~('\\'|'\'')) '\'';
 STRING : ('\''|'"') .*? ('\''|'"');
 WS : [ \t\r\n]+ -> skip;
 LPAREN : '(';
@@ -178,7 +191,10 @@ as
             Identifier newId = new Identifier();
             newId.id = pendingLHS;
             newId.value = $expr.value;
-            newId.type = Type.INT;
+            //TYPE CHECK HERE
+            newId.type = typeCheck(String.valueOf(newId.value));
+            System.out.println("DEBUG: Assign = " + String.valueOf(newId.value));
+            System.out.println("DEBUG: Type = " + newId.type);
             newId.hasKnown = $expr.hasKnownValue;
             newId.hasBeenUsed = false;
             
@@ -213,7 +229,17 @@ ps : KW_PRINT '(' expr ')'
     }
 ;
 
-expr returns [boolean hasKnownValue, float value]
+
+// expr : INT 
+//     | IDENT {}
+//     | '(' expr ')' {}
+//     | expr op expr{}
+//     | expr comp expr{}
+//     ;
+
+//SHOULD TYPE CHECK SOMEWHERE IN HERE 
+//SCRATCH THIS TYPE HECKING ONLY REALLY NEEDS TO BE DONE AT THE LOWEST LEVEL OF FACTOR 
+expr returns [boolean hasKnownValue, Integer value]
   : a=term
     {
       if ($a.hasKnownValue) {
@@ -238,7 +264,7 @@ expr returns [boolean hasKnownValue, float value]
     )*
   ;
 
-term returns [boolean hasKnownValue, float value]
+    term returns [boolean hasKnownValue, Integer value]
   : a=factor 
     {
       if ($a.hasKnownValue) {
@@ -266,7 +292,10 @@ term returns [boolean hasKnownValue, float value]
     )*
   ;
 
-factor returns [boolean hasKnownValue, float value]
+
+// TO DO TOMORROW CHANGE INTEGER TO OBJECT AND ALLOW FOR OTHER DATA TYPES TO BE DETECTED.
+//type checking goes here 
+  factor returns [boolean hasKnownValue, Integer value]
   : INT 
       { 
         $hasKnownValue = true; 
@@ -286,15 +315,20 @@ factor returns [boolean hasKnownValue, float value]
             error($IDENT, "use of variable '" + id + "' before assignment");
           }
           $hasKnownValue = false;
-          $value = 0; // Default value to prevent crashes
+        } else if(currentId.type != Type.INT){
+          error($IDENT, id + "is not of type int");
         } else {
           currentId.hasBeenUsed = true;
           $hasKnownValue = currentId.hasKnown;
-          if (currentId.value instanceof Number) {
-            $value = ((Number)currentId.value).floatValue();
+          Object val = currentId.value;
+          if (val instanceof Integer) {
+              $value = (Integer) val;
+          } else if (val instanceof String) {
+              $value = Integer.parseInt((String) val);
           } else {
-            $hasKnownValue = false;
-            $value = 0;
+              error($IDENT, "Unsupported type for arithmetic: " + val.getClass().getSimpleName());
+              $hasKnownValue = false;
+              $value = 0;
           }
         }
       }

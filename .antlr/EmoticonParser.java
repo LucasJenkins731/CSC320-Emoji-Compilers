@@ -103,7 +103,7 @@ public class EmoticonParser extends Parser {
 
 
 	  enum Type {
-	    INT, STRING, CHAR
+	    INT, STRING, CHAR, UNKNOWN
 	  }
 
 	  class Identifier {
@@ -164,6 +164,18 @@ public class EmoticonParser extends Parser {
 	        System.err.println("Variable '" + entry.getKey() + "' declared but never used");
 	      }
 	    }
+	//SHOULD BE CALLED IN ASSIGNMENT STATEMENT AND WHEN CALLING VARIABLES.
+	//NVM WHEN CALLING VARIABLES WE SHOULD BE SAVING THE TYPE OF THE VARIABLE IN THE IDENTIFIER CLASS AND THEREFORE DONT NEED TO DO THAT.
+	    Type typeCheck(String text) {
+	      Type varType = Type.UNKNOWN;
+	      if (text.matches("[+-]?(0|[1-9][0-9]*)")) {
+	        varType = Type.INT;
+	      } else if (text.matches("'(\\\\.|[^\\\\'])'")){
+	        varType = Type.CHAR;
+	      } else if (text.matches("(['\"']).*?(['\"])")) {
+	        varType = Type.STRING;
+	      }
+	      return varType;
 	  }
 
 	  // Lookup a variable by searching through the scope stack (innermost first)
@@ -202,6 +214,7 @@ public class EmoticonParser extends Parser {
 	      return symbolStack.peek().table.containsKey(name);
 	    }
 	  }
+	}
 
 	public EmoticonParser(TokenStream input) {
 		super(input);
@@ -511,7 +524,10 @@ public class EmoticonParser extends Parser {
 				            Identifier newId = new Identifier();
 				            newId.id = pendingLHS;
 				            newId.value = ((AsContext)_localctx).expr.value;
-				            newId.type = Type.INT;
+				            //TYPE CHECK HERE
+				            newId.type = typeCheck(String.valueOf(newId.value));
+				            System.out.println("DEBUG: Assign = " + String.valueOf(newId.value));
+				            System.out.println("DEBUG: Type = " + newId.type);
 				            newId.hasKnown = ((AsContext)_localctx).expr.hasKnownValue;
 				            newId.hasBeenUsed = false;
 				            
@@ -608,7 +624,7 @@ public class EmoticonParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class ExprContext extends ParserRuleContext {
 		public boolean hasKnownValue;
-		public float value;
+		public Integer value;
 		public TermContext a;
 		public Token op;
 		public TermContext b;
@@ -701,7 +717,7 @@ public class EmoticonParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class TermContext extends ParserRuleContext {
 		public boolean hasKnownValue;
-		public float value;
+		public Integer value;
 		public FactorContext a;
 		public Token op;
 		public FactorContext b;
@@ -797,7 +813,7 @@ public class EmoticonParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class FactorContext extends ParserRuleContext {
 		public boolean hasKnownValue;
-		public float value;
+		public Integer value;
 		public Token INT;
 		public Token IDENT;
 		public ExprContext expr;
@@ -850,15 +866,20 @@ public class EmoticonParser extends Parser {
 				            error(((FactorContext)_localctx).IDENT, "use of variable '" + id + "' before assignment");
 				          }
 				          ((FactorContext)_localctx).hasKnownValue =  false;
-				          ((FactorContext)_localctx).value =  0; // Default value to prevent crashes
+				        } else if(currentId.type != Type.INT){
+				          error(((FactorContext)_localctx).IDENT, id + "is not of type int");
 				        } else {
 				          currentId.hasBeenUsed = true;
 				          ((FactorContext)_localctx).hasKnownValue =  currentId.hasKnown;
-				          if (currentId.value instanceof Number) {
-				            ((FactorContext)_localctx).value =  ((Number)currentId.value).floatValue();
+				          Object val = currentId.value;
+				          if (val instanceof Integer) {
+				              ((FactorContext)_localctx).value =  (Integer) val;
+				          } else if (val instanceof String) {
+				              ((FactorContext)_localctx).value =  Integer.parseInt((String) val);
 				          } else {
-				            ((FactorContext)_localctx).hasKnownValue =  false;
-				            ((FactorContext)_localctx).value =  0;
+				              error(((FactorContext)_localctx).IDENT, "Unsupported type for arithmetic: " + val.getClass().getSimpleName());
+				              ((FactorContext)_localctx).hasKnownValue =  false;
+				              ((FactorContext)_localctx).value =  0;
 				          }
 				        }
 				      
