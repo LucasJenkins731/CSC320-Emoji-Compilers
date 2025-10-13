@@ -102,7 +102,14 @@ public class EmoticonLexer extends Lexer {
 	    boolean hasBeenUsed;
 	  }
 
+	  /** Symbol type */
+	  class Symbol {
+	    String id;
+	    boolean hasBeenUsed;  // Has the id been used yet
 
+	    Symbol(String id, boolean hasBeenUsed) { this.id = id; this.hasBeenUsed = hasBeenUsed; }
+	    Symbol(String id) { this.id = id; this.hasBeenUsed = false; }
+	  }
 
 	  class SymbolTable {
 	    Map<String, Identifier> table = new HashMap<>();
