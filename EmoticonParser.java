@@ -103,7 +103,7 @@ public class EmoticonParser extends Parser {
 
 
 	  enum Type {
-	    INT, STRING, CHAR
+	    INT, STRING, CHAR, UNKNOWN
 	  }
 
 	  class Identifier {
@@ -139,18 +139,16 @@ public class EmoticonParser extends Parser {
 	        System.err.println("error: " + d);
 	      }
 	    }
-
 	//SHOULD BE CALLED IN ASSIGNMENT STATEMENT AND WHEN CALLING VARIABLES.
 	//NVM WHEN CALLING VARIABLES WE SHOULD BE SAVING THE TYPE OF THE VARIABLE IN THE IDENTIFIER CLASS AND THEREFORE DONT NEED TO DO THAT.
-	    void typeCheck(String text) {
-	      if (text.matches(INT)) {
-	        Type varType = Type.INT;
-	      } else if (text.matches(CHAR)){
-	        Type varType = Type.CHAR;
-	      }
-	      
-	      else if (text.matches(STRING)) {
-	        Type varType = Type.STRING;
+	    Type typeCheck(String text) {
+	      Type varType = Type.UNKNOWN;
+	      if (text.matches("[+-]?(0|[1-9][0-9]*)")) {
+	        varType = Type.INT;
+	      } else if (text.matches("'(\\\\.|[^\\\\'])'")){
+	        varType = Type.CHAR;
+	      } else if (text.matches("(['\"']).*?(['\"])")) {
+	        varType = Type.STRING;
 	      }
 	      return varType;
 	    }
@@ -484,8 +482,9 @@ public class EmoticonParser extends Parser {
 				            newId.id = pendingLHS;
 				            newId.value = ((AsContext)_localctx).expr.value;
 				            //TYPE CHECK HERE
-				            newId.type = typeCheck(newId.value);
-				            System.out.println("DEBUG: " + newId.type);
+				            newId.type = typeCheck(String.valueOf(newId.value));
+				            System.out.println("DEBUG: Assign = " + String.valueOf(newId.value));
+				            System.out.println("DEBUG: Type = " + newId.type);
 				            newId.hasKnown = ((AsContext)_localctx).expr.hasKnownValue;
 				            newId.hasBeenUsed = false;
 				            mainTable.table.put(newId.id, newId);
@@ -532,7 +531,6 @@ public class EmoticonParser extends Parser {
 
 	@SuppressWarnings("CheckReturnValue")
 	public static class PsContext extends ParserRuleContext {
-		public Token KW_PRINT;
 		public ExprContext expr;
 		public TerminalNode KW_PRINT() { return getToken(EmoticonParser.KW_PRINT, 0); }
 		public TerminalNode LPAREN() { return getToken(EmoticonParser.LPAREN, 0); }
@@ -561,7 +559,7 @@ public class EmoticonParser extends Parser {
 			enterOuterAlt(_localctx, 1);
 			{
 			setState(75);
-			((PsContext)_localctx).KW_PRINT = match(KW_PRINT);
+			match(KW_PRINT);
 			setState(76);
 			match(LPAREN);
 			setState(77);
@@ -571,9 +569,9 @@ public class EmoticonParser extends Parser {
 
 			      if (((PsContext)_localctx).expr.hasKnownValue) {
 			        // Let us print it out (for debugging purposes really)
-			        System.out.println("DEBUG: Line " + ((PsContext)_localctx).KW_PRINT.getLine() + ": Printing known value: " + ((PsContext)_localctx).expr.value);
+			        System.out.println("DEBUG: print");
 			      } else {
-			        System.out.println("DEBUG: Line " + ((PsContext)_localctx).KW_PRINT.getLine() + ": Can't print this value. Need to evaluate further.");
+			        // old debugs were here
 			      }
 			    
 			}
@@ -592,7 +590,7 @@ public class EmoticonParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class ExprContext extends ParserRuleContext {
 		public boolean hasKnownValue;
-		public float value;
+		public Integer value;
 		public TermContext a;
 		public Token op;
 		public TermContext b;
@@ -693,7 +691,7 @@ public class EmoticonParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class TermContext extends ParserRuleContext {
 		public boolean hasKnownValue;
-		public float value;
+		public Integer value;
 		public FactorContext a;
 		public Token op;
 		public FactorContext b;
@@ -797,7 +795,7 @@ public class EmoticonParser extends Parser {
 	@SuppressWarnings("CheckReturnValue")
 	public static class FactorContext extends ParserRuleContext {
 		public boolean hasKnownValue;
-		public float value;
+		public Integer value;
 		public Token INT;
 		public Token IDENT;
 		public ExprContext expr;
@@ -858,12 +856,21 @@ public class EmoticonParser extends Parser {
 				            error(((FactorContext)_localctx).IDENT, "use of variable '" + id + "' before assignment");
 				          }
 				          ((FactorContext)_localctx).hasKnownValue =  false;
-				        } else if(id.getClass() == Integer.class){
+				        } else if(currentId.type != Type.INT){
 				          error(((FactorContext)_localctx).IDENT, id + "is not of type int");
 				        } else {
 				          currentId.hasBeenUsed = true;
 				          ((FactorContext)_localctx).hasKnownValue =  currentId.hasKnown;
-				          ((FactorContext)_localctx).value =  currentId.value;
+				          Object val = currentId.value;
+				          if (val instanceof Integer) {
+				              ((FactorContext)_localctx).value =  (Integer) val;
+				          } else if (val instanceof String) {
+				              ((FactorContext)_localctx).value =  Integer.parseInt((String) val);
+				          } else {
+				              error(((FactorContext)_localctx).IDENT, "Unsupported type for arithmetic: " + val.getClass().getSimpleName());
+				              ((FactorContext)_localctx).hasKnownValue =  false;
+				              ((FactorContext)_localctx).value =  0;
+				          }
 				        }
 				      
 				}

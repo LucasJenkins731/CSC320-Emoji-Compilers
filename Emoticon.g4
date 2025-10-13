@@ -7,7 +7,7 @@ grammar Emoticon;
 @ members {
 
   enum Type {
-    INT, STRING, CHAR
+    INT, STRING, CHAR, UNKNOWN
   }
 
   class Identifier {
@@ -43,18 +43,16 @@ grammar Emoticon;
         System.err.println("error: " + d);
       }
     }
-
 //SHOULD BE CALLED IN ASSIGNMENT STATEMENT AND WHEN CALLING VARIABLES.
 //NVM WHEN CALLING VARIABLES WE SHOULD BE SAVING THE TYPE OF THE VARIABLE IN THE IDENTIFIER CLASS AND THEREFORE DONT NEED TO DO THAT.
-    void typeCheck(String text) {
-      if (text.matches(INT)) {
-        Type varType = Type.INT;
-      } else if (text.matches(CHAR)){
-        Type varType = Type.CHAR;
-      }
-      
-      else if (text.matches(STRING)) {
-        Type varType = Type.STRING;
+    Type typeCheck(String text) {
+      Type varType = Type.UNKNOWN;
+      if (text.matches("[+-]?(0|[1-9][0-9]*)")) {
+        varType = Type.INT;
+      } else if (text.matches("'(\\\\.|[^\\\\'])'")){
+        varType = Type.CHAR;
+      } else if (text.matches("(['\"']).*?(['\"])")) {
+        varType = Type.STRING;
       }
       return varType;
     }
@@ -92,7 +90,7 @@ SUBTRACT : ':-)';
 MULTIPLY : ':*)';
 DIVIDE : ':/)';
 INT : ('+'|'-')? ('0'|[1-9][0-9]*);
-CHAR : ('\''|'"') . ('\''|'"');
+CHAR : '\'' ( '\\' . | ~('\\'|'\'')) '\'';
 STRING : ('\''|'"') .*? ('\''|'"');
 WS : [ \t\r\n]+ -> skip;
 LPAREN : '(';
@@ -146,8 +144,9 @@ as
             newId.id = pendingLHS;
             newId.value = $expr.value;
             //TYPE CHECK HERE
-            newId.type = typeCheck(newId.value);
-            System.out.println("DEBUG: " + newId.type);
+            newId.type = typeCheck(String.valueOf(newId.value));
+            System.out.println("DEBUG: Assign = " + String.valueOf(newId.value));
+            System.out.println("DEBUG: Type = " + newId.type);
             newId.hasKnown = $expr.hasKnownValue;
             newId.hasBeenUsed = false;
             mainTable.table.put(newId.id, newId);
@@ -177,7 +176,7 @@ ps : KW_PRINT '(' expr ')'
     {
       if ($expr.hasKnownValue) {
         // Let us print it out (for debugging purposes really)
-        // OLD DEBUGS WERE HERE
+        System.out.println("DEBUG: print");
       } else {
         // old debugs were here
       }
@@ -194,7 +193,7 @@ ps : KW_PRINT '(' expr ')'
 
 //SHOULD TYPE CHECK SOMEWHERE IN HERE 
 //SCRATCH THIS TYPE HECKING ONLY REALLY NEEDS TO BE DONE AT THE LOWEST LEVEL OF FACTOR 
-expr returns [boolean hasKnownValue, float value]
+expr returns [boolean hasKnownValue, Integer value]
   : a=term
     {
       if ($a.hasKnownValue) {
@@ -219,7 +218,7 @@ expr returns [boolean hasKnownValue, float value]
     )*
   ;
 
-    term returns [boolean hasKnownValue, float value]
+    term returns [boolean hasKnownValue, Integer value]
   : a=factor 
     {
       if ($a.hasKnownValue) {
@@ -247,8 +246,10 @@ expr returns [boolean hasKnownValue, float value]
     )*
   ;
 
+
+// TO DO TOMORROW CHANGE INTEGER TO OBJECT AND ALLOW FOR OTHER DATA TYPES TO BE DETECTED.
 //type checking goes here 
-  factor returns [boolean hasKnownValue, float value]
+  factor returns [boolean hasKnownValue, Integer value]
   : INT 
       { 
         $hasKnownValue = true; $value = Integer.parseInt($INT.getText());
@@ -268,12 +269,21 @@ expr returns [boolean hasKnownValue, float value]
             error($IDENT, "use of variable '" + id + "' before assignment");
           }
           $hasKnownValue = false;
-        } else if(id.getClass() == Integer.class){
+        } else if(currentId.type != Type.INT){
           error($IDENT, id + "is not of type int");
         } else {
           currentId.hasBeenUsed = true;
           $hasKnownValue = currentId.hasKnown;
-          $value = currentId.value;
+          Object val = currentId.value;
+          if (val instanceof Integer) {
+              $value = (Integer) val;
+          } else if (val instanceof String) {
+              $value = Integer.parseInt((String) val);
+          } else {
+              error($IDENT, "Unsupported type for arithmetic: " + val.getClass().getSimpleName());
+              $hasKnownValue = false;
+              $value = 0;
+          }
         }
       }
   | '(' expr ')' 
