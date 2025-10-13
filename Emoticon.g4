@@ -1,10 +1,8 @@
 grammar Emoticon;
 
+@header { import java.util.*; }
 
-@ header { import java.util.*; }
-
-
-@ members {
+@members {
 
   enum Type {
     INT, STRING, CHAR, UNKNOWN
@@ -12,35 +10,54 @@ grammar Emoticon;
 
   class Identifier {
     String id;
-    Object value; //This line should be an object since we dont know its type can vary.
-    Type type; //Type of the value
-    boolean hasKnown; // is the variable known when calling it i think
-    boolean hasBeenUsed; // used for error checks for if the variable has been used.
+    Object value;
+    Type type;
+    boolean hasKnown;
+    boolean hasBeenUsed;
   }
 
   class SymbolTable {
     Map<String, Identifier> table = new HashMap<>();
   }
+  
   SymbolTable mainTable = new SymbolTable();
-
-    Stack<SymbolTable> symbolStack = new Stack<>(); // I feel like a linked list might work better here. stack seems weird.
-    //WE SHOULD MAKE THE DATATYPE INSIDE THE 'STACK' A DATATYPE THAT HAS A .CONTAINS OR .HAS METHOD. THIS WAY WE CAN CALL THIS METHOD ON THE ARRAY/DATASTRUCTURE AS A WHOLE
-    //THIS WILL SAVE A LOT OF TIME AND EFFORT WITH NESTED FOR LOOPS.
-    //linked list will probably work best for this.
-    // diagnostics
-    List<String> diagnostics = new ArrayList<>();
-    // lhs stuff
-    String pendingLHS = null;
-    // error stuff
-    boolean lhsExistedBefore = false;
+  Stack<SymbolTable> symbolStack = new Stack<>();
+  
+  // Diagnostics
+  List<String> diagnostics = new ArrayList<>();
+  
+  // LHS tracking
+  String pendingLHS = null;
+  boolean lhsExistedBefore = false;
+  
+  // Error tracking
+  boolean hasErrors = false;
     
-    void error(Token t, String msg) {
-        diagnostics.add("line " + t.getLine() + ":" + t.getCharPositionInLine() + " " + msg);
-    }
+  void error(Token t, String msg) {
+    diagnostics.add("line " + t.getLine() + ":" + t.getCharPositionInLine() + " " + msg);
+    hasErrors = true;
+  }
 
-    void printDiagnostics() {
+  void printDiagnostics() {    
+    if (!diagnostics.isEmpty()) {
       for (String d : diagnostics) {
-        System.err.println("error: " + d);
+        System.err.println("Error: " + d);
+      }
+    }    
+    checkUnusedVariables();
+  }
+  
+  void checkUnusedVariables() {
+    boolean foundUnused = false;
+    
+    // Check main table
+    for (Map.Entry<String, Identifier> entry : mainTable.table.entrySet()) {
+      if (!entry.getValue().hasBeenUsed) {
+        if (!foundUnused) {
+          System.err.println("\nUnused variables:");
+          foundUnused = true;
+        }
+        System.err.println("Variable '" + entry.getKey() + "' declared but never used");
       }
     }
 //SHOULD BE CALLED IN ASSIGNMENT STATEMENT AND WHEN CALLING VARIABLES.
@@ -55,16 +72,60 @@ grammar Emoticon;
         varType = Type.STRING;
       }
       return varType;
+  }
+
+  // Lookup a variable by searching through the scope stack (innermost first)
+  Identifier lookupVariable(String name) {
+    // Search from top of stack (innermost scope) down
+    for (int i = symbolStack.size() - 1; i >= 0; i--) {
+      SymbolTable table = symbolStack.get(i);
+      if (table.table.containsKey(name)) {
+        return table.table.get(name);
+      }
     }
+    
+    // Finally check the main/global table
+    if (mainTable.table.containsKey(name)) {
+      return mainTable.table.get(name);
+    }
+    
+    return null; // Variable not found in any scope
+  }
+
+  // Add a variable to the current scope (top of stack, or main if stack is empty)
+  void addVariable(Identifier id) {
+    if (symbolStack.isEmpty()) {
+      // Check for redeclaration in global scope
+      if (mainTable.table.containsKey(id.id)) {
+        // Variable already exists - this is a reassignment, not an error
+        // Just update the existing entry
+        mainTable.table.put(id.id, id);
+      } else {
+        mainTable.table.put(id.id, id);
+      }
+    } else {
+      SymbolTable currentScope = symbolStack.peek();
+      // Check for redeclaration in current scope
+      if (currentScope.table.containsKey(id.id)) {
+        // Variable already declared in this scope - allow reassignment
+        currentScope.table.put(id.id, id);
+      } else {
+        currentScope.table.put(id.id, id);
+      }
+    }
+  }
+
+  // Check if variable exists in current scope only
+  boolean existsInCurrentScope(String name) {
+    if (symbolStack.isEmpty()) {
+      return mainTable.table.containsKey(name);
+    } else {
+      return symbolStack.peek().table.containsKey(name);
+    }
+  }
 }
 
-
-// make a symbol stack look through method here CHANNELS
-//should recursively move through the linked list until either the value is found or we reach the end of the linked list. (next is null)
-
-
-//Keywords
-
+// Keywords
 KW_READ : '-0-0-';
 KW_PRINT : ':P';
 KW_IF : ':)';
@@ -76,14 +137,11 @@ KW_FUNCTION : '=^._.^=';
 KW_ARRAY : '(o_o)';
 LBRACE : '><(((,^>';
 RBRACE : '<^,)))><';
-// <.)))><
 KW_INT : 'int';
 KW_STRING : 'string';
 KW_CHAR : 'char';
 
-
-
-//Other tokens
+// Other tokens
 IDENT : [A-Za-z][A-Za-z0-9_]* | [_][A-Za-z0-9_]+;
 ADD : ':+)';
 SUBTRACT : ':-)';
@@ -100,46 +158,42 @@ COMMENT_BLOCK : 'OWO' .*? 'UWU' -> skip;
 COMPARISON : ':==)';
 ASSIGNMENT : ':=)';
 
+// GRAMMAR
 
-
-//GRAMMAR
-
-program  : 
+program : 
   {
     SymbolTable globalSymbolTable = new SymbolTable();
   }
-  s+ EOF;
+  s+ EOF
+  {
+    printDiagnostics();
+  };
 
 s : as | ps | expr | arraystmt | stringstmt | blockStatement | ifstmt | forstmt | whilestmt | functionstmt ;
 
 blockStatement : LBRACE
-   {  
-     SymbolTable currentSymbolTable = new SymbolTable();
-     System.out.println("DEBUG: Pushing new symbol table");
-     symbolStack.push(currentSymbolTable); 
-   } 
+  {  
+    SymbolTable currentSymbolTable = new SymbolTable();
+    System.out.println("Debug: Pushing new symbol table for block");
+    symbolStack.push(currentSymbolTable); 
+  } 
   (s)* RBRACE 
   { 
     symbolStack.pop();
-    System.out.println("DEBUG: Popping symbol table");
+    System.out.println("Debug: Popping symbol table for block");
   } 
   ;
 
-
- 
-
 as
-
   : IDENT 
     {
-      // We're entering an assignment: record LHS and whether it existed before.
       pendingLHS = $IDENT.getText();
-      lhsExistedBefore = mainTable.table.containsKey(pendingLHS);
+      // Check if it exists in ANY scope
+      Identifier existing = lookupVariable(pendingLHS);
+      lhsExistedBefore = (existing != null);
     }
     ':=)' ( expr 
           {
-            // Successful RHS parse: consider variable now assigned.
-            
             Identifier newId = new Identifier();
             newId.id = pendingLHS;
             newId.value = $expr.value;
@@ -149,36 +203,42 @@ as
             System.out.println("DEBUG: Type = " + newId.type);
             newId.hasKnown = $expr.hasKnownValue;
             newId.hasBeenUsed = false;
-            mainTable.table.put(newId.id, newId);
-
-            // Clear LHS context.
+            
+            // Type checking: if variable existed before, check type compatibility
+            if (lhsExistedBefore) {
+              Identifier oldId = lookupVariable(pendingLHS);
+              if (oldId != null && oldId.type != Type.INT && !existsInCurrentScope(pendingLHS)) {
+                error($IDENT, "type mismatch: '" + pendingLHS + "' was previously " + oldId.type + ", now assigning INT");
+              }
+            }
+            
+            // Add to CURRENT scope
+            addVariable(newId);
+            
             pendingLHS = null;
           }
         | KW_READ
           {
-            // Successful RHS parse: consider variable now assigned.
-            
             Identifier newId = new Identifier();
             newId.id = pendingLHS;
-            newId.value = 0; //??????? MAYBE READING HASNT BEEN PROPERLY IMPLEMENTED AT THIS TIME
+            newId.value = 0;
+            newId.type = Type.INT;
             newId.hasKnown = false;
             newId.hasBeenUsed = false;
-            mainTable.table.put(newId.id, newId);
-
-            // Clear LHS context.
+            
+            addVariable(newId);
+            
             pendingLHS = null;
           }
         ) 
   ;
     
-
 ps : KW_PRINT '(' expr ')' 
     {
       if ($expr.hasKnownValue) {
-        // Let us print it out (for debugging purposes really)
-        System.out.println("DEBUG: print");
+        System.out.println("Debug: Print value = " + $expr.value);
       } else {
-        // old debugs were here
+        System.out.println("Debug: Print unknown value");
       }
     }
 ;
@@ -224,25 +284,25 @@ expr returns [boolean hasKnownValue, Integer value]
       if ($a.hasKnownValue) {
         $hasKnownValue = true;
         $value = $a.value;
-      } else $hasKnownValue = false;
-
+      } else {
+        $hasKnownValue = false;
+      }
     }
   ( op=(MULTIPLY|DIVIDE) b=factor
     {
-        // First check for division by zero when b has value 0 (and /).
-        if ($b.hasKnownValue && $op.getText().equals(":/)") && $b.value == 0) {
-          error($op, "division by zero");
-          $hasKnownValue = false;  // Error anyway so stopping there
-        } else if ($hasKnownValue && $b.hasKnownValue) {
-          if ($op.getText().equals(":*)")) {
-            $value = $value * $b.value;
-          } else {
-            $value = $value / $b.value;
-          }
+      if ($b.hasKnownValue && $op.getText().equals(":/)") && $b.value == 0) {
+        error($op, "division by zero");
+        $hasKnownValue = false;
+      } else if ($hasKnownValue && $b.hasKnownValue) {
+        if ($op.getText().equals(":*)")) {
+          $value = $value * $b.value;
         } else {
-          $hasKnownValue = false;
+          $value = $value / $b.value;
         }
+      } else {
+        $hasKnownValue = false;
       }
+    }
     )*
   ;
 
@@ -252,17 +312,17 @@ expr returns [boolean hasKnownValue, Integer value]
   factor returns [boolean hasKnownValue, Integer value]
   : INT 
       { 
-        $hasKnownValue = true; $value = Integer.parseInt($INT.getText());
-        
-        
-         }
+        $hasKnownValue = true; 
+        $value = Integer.parseInt($INT.getText());
+      }
   | IDENT 
       {
         String id = $IDENT.getText();
-
-        Identifier currentId = mainTable.table.get(id);
+        
+        // Use lookupVariable instead of mainTable.table.get
+        Identifier currentId = lookupVariable(id);
+        
         if (currentId == null) {
-          // Variable used before declaration error
           if (pendingLHS != null && !lhsExistedBefore && id.equals(pendingLHS)) {
             error($IDENT, "self-reference on first assignment of '" + pendingLHS + "'");
           } else {
@@ -293,43 +353,124 @@ expr returns [boolean hasKnownValue, Integer value]
           $value = $expr.value;
         } else {
           $hasKnownValue = false;
+          $value = 0;
         }
       }
   ;
 
+ifstmt : KW_IF 
+  {
+    SymbolTable ifScope = new SymbolTable();
+    System.out.println("Debug: Pushing new symbol table for if");
+    symbolStack.push(ifScope);
+  }
+  '(' expr ')' s 
+  {
+    symbolStack.pop();
+    System.out.println("Debug: Popping symbol table for if");
+  }
+  (elsestmt)?
+  ;
 
+elsestmt : KW_ELSE_IF 
+  {
+    SymbolTable elseIfScope = new SymbolTable();
+    System.out.println("Debug: Pushing new symbol table for else-if");
+    symbolStack.push(elseIfScope);
+  }
+  '(' expr ')' s 
+  {
+    symbolStack.pop();
+    System.out.println("Debug: Popping symbol table for else-if");
+  }
+  (elsestmt)?
+  | KW_ELSE 
+  {
+    SymbolTable elseScope = new SymbolTable();
+    System.out.println("Debug: Pushing new symbol table for else");
+    symbolStack.push(elseScope);
+  }
+  s
+  {
+    symbolStack.pop();
+    System.out.println("Debug: Popping symbol table for else");
+  }
+  ;
 
+forstmt : KW_FOR '(' 
+  {
+    SymbolTable forScope = new SymbolTable();
+    System.out.println("Debug: Pushing new symbol table for for-loop");
+    symbolStack.push(forScope);
+  }
+  as ';' expr ';' as ')' s
+  {
+    symbolStack.pop();
+    System.out.println("Debug: Popping symbol table for for-loop");
+  }
+  ;
 
+whilestmt : KW_WHILE 
+  {
+    SymbolTable whileScope = new SymbolTable();
+    System.out.println("Debug: Pushing new symbol table for while-loop");
+    symbolStack.push(whileScope);
+  }
+  '(' expr ')' s
+  {
+    symbolStack.pop();
+    System.out.println("Debug: Popping symbol table for while-loop");
+  }
+  ;
 
-
-
-ifstmt : KW_IF '(' expr ')' s 
-   | KW_IF '(' expr ')' elsestmt ;
-
-elsestmt : KW_ELSE_IF '(' expr ')' s elsestmt
-         | KW_ELSE s ;
-
-forstmt : KW_FOR '(' as ';' expr ';' as ')' s;
-
-whilestmt : KW_WHILE '(' expr ')' s;
-
-functionstmt : KW_FUNCTION IDENT '(' IDENT ')' s
-             | KW_FUNCTION IDENT '('')' s;
+functionstmt : KW_FUNCTION IDENT '(' param=IDENT ')' 
+  {
+    SymbolTable funcScope = new SymbolTable();
+    System.out.println("Debug: Pushing new symbol table for function");
+    symbolStack.push(funcScope);
+    
+    // Add parameter to function scope
+    Identifier paramId = new Identifier();
+    paramId.id = $param.getText();
+    paramId.value = 0;
+    paramId.type = Type.INT;
+    paramId.hasKnown = false;
+    paramId.hasBeenUsed = false;
+    addVariable(paramId);
+  }
+  s
+  {
+    symbolStack.pop();
+    System.out.println("Debug: Popping symbol table for function");
+  }
+  | KW_FUNCTION IDENT '('')' 
+  {
+    SymbolTable funcScope = new SymbolTable();
+    System.out.println("Debug: Pushing new symbol table for function (no params)");
+    symbolStack.push(funcScope);
+  }
+  s
+  {
+    symbolStack.pop();
+    System.out.println("Debug: Popping symbol table for function (no params)");
+  }
+  ;
 
 arraystmt : KW_ARRAY IDENT ':=)' '[' INT ']' s;
 
-stringstmt : IDENT ':=)' STRING;
-
+stringstmt : IDENT ':=)' STRING
+  {
+    String varName = $IDENT.getText();
+    Identifier strId = new Identifier();
+    strId.id = varName;
+    strId.value = $STRING.getText();
+    strId.type = Type.STRING;
+    strId.hasKnown = true;
+    strId.hasBeenUsed = false;
+    
+    addVariable(strId);
+  };
 
 operators : ADD | SUBTRACT | MULTIPLY | DIVIDE;
 
 comp : COMPARISON;
-
-
-
-
-
-
-// expr : term ( ('+'|'-') term )? ;
-// term : factor ( ('*'|'/') factor )? ;
-// factor : INT | IDENT | '(' expr ')' ;

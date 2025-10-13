@@ -101,37 +101,57 @@ public class EmoticonLexer extends Lexer {
 
 	  class Identifier {
 	    String id;
-	    Object value; //This line should be an object since we dont know its type can vary.
-	    Type type; //Type of the value
-	    boolean hasKnown; // is the variable known when calling it i think
-	    boolean hasBeenUsed; // used for error checks for if the variable has been used.
+	    Object value;
+	    Type type;
+	    boolean hasKnown;
+	    boolean hasBeenUsed;
 	  }
 
 	  class SymbolTable {
 	    Map<String, Identifier> table = new HashMap<>();
 	  }
+	  
 	  SymbolTable mainTable = new SymbolTable();
-
-	    Stack<SymbolTable> symbolStack = new Stack<>(); // I feel like a linked list might work better here. stack seems weird.
-	    //WE SHOULD MAKE THE DATATYPE INSIDE THE 'STACK' A DATATYPE THAT HAS A .CONTAINS OR .HAS METHOD. THIS WAY WE CAN CALL THIS METHOD ON THE ARRAY/DATASTRUCTURE AS A WHOLE
-	    //THIS WILL SAVE A LOT OF TIME AND EFFORT WITH NESTED FOR LOOPS.
-	    //linked list will probably work best for this.
-	    // diagnostics
-	    List<String> diagnostics = new ArrayList<>();
-	    // lhs stuff
-	    String pendingLHS = null;
-	    // error stuff
-	    boolean lhsExistedBefore = false;
+	  Stack<SymbolTable> symbolStack = new Stack<>();
+	  
+	  // Diagnostics
+	  List<String> diagnostics = new ArrayList<>();
+	  
+	  // LHS tracking
+	  String pendingLHS = null;
+	  boolean lhsExistedBefore = false;
+	  
+	  // Error tracking
+	  boolean hasErrors = false;
 	    
-	    void error(Token t, String msg) {
-	        diagnostics.add("line " + t.getLine() + ":" + t.getCharPositionInLine() + " " + msg);
-	    }
+	  void error(Token t, String msg) {
+	    diagnostics.add("line " + t.getLine() + ":" + t.getCharPositionInLine() + " " + msg);
+	    hasErrors = true;
+	  }
 
-	    void printDiagnostics() {
+	  void printDiagnostics() {    
+	    if (!diagnostics.isEmpty()) {
 	      for (String d : diagnostics) {
-	        System.err.println("error: " + d);
+	        System.err.println("Error: " + d);
+	      }
+	    }    
+	    checkUnusedVariables();
+	  }
+	  
+	  void checkUnusedVariables() {
+	    boolean foundUnused = false;
+	    
+	    // Check main table
+	    for (Map.Entry<String, Identifier> entry : mainTable.table.entrySet()) {
+	      if (!entry.getValue().hasBeenUsed) {
+	        if (!foundUnused) {
+	          System.err.println("\nUnused variables:");
+	          foundUnused = true;
+	        }
+	        System.err.println("Variable '" + entry.getKey() + "' declared but never used");
 	      }
 	    }
+<<<<<<< HEAD
 	//SHOULD BE CALLED IN ASSIGNMENT STATEMENT AND WHEN CALLING VARIABLES.
 	//NVM WHEN CALLING VARIABLES WE SHOULD BE SAVING THE TYPE OF THE VARIABLE IN THE IDENTIFIER CLASS AND THEREFORE DONT NEED TO DO THAT.
 	    Type typeCheck(String text) {
@@ -144,7 +164,59 @@ public class EmoticonLexer extends Lexer {
 	        varType = Type.STRING;
 	      }
 	      return varType;
+=======
+	  }
+
+	  // Lookup a variable by searching through the scope stack (innermost first)
+	  Identifier lookupVariable(String name) {
+	    // Search from top of stack (innermost scope) down
+	    for (int i = symbolStack.size() - 1; i >= 0; i--) {
+	      SymbolTable table = symbolStack.get(i);
+	      if (table.table.containsKey(name)) {
+	        return table.table.get(name);
+	      }
+>>>>>>> ec79a6f4b09c9603e71c748978ce456b51b60a8d
 	    }
+	    
+	    // Finally check the main/global table
+	    if (mainTable.table.containsKey(name)) {
+	      return mainTable.table.get(name);
+	    }
+	    
+	    return null; // Variable not found in any scope
+	  }
+
+	  // Add a variable to the current scope (top of stack, or main if stack is empty)
+	  void addVariable(Identifier id) {
+	    if (symbolStack.isEmpty()) {
+	      // Check for redeclaration in global scope
+	      if (mainTable.table.containsKey(id.id)) {
+	        // Variable already exists - this is a reassignment, not an error
+	        // Just update the existing entry
+	        mainTable.table.put(id.id, id);
+	      } else {
+	        mainTable.table.put(id.id, id);
+	      }
+	    } else {
+	      SymbolTable currentScope = symbolStack.peek();
+	      // Check for redeclaration in current scope
+	      if (currentScope.table.containsKey(id.id)) {
+	        // Variable already declared in this scope - allow reassignment
+	        currentScope.table.put(id.id, id);
+	      } else {
+	        currentScope.table.put(id.id, id);
+	      }
+	    }
+	  }
+
+	  // Check if variable exists in current scope only
+	  boolean existsInCurrentScope(String name) {
+	    if (symbolStack.isEmpty()) {
+	      return mainTable.table.containsKey(name);
+	    } else {
+	      return symbolStack.peek().table.containsKey(name);
+	    }
+	  }
 
 
 	public EmoticonLexer(CharStream input) {
