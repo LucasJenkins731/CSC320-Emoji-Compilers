@@ -13,7 +13,7 @@ grammar Emoticon;
   class Identifier {
     String id;
     Object value; //This line should be an object since we dont know its type can vary.
-    String Type; //Type of the value
+    Type type; //Type of the value
     boolean hasKnown; // is the variable known when calling it i think
     boolean hasBeenUsed; // used for error checks for if the variable has been used.
   }
