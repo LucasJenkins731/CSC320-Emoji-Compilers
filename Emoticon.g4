@@ -27,7 +27,6 @@ grammar Emoticon;
     //WE SHOULD MAKE THE DATATYPE INSIDE THE 'STACK' A DATATYPE THAT HAS A .CONTAINS OR .HAS METHOD. THIS WAY WE CAN CALL THIS METHOD ON THE ARRAY/DATASTRUCTURE AS A WHOLE
     //THIS WILL SAVE A LOT OF TIME AND EFFORT WITH NESTED FOR LOOPS.
     //linked list will probably work best for this.
-
     // diagnostics
     List<String> diagnostics = new ArrayList<>();
     // lhs stuff
@@ -148,6 +147,7 @@ as
             newId.value = $expr.value;
             //TYPE CHECK HERE
             newId.type = typeCheck(newId.value);
+            System.out.println("DEBUG: " + newId.type);
             newId.hasKnown = $expr.hasKnownValue;
             newId.hasBeenUsed = false;
             mainTable.table.put(newId.id, newId);
@@ -177,9 +177,9 @@ ps : KW_PRINT '(' expr ')'
     {
       if ($expr.hasKnownValue) {
         // Let us print it out (for debugging purposes really)
-        System.out.println("DEBUG: Line " + $KW_PRINT.getLine() + ": Printing known value: " + $expr.value);
+        // OLD DEBUGS WERE HERE
       } else {
-        System.out.println("DEBUG: Line " + $KW_PRINT.getLine() + ": Can't print this value. Need to evaluate further.");
+        // old debugs were here
       }
     }
 ;

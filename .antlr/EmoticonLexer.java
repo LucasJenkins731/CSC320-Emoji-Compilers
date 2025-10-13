@@ -116,7 +116,6 @@ public class EmoticonLexer extends Lexer {
 	    //WE SHOULD MAKE THE DATATYPE INSIDE THE 'STACK' A DATATYPE THAT HAS A .CONTAINS OR .HAS METHOD. THIS WAY WE CAN CALL THIS METHOD ON THE ARRAY/DATASTRUCTURE AS A WHOLE
 	    //THIS WILL SAVE A LOT OF TIME AND EFFORT WITH NESTED FOR LOOPS.
 	    //linked list will probably work best for this.
-
 	    // diagnostics
 	    List<String> diagnostics = new ArrayList<>();
 	    // lhs stuff

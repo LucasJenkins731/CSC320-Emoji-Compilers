@@ -109,11 +109,7 @@ public class EmoticonParser extends Parser {
 	  class Identifier {
 	    String id;
 	    Object value; //This line should be an object since we dont know its type can vary.
-<<<<<<< HEAD
 	    Type type; //Type of the value
-=======
-	    String Type; //Type of the value
->>>>>>> ed5fb0ef62f9db6041b9148b0edf7c57fb44dede
 	    boolean hasKnown; // is the variable known when calling it i think
 	    boolean hasBeenUsed; // used for error checks for if the variable has been used.
 	  }
@@ -127,16 +123,6 @@ public class EmoticonParser extends Parser {
 	    //WE SHOULD MAKE THE DATATYPE INSIDE THE 'STACK' A DATATYPE THAT HAS A .CONTAINS OR .HAS METHOD. THIS WAY WE CAN CALL THIS METHOD ON THE ARRAY/DATASTRUCTURE AS A WHOLE
 	    //THIS WILL SAVE A LOT OF TIME AND EFFORT WITH NESTED FOR LOOPS.
 	    //linked list will probably work best for this.
-<<<<<<< HEAD
-	    
-	    // for the variables that are assigned (self explanatory) SHOULD DEPRECIATE THIS
-	    Map<String, Object> assigned = new Hashtable<>();
-
-	    //used? SHOULD DEPRECIATE THIS
-	    Set<String> used = new HashSet<>();
-=======
-
->>>>>>> ed5fb0ef62f9db6041b9148b0edf7c57fb44dede
 	    // diagnostics
 	    List<String> diagnostics = new ArrayList<>();
 	    // lhs stuff
@@ -498,10 +484,8 @@ public class EmoticonParser extends Parser {
 				            newId.id = pendingLHS;
 				            newId.value = ((AsContext)_localctx).expr.value;
 				            //TYPE CHECK HERE
-<<<<<<< HEAD
 				            newId.type = typeCheck(newId.value);
-=======
->>>>>>> ed5fb0ef62f9db6041b9148b0edf7c57fb44dede
+				            System.out.println("DEBUG: " + newId.type);
 				            newId.hasKnown = ((AsContext)_localctx).expr.hasKnownValue;
 				            newId.hasBeenUsed = false;
 				            mainTable.table.put(newId.id, newId);
