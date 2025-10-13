@@ -1,15 +1,26 @@
-x :=) 10
-a :=) 1234 :+) 1
-><(((,^>
-  y :=) 20
-  :P(x)  <3 OK: x is in outer scope
-  :P(y)  <3 OK: y is in current scope
-  ><(((,^>
-    z :=) 30
-    :P(y)
-  <^,)))><
+global :=) 100
+
+<3 Function with parameter - parameter 'param' should be in function scope
+=^._.^= myFunction() ><(((,^>
+  param :=) 50
+  local :=) param :+) 10
+  result :=) local :*) 2
+  :P(result)
+  :P(global)
 <^,)))><
-:P(x)    <3 OK: x still accessible
-:P(y)    <3 ERROR: y not accessible (out of scope)
-:P(z)
-:P(a)
+
+=^._.^= anothaone() ><(((,^>
+  param :=) 50
+  local :=) param :+) 10
+  result :=) local :*) 2
+  :P(result)
+  :P(global)
+<^,)))><
+
+anothaone()
+myFunction()
+
+<3 These should cause errors since they're out of scope
+x :=) param
+y :=) local
+z :=) result

@@ -111,8 +111,14 @@ public class EmoticonLexer extends Lexer {
 	    Map<String, Identifier> table = new HashMap<>();
 	  }
 	  
+	  class FunctionDef {
+	    String name;
+	    String paramName; // null if no parameter
+	  }
+	  
 	  SymbolTable mainTable = new SymbolTable();
 	  Stack<SymbolTable> symbolStack = new Stack<>();
+	  Map<String, FunctionDef> functions = new HashMap<>();
 	  
 	  // Diagnostics
 	  List<String> diagnostics = new ArrayList<>();
@@ -174,23 +180,10 @@ public class EmoticonLexer extends Lexer {
 	  // Add a variable to the current scope (top of stack, or main if stack is empty)
 	  void addVariable(Identifier id) {
 	    if (symbolStack.isEmpty()) {
-	      // Check for redeclaration in global scope
-	      if (mainTable.table.containsKey(id.id)) {
-	        // Variable already exists - this is a reassignment, not an error
-	        // Just update the existing entry
-	        mainTable.table.put(id.id, id);
-	      } else {
-	        mainTable.table.put(id.id, id);
-	      }
+	      mainTable.table.put(id.id, id);
 	    } else {
 	      SymbolTable currentScope = symbolStack.peek();
-	      // Check for redeclaration in current scope
-	      if (currentScope.table.containsKey(id.id)) {
-	        // Variable already declared in this scope - allow reassignment
-	        currentScope.table.put(id.id, id);
-	      } else {
-	        currentScope.table.put(id.id, id);
-	      }
+	      currentScope.table.put(id.id, id);
 	    }
 	  }
 

@@ -20,8 +20,14 @@ grammar Emoticon;
     Map<String, Identifier> table = new HashMap<>();
   }
   
+  class FunctionDef {
+    String name;
+    String paramName; // null if no parameter
+  }
+  
   SymbolTable mainTable = new SymbolTable();
   Stack<SymbolTable> symbolStack = new Stack<>();
+  Map<String, FunctionDef> functions = new HashMap<>();
   
   // Diagnostics
   List<String> diagnostics = new ArrayList<>();
@@ -83,23 +89,10 @@ grammar Emoticon;
   // Add a variable to the current scope (top of stack, or main if stack is empty)
   void addVariable(Identifier id) {
     if (symbolStack.isEmpty()) {
-      // Check for redeclaration in global scope
-      if (mainTable.table.containsKey(id.id)) {
-        // Variable already exists - this is a reassignment, not an error
-        // Just update the existing entry
-        mainTable.table.put(id.id, id);
-      } else {
-        mainTable.table.put(id.id, id);
-      }
+      mainTable.table.put(id.id, id);
     } else {
       SymbolTable currentScope = symbolStack.peek();
-      // Check for redeclaration in current scope
-      if (currentScope.table.containsKey(id.id)) {
-        // Variable already declared in this scope - allow reassignment
-        currentScope.table.put(id.id, id);
-      } else {
-        currentScope.table.put(id.id, id);
-      }
+      currentScope.table.put(id.id, id);
     }
   }
 
@@ -157,7 +150,7 @@ program :
     printDiagnostics();
   };
 
-s : as | ps | expr | arraystmt | stringstmt | blockStatement | ifstmt | forstmt | whilestmt | functionstmt ;
+s : as | ps | expr | arraystmt | stringstmt | blockStatement | ifstmt | forstmt | whilestmt | functionstmt | functioncall ;
 
 blockStatement : LBRACE
   {  
@@ -185,17 +178,9 @@ as
             Identifier newId = new Identifier();
             newId.id = pendingLHS;
             newId.value = $expr.value;
-            newId.type = Type.INT; // Since expr returns float, treat as INT
+            newId.type = Type.INT;
             newId.hasKnown = $expr.hasKnownValue;
             newId.hasBeenUsed = false;
-            
-            // Type checking: if variable existed before, check type compatibility
-            if (lhsExistedBefore) {
-              Identifier oldId = lookupVariable(pendingLHS);
-              if (oldId != null && oldId.type != Type.INT && !existsInCurrentScope(pendingLHS)) {
-                error($IDENT, "type mismatch: '" + pendingLHS + "' was previously " + oldId.type + ", now assigning INT");
-              }
-            }
             
             // Add to CURRENT scope
             addVariable(newId);
@@ -303,20 +288,13 @@ factor returns [boolean hasKnownValue, float value]
           $hasKnownValue = false;
           $value = 0; // Default value to prevent crashes
         } else {
-          // Type checking for integer context
-          if (currentId.type != Type.INT) {
-            error($IDENT, "'" + id + "' is not of type int (is " + currentId.type + ")");
+          currentId.hasBeenUsed = true;
+          $hasKnownValue = currentId.hasKnown;
+          if (currentId.value instanceof Number) {
+            $value = ((Number)currentId.value).floatValue();
+          } else {
             $hasKnownValue = false;
             $value = 0;
-          } else {
-            currentId.hasBeenUsed = true;
-            $hasKnownValue = currentId.hasKnown;
-            if (currentId.value instanceof Number) {
-              $value = ((Number)currentId.value).floatValue();
-            } else {
-              $hasKnownValue = false;
-              $value = 0;
-            }
           }
         }
       }
@@ -397,53 +375,77 @@ whilestmt : KW_WHILE
   }
   ;
 
-functionstmt : KW_FUNCTION IDENT '(' param=IDENT ')' 
+functionstmt : KW_FUNCTION name=IDENT '(' param=IDENT ')' 
   {
-    SymbolTable funcScope = new SymbolTable();
-    System.out.println("Debug: Pushing new symbol table for function");
-    symbolStack.push(funcScope);
-    
-    // Add parameter to function scope
-    Identifier paramId = new Identifier();
-    paramId.id = $param.getText();
-    paramId.value = 0;
-    paramId.type = Type.INT;
-    paramId.hasKnown = false;
-    paramId.hasBeenUsed = false;
-    addVariable(paramId);
+    // Store function definition
+    FunctionDef func = new FunctionDef();
+    func.name = $name.getText();
+    func.paramName = $param.getText();
+    functions.put(func.name, func);
+    System.out.println("Debug: Defined function '" + func.name + "' with parameter '" + func.paramName + "'");
   }
   s
+  | KW_FUNCTION name=IDENT '('')' 
   {
-    symbolStack.pop();
-    System.out.println("Debug: Popping symbol table for function");
-  }
-  | KW_FUNCTION IDENT '('')' 
-  {
-    SymbolTable funcScope = new SymbolTable();
-    System.out.println("Debug: Pushing new symbol table for function (no params)");
-    symbolStack.push(funcScope);
+    // Store function definition
+    FunctionDef func = new FunctionDef();
+    func.name = $name.getText();
+    func.paramName = null;
+    functions.put(func.name, func);
+    System.out.println("Debug: Defined function '" + func.name + "' with no parameters");
   }
   s
+  ;
+
+functioncall : IDENT '(' arg=expr ')'
   {
-    symbolStack.pop();
-    System.out.println("Debug: Popping symbol table for function (no params)");
+    String funcName = $IDENT.getText();
+    if (!functions.containsKey(funcName)) {
+      error($IDENT, "function '" + funcName + "' not defined");
+    } else {
+      FunctionDef func = functions.get(funcName);
+      System.out.println("Debug: Calling function '" + funcName + "'");
+      
+      // Create new scope for function call
+      SymbolTable funcScope = new SymbolTable();
+      symbolStack.push(funcScope);
+      
+      // Add parameter with argument value if function has parameter
+      if (func.paramName != null) {
+        Identifier paramId = new Identifier();
+        paramId.id = func.paramName;
+        paramId.value = $arg.value;
+        paramId.type = Type.INT;
+        paramId.hasKnown = $arg.hasKnownValue;
+        paramId.hasBeenUsed = false;
+        addVariable(paramId);
+        System.out.println("Debug: Set parameter '" + func.paramName + "' = " + $arg.value);
+      }
+    }
+  }
+  | IDENT '('')'
+  {
+    String funcName = $IDENT.getText();
+    if (!functions.containsKey(funcName)) {
+      error($IDENT, "function '" + funcName + "' not defined");
+    } else {
+      FunctionDef func = functions.get(funcName);
+      if (func.paramName != null) {
+        error($IDENT, "function '" + funcName + "' expects a parameter");
+      } else {
+        System.out.println("Debug: Calling function '" + funcName + "'");
+        
+        // Create new scope for function call
+        SymbolTable funcScope = new SymbolTable();
+        symbolStack.push(funcScope);
+      }
+    }
   }
   ;
 
 arraystmt : KW_ARRAY IDENT ':=)' '[' INT ']' s;
 
-stringstmt : IDENT ':=)' STRING
-  {
-    String varName = $IDENT.getText();
-    Identifier strId = new Identifier();
-    strId.id = varName;
-    strId.value = $STRING.getText();
-    strId.type = Type.STRING;
-    strId.hasKnown = true;
-    strId.hasBeenUsed = false;
-    
-    addVariable(strId);
-  };
+stringstmt : IDENT ':=)' STRING;
 
 operators : ADD | SUBTRACT | MULTIPLY | DIVIDE;
 
