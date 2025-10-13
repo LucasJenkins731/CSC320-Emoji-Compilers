@@ -123,12 +123,7 @@ public class EmoticonParser extends Parser {
 	    //WE SHOULD MAKE THE DATATYPE INSIDE THE 'STACK' A DATATYPE THAT HAS A .CONTAINS OR .HAS METHOD. THIS WAY WE CAN CALL THIS METHOD ON THE ARRAY/DATASTRUCTURE AS A WHOLE
 	    //THIS WILL SAVE A LOT OF TIME AND EFFORT WITH NESTED FOR LOOPS.
 	    //linked list will probably work best for this.
-	    
-	    // for the variables that are assigned (self explanatory) SHOULD DEPRECIATE THIS
-	    Map<String, Object> assigned = new Hashtable<>();
 
-	    //used? SHOULD DEPRECIATE THIS
-	    Set<String> used = new HashSet<>();
 	    // diagnostics
 	    List<String> diagnostics = new ArrayList<>();
 	    // lhs stuff
@@ -141,12 +136,6 @@ public class EmoticonParser extends Parser {
 	    }
 
 	    void printDiagnostics() {
-	      // After parsing the whole file: report unused variables and print errors.
-	      for (String v : assigned.keySet()) {
-	        if (!used.contains(v)) {
-	          System.err.println("warning: variable '" + v + "' assigned but never used");
-	        }
-	      }
 	      for (String d : diagnostics) {
 	        System.err.println("error: " + d);
 	      }
@@ -467,7 +456,6 @@ public class EmoticonParser extends Parser {
 				            newId.hasKnown = ((AsContext)_localctx).expr.hasKnownValue;
 				            newId.hasBeenUsed = false;
 				            mainTable.table.put(newId.id, newId);
-				            assigned.put(pendingLHS, newId.value);
 
 				            // Clear LHS context.
 				            pendingLHS = null;
@@ -487,7 +475,6 @@ public class EmoticonParser extends Parser {
 				            newId.hasKnown = false;
 				            newId.hasBeenUsed = false;
 				            mainTable.table.put(newId.id, newId);
-				            assigned.put(pendingLHS, newId.value);
 
 				            // Clear LHS context.
 				            pendingLHS = null;
@@ -796,7 +783,6 @@ public class EmoticonParser extends Parser {
 				((FactorContext)_localctx).IDENT = match(IDENT);
 
 				        String id = ((FactorContext)_localctx).IDENT.getText();
-				        used.add(id);
 
 				        Identifier currentId = mainTable.table.get(id);
 				        if (currentId == null) {
