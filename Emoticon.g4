@@ -60,6 +60,7 @@ grammar Emoticon;
         System.err.println("Variable '" + entry.getKey() + "' declared but never used");
       }
     }
+  }
 //SHOULD BE CALLED IN ASSIGNMENT STATEMENT AND WHEN CALLING VARIABLES.
 //NVM WHEN CALLING VARIABLES WE SHOULD BE SAVING THE TYPE OF THE VARIABLE IN THE IDENTIFIER CLASS AND THEREFORE DONT NEED TO DO THAT.
     Type typeCheck(String text) {
@@ -124,7 +125,6 @@ grammar Emoticon;
     }
   }
 }
-
 // Keywords
 KW_READ : '-0-0-';
 KW_PRINT : ':P';

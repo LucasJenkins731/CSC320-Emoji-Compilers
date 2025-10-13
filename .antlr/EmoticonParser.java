@@ -1,4 +1,4 @@
-// Generated from c:/Users/lukie/OneDrive/Documents/Senior Semester I/CSC 320/Emoticon Master/Emoticon.g4 by ANTLR 4.13.1
+// Generated from c:/Users/pieco/Desktop/Emoticon language/Emoticon.g4 by ANTLR 4.13.1
  import java.util.*; 
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
@@ -158,7 +158,7 @@ public class EmoticonParser extends Parser {
 	        System.err.println("Variable '" + entry.getKey() + "' declared but never used");
 	      }
 	    }
-<<<<<<< HEAD
+	  }
 	//SHOULD BE CALLED IN ASSIGNMENT STATEMENT AND WHEN CALLING VARIABLES.
 	//NVM WHEN CALLING VARIABLES WE SHOULD BE SAVING THE TYPE OF THE VARIABLE IN THE IDENTIFIER CLASS AND THEREFORE DONT NEED TO DO THAT.
 	    Type typeCheck(String text) {
@@ -171,7 +171,6 @@ public class EmoticonParser extends Parser {
 	        varType = Type.STRING;
 	      }
 	      return varType;
-=======
 	  }
 
 	  // Lookup a variable by searching through the scope stack (innermost first)
@@ -182,7 +181,6 @@ public class EmoticonParser extends Parser {
 	      if (table.table.containsKey(name)) {
 	        return table.table.get(name);
 	      }
->>>>>>> ec79a6f4b09c9603e71c748978ce456b51b60a8d
 	    }
 	    
 	    // Finally check the main/global table
@@ -523,14 +521,10 @@ public class EmoticonParser extends Parser {
 				            Identifier newId = new Identifier();
 				            newId.id = pendingLHS;
 				            newId.value = ((AsContext)_localctx).expr.value;
-<<<<<<< HEAD
 				            //TYPE CHECK HERE
 				            newId.type = typeCheck(String.valueOf(newId.value));
 				            System.out.println("DEBUG: Assign = " + String.valueOf(newId.value));
 				            System.out.println("DEBUG: Type = " + newId.type);
-=======
-				            newId.type = Type.INT; // Since expr returns float, treat as INT
->>>>>>> ec79a6f4b09c9603e71c748978ce456b51b60a8d
 				            newId.hasKnown = ((AsContext)_localctx).expr.hasKnownValue;
 				            newId.hasBeenUsed = false;
 				            
@@ -614,12 +608,7 @@ public class EmoticonParser extends Parser {
 			match(RPAREN);
 
 			      if (((PsContext)_localctx).expr.hasKnownValue) {
-<<<<<<< HEAD
-			        // Let us print it out (for debugging purposes really)
-			        System.out.println("DEBUG: print");
-=======
 			        System.out.println("Debug: Print value = " + ((PsContext)_localctx).expr.value);
->>>>>>> ec79a6f4b09c9603e71c748978ce456b51b60a8d
 			      } else {
 			        System.out.println("Debug: Print unknown value");
 			      }
@@ -882,7 +871,6 @@ public class EmoticonParser extends Parser {
 				            error(((FactorContext)_localctx).IDENT, "use of variable '" + id + "' before assignment");
 				          }
 				          ((FactorContext)_localctx).hasKnownValue =  false;
-<<<<<<< HEAD
 				        } else if(currentId.type != Type.INT){
 				          error(((FactorContext)_localctx).IDENT, id + "is not of type int");
 				        } else {
@@ -897,24 +885,6 @@ public class EmoticonParser extends Parser {
 				              error(((FactorContext)_localctx).IDENT, "Unsupported type for arithmetic: " + val.getClass().getSimpleName());
 				              ((FactorContext)_localctx).hasKnownValue =  false;
 				              ((FactorContext)_localctx).value =  0;
-=======
-				          ((FactorContext)_localctx).value =  0; // Default value to prevent crashes
-				        } else {
-				          // Type checking for integer context
-				          if (currentId.type != Type.INT) {
-				            error(((FactorContext)_localctx).IDENT, "'" + id + "' is not of type int (is " + currentId.type + ")");
-				            ((FactorContext)_localctx).hasKnownValue =  false;
-				            ((FactorContext)_localctx).value =  0;
-				          } else {
-				            currentId.hasBeenUsed = true;
-				            ((FactorContext)_localctx).hasKnownValue =  currentId.hasKnown;
-				            if (currentId.value instanceof Number) {
-				              ((FactorContext)_localctx).value =  ((Number)currentId.value).floatValue();
-				            } else {
-				              ((FactorContext)_localctx).hasKnownValue =  false;
-				              ((FactorContext)_localctx).value =  0;
-				            }
->>>>>>> ec79a6f4b09c9603e71c748978ce456b51b60a8d
 				          }
 				        }
 				      

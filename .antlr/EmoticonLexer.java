@@ -1,4 +1,4 @@
-// Generated from c:/Users/lukie/OneDrive/Documents/Senior Semester I/CSC 320/Emoticon Master/Emoticon.g4 by ANTLR 4.13.1
+// Generated from c:/Users/pieco/Desktop/Emoticon language/Emoticon.g4 by ANTLR 4.13.1
  import java.util.*; 
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
@@ -151,7 +151,7 @@ public class EmoticonLexer extends Lexer {
 	        System.err.println("Variable '" + entry.getKey() + "' declared but never used");
 	      }
 	    }
-<<<<<<< HEAD
+	  }
 	//SHOULD BE CALLED IN ASSIGNMENT STATEMENT AND WHEN CALLING VARIABLES.
 	//NVM WHEN CALLING VARIABLES WE SHOULD BE SAVING THE TYPE OF THE VARIABLE IN THE IDENTIFIER CLASS AND THEREFORE DONT NEED TO DO THAT.
 	    Type typeCheck(String text) {
@@ -164,7 +164,6 @@ public class EmoticonLexer extends Lexer {
 	        varType = Type.STRING;
 	      }
 	      return varType;
-=======
 	  }
 
 	  // Lookup a variable by searching through the scope stack (innermost first)
@@ -175,7 +174,6 @@ public class EmoticonLexer extends Lexer {
 	      if (table.table.containsKey(name)) {
 	        return table.table.get(name);
 	      }
->>>>>>> ec79a6f4b09c9603e71c748978ce456b51b60a8d
 	    }
 	    
 	    // Finally check the main/global table
