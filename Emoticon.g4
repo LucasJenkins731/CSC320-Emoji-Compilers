@@ -327,7 +327,7 @@ program :
     printDiagnostics();
   };
 
-s : functioncall | as | ps | expr | arraystmt | stringstmt | blockStatement | ifstmt | forstmt | whilestmt | functionstmt ;
+s : functioncall | as | ps | expr | arraystmt | blockStatement | ifstmt | forstmt | whilestmt | functionstmt ;
 
 blockStatement : LBRACE
   {  
@@ -349,24 +349,24 @@ blockStatement : LBRACE
   ;
 
 as
-  : IDENT 
-    {
-      if (!definingFunction) {
+  : IDENT ':=)' 
+    (
+      expr
+      {
+        if (!definingFunction) {
         pendingLHS = $IDENT.getText();
         // Check if it exists in ANY scope
         Identifier existing = lookupVariable(pendingLHS);
         lhsExistedBefore = (existing != null);
       }
-    }
-    ':=)' ( expr 
-          {
-            if (!definingFunction) {
+      if (!definingFunction) {
               Identifier newId = new Identifier();
               newId.id = pendingLHS;
               newId.value = $expr.value;
               //TYPE CHECK HERE
               newId.type = typeCheck(String.valueOf(newId.value));
               System.out.println("DEBUG: Assign " + pendingLHS + " = " + String.valueOf(newId.value));
+               System.out.println("DEBUG: Type = " + newId.type);
               newId.hasKnown = $expr.hasKnownValue;
               newId.hasBeenUsed = false;
               
@@ -375,24 +375,88 @@ as
               
               pendingLHS = null;
             }
-          }
-        | KW_READ
-          {
-            if (!definingFunction) {
-              Identifier newId = new Identifier();
-              newId.id = pendingLHS;
-              newId.value = 0;
-              newId.type = Type.INT;
-              newId.hasKnown = false;
-              newId.hasBeenUsed = false;
-              
-              addVariable(newId);
-              
-              pendingLHS = null;
-            }
-          }
-        ) 
+      }
+    |
+      KW_READ
+      {
+        Identifier newId = new Identifier();
+        newId.id = $IDENT.getText();
+        newId.value = 0;
+        newId.type = Type.INT;
+        addVariable(newId);
+        System.out.println("DEBUG: Print type = " + newId.value);
+        System.out.println("DEBUG: Print type = " + newId.type);
+      }
+    |
+      STRING
+      {
+        Identifier newId = new Identifier();
+        newId.id = $IDENT.getText();
+        newId.value = $STRING.getText();
+        newId.type = Type.STRING;
+        addVariable(newId);
+        System.out.println("DEBUG: Print type = " + newId.value);
+        System.out.println("DEBUG: Print type = " + newId.type);
+      }
+    |
+      CHAR
+      {
+        Identifier newId = new Identifier();
+        newId.id = $IDENT.getText();
+        newId.value = $CHAR.getText();
+        newId.type = Type.CHAR;
+        addVariable(newId);
+        System.out.println("DEBUG: Print type = " + newId.value);
+        System.out.println("DEBUG: Print type = " + newId.type);
+      }
+    )
   ;
+// as
+//   : IDENT 
+//     {
+//       if (!definingFunction) {
+//         pendingLHS = $IDENT.getText();
+//         // Check if it exists in ANY scope
+//         Identifier existing = lookupVariable(pendingLHS);
+//         lhsExistedBefore = (existing != null);
+//       }
+//     }
+//     ':=)' ( expr 
+//           {
+//             if (!definingFunction) {
+//               Identifier newId = new Identifier();
+//               newId.id = pendingLHS;
+//               newId.value = $expr.value;
+//               //TYPE CHECK HERE
+//               newId.type = typeCheck(String.valueOf(newId.value));
+//               System.out.println("DEBUG: Assign " + pendingLHS + " = " + String.valueOf(newId.value));
+//                System.out.println("DEBUG: Type = " + newId.type);
+//               newId.hasKnown = $expr.hasKnownValue;
+//               newId.hasBeenUsed = false;
+              
+//               // Add to CURRENT scope
+//               addVariable(newId);
+              
+//               pendingLHS = null;
+//             }
+//           }
+//         | KW_READ
+//           {
+//             if (!definingFunction) {
+//               Identifier newId = new Identifier();
+//               newId.id = pendingLHS;
+//               newId.value = 0;
+//               newId.type = Type.INT;
+//               newId.hasKnown = false;
+//               newId.hasBeenUsed = false;
+              
+//               addVariable(newId);
+              
+//               pendingLHS = null;
+//             }
+//           }
+//         ) 
+//   ;
     
 ps : KW_PRINT '(' expr ')' 
     {
@@ -696,7 +760,7 @@ functioncall : IDENT '(' arg=expr ')'
 
 arraystmt : KW_ARRAY IDENT ':=)' '[' INT ']' s;
 
-stringstmt : IDENT ':=)' STRING;
+//stringstmt : IDENT ':=)' STRING;
 
 operators : ADD | SUBTRACT | MULTIPLY | DIVIDE;
 
