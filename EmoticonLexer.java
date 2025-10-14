@@ -1,5 +1,5 @@
 // Generated from Emoticon.g4 by ANTLR 4.13.2
- import java.util.*; 
+ import java.util.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; 
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;
@@ -114,6 +114,7 @@ public class EmoticonLexer extends Lexer {
 	  class FunctionDef {
 	    String name;
 	    String paramName; // null if no parameter
+	    ParserRuleContext body; // Store the parse tree of the function body
 	  }
 	  
 	  SymbolTable mainTable = new SymbolTable();
@@ -129,6 +130,10 @@ public class EmoticonLexer extends Lexer {
 	  
 	  // Error tracking
 	  boolean hasErrors = false;
+	  
+	  // Track if we're currently defining a function (to skip execution during definition)
+	  boolean definingFunction = false;
+	  int functionDefDepth = 0; // Track nesting depth during function definition
 	    
 	  void error(Token t, String msg) {
 	    diagnostics.add("line " + t.getLine() + ":" + t.getCharPositionInLine() + " " + msg);
@@ -157,22 +162,18 @@ public class EmoticonLexer extends Lexer {
 	        System.err.println("Variable '" + entry.getKey() + "' declared but never used");
 	      }
 	    }
-<<<<<<< HEAD
-=======
 	  }
->>>>>>> 8837788995e5ce0c65a4fff55d7c4f8ec6a6d31a
-	//SHOULD BE CALLED IN ASSIGNMENT STATEMENT AND WHEN CALLING VARIABLES.
-	//NVM WHEN CALLING VARIABLES WE SHOULD BE SAVING THE TYPE OF THE VARIABLE IN THE IDENTIFIER CLASS AND THEREFORE DONT NEED TO DO THAT.
-	    Type typeCheck(String text) {
-	      Type varType = Type.UNKNOWN;
-	      if (text.matches("[+-]?(0|[1-9][0-9]*)")) {
-	        varType = Type.INT;
-	      } else if (text.matches("'(\\\\.|[^\\\\'])'")){
-	        varType = Type.CHAR;
-	      } else if (text.matches("(['\"']).*?(['\"])")) {
-	        varType = Type.STRING;
-	      }
-	      return varType;
+
+	  Type typeCheck(String text) {
+	    Type varType = Type.UNKNOWN;
+	    if (text.matches("[+-]?(0|[1-9][0-9]*)")) {
+	      varType = Type.INT;
+	    } else if (text.matches("'(\\\\.|[^\\\\'])'")){
+	      varType = Type.CHAR;
+	    } else if (text.matches("(['\"']).*?(['\"])")) {
+	      varType = Type.STRING;
+	    }
+	    return varType;
 	  }
 
 	  // Lookup a variable by searching through the scope stack (innermost first)
@@ -211,7 +212,166 @@ public class EmoticonLexer extends Lexer {
 	      return symbolStack.peek().table.containsKey(name);
 	    }
 	  }
-	}
+	  
+	  // Execute a function body by re-visiting the parse tree
+	  void executeStatement(ParserRuleContext ctx) {
+	    if (ctx == null) {
+	      return;
+	    }
+	    
+	    // Check what type of statement this is and execute it
+	    if (ctx instanceof EmoticonParser.AsContext) {
+	      executeAssignment((EmoticonParser.AsContext) ctx);
+	    } else if (ctx instanceof EmoticonParser.PsContext) {
+	      executePrint((EmoticonParser.PsContext) ctx);
+	    } else if (ctx instanceof EmoticonParser.BlockStatementContext) {
+	      executeBlock((EmoticonParser.BlockStatementContext) ctx);
+	    } else if (ctx instanceof EmoticonParser.IfstmtContext) {
+	      executeIf((EmoticonParser.IfstmtContext) ctx);
+	    } else if (ctx instanceof EmoticonParser.SContext) {
+	      // It's a general statement context, figure out which type
+	      EmoticonParser.SContext sCtx = (EmoticonParser.SContext) ctx;
+	      if (sCtx.as() != null) {
+	        executeAssignment(sCtx.as());
+	      } else if (sCtx.ps() != null) {
+	        executePrint(sCtx.ps());
+	      } else if (sCtx.blockStatement() != null) {
+	        executeBlock(sCtx.blockStatement());
+	      } else if (sCtx.ifstmt() != null) {
+	        executeIf(sCtx.ifstmt());
+	      }
+	    }
+	  }
+	  
+	  void executeAssignment(EmoticonParser.AsContext ctx) {
+	    String varName = ctx.IDENT().getText();
+	    
+	    // Check if it's expr or READ
+	    if (ctx.expr() != null) {
+	      Integer value = evaluateExpr(ctx.expr());
+	      
+	      Identifier newId = new Identifier();
+	      newId.id = varName;
+	      newId.value = value;
+	      newId.type = typeCheck(String.valueOf(value));
+	      newId.hasKnown = (value != null);
+	      newId.hasBeenUsed = false;
+	      
+	      addVariable(newId);
+	      System.out.println("DEBUG: Assign " + varName + " = " + value);
+	    } else if (ctx.KW_READ() != null) {
+	      Identifier newId = new Identifier();
+	      newId.id = varName;
+	      newId.value = 0;
+	      newId.type = Type.INT;
+	      newId.hasKnown = false;
+	      newId.hasBeenUsed = false;
+	      addVariable(newId);
+	    }
+	  }
+	  
+	  void executePrint(EmoticonParser.PsContext ctx) {
+	    Integer value = evaluateExpr(ctx.expr());
+	    if (value != null) {
+	      System.out.println("DEBUG: Print value = " + value);
+	    }
+	  }
+	  
+	  void executeBlock(EmoticonParser.BlockStatementContext ctx) {
+	    SymbolTable blockScope = new SymbolTable();
+	    symbolStack.push(blockScope);
+	    
+	    for (EmoticonParser.SContext stmt : ctx.s()) {
+	      executeStatement(stmt);
+	    }
+	    
+	    symbolStack.pop();
+	  }
+	  
+	  void executeIf(EmoticonParser.IfstmtContext ctx) {
+	    SymbolTable ifScope = new SymbolTable();
+	    symbolStack.push(ifScope);
+	    
+	    executeStatement(ctx.s());
+	    
+	    symbolStack.pop();
+	  }
+	  
+	  Integer evaluateExpr(EmoticonParser.ExprContext ctx) {
+	    if (ctx == null) return null;
+	    
+	    // Get the first term
+	    Integer value = evaluateTerm(ctx.term(0));
+	    if (value == null) return null;
+	    
+	    // Process additional terms with operators
+	    for (int i = 1; i < ctx.term().size(); i++) {
+	      Integer nextValue = evaluateTerm(ctx.term(i));
+	      if (nextValue == null) return null;
+	      
+	      String op = ctx.getChild(i * 2 - 1).getText(); // Get operator
+	      if (op.equals(":+)")) {
+	        value = value + nextValue;
+	      } else if (op.equals(":-)")) {
+	        value = value - nextValue;
+	      }
+	    }
+	    
+	    return value;
+	  }
+	  
+	  Integer evaluateTerm(EmoticonParser.TermContext ctx) {
+	    if (ctx == null) return null;
+	    
+	    // Get the first factor
+	    Integer value = evaluateFactor(ctx.factor(0));
+	    if (value == null) return null;
+	    
+	    // Process additional factors with operators
+	    for (int i = 1; i < ctx.factor().size(); i++) {
+	      Integer nextValue = evaluateFactor(ctx.factor(i));
+	      if (nextValue == null) return null;
+	      
+	      String op = ctx.getChild(i * 2 - 1).getText(); // Get operator
+	      if (op.equals(":*)")) {
+	        value = value * nextValue;
+	      } else if (op.equals(":/)")) {
+	        if (nextValue == 0) {
+	          return null; // Division by zero
+	        }
+	        value = value / nextValue;
+	      }
+	    }
+	    
+	    return value;
+	  }
+	  
+	  Integer evaluateFactor(EmoticonParser.FactorContext ctx) {
+	    if (ctx == null) return null;
+	    
+	    // Check if it's an INT literal
+	    if (ctx.INT() != null) {
+	      return Integer.parseInt(ctx.INT().getText());
+	    }
+	    
+	    // Check if it's an IDENT (variable)
+	    if (ctx.IDENT() != null) {
+	      String varName = ctx.IDENT().getText();
+	      Identifier id = lookupVariable(varName);
+	      if (id != null && id.value instanceof Integer) {
+	        id.hasBeenUsed = true;
+	        return (Integer) id.value;
+	      }
+	      return null;
+	    }
+	    
+	    // Check if it's a parenthesized expression
+	    if (ctx.expr() != null) {
+	      return evaluateExpr(ctx.expr());
+	    }
+	    
+	    return null;
+	  }
 
 
 	public EmoticonLexer(CharStream input) {

@@ -1,6 +1,6 @@
 grammar Emoticon;
 
-@header { import java.util.*; }
+@header { import java.util.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; }
 
 @members {
 
@@ -23,6 +23,7 @@ grammar Emoticon;
   class FunctionDef {
     String name;
     String paramName; // null if no parameter
+    ParserRuleContext body; // Store the parse tree of the function body
   }
   
   SymbolTable mainTable = new SymbolTable();
@@ -38,6 +39,10 @@ grammar Emoticon;
   
   // Error tracking
   boolean hasErrors = false;
+  
+  // Track if we're currently defining a function (to skip execution during definition)
+  boolean definingFunction = false;
+  int functionDefDepth = 0; // Track nesting depth during function definition
     
   void error(Token t, String msg) {
     diagnostics.add("line " + t.getLine() + ":" + t.getCharPositionInLine() + " " + msg);
@@ -67,18 +72,17 @@ grammar Emoticon;
       }
     }
   }
-//SHOULD BE CALLED IN ASSIGNMENT STATEMENT AND WHEN CALLING VARIABLES.
-//NVM WHEN CALLING VARIABLES WE SHOULD BE SAVING THE TYPE OF THE VARIABLE IN THE IDENTIFIER CLASS AND THEREFORE DONT NEED TO DO THAT.
-    Type typeCheck(String text) {
-      Type varType = Type.UNKNOWN;
-      if (text.matches("[+-]?(0|[1-9][0-9]*)")) {
-        varType = Type.INT;
-      } else if (text.matches("'(\\\\.|[^\\\\'])'")){
-        varType = Type.CHAR;
-      } else if (text.matches("(['\"']).*?(['\"])")) {
-        varType = Type.STRING;
-      }
-      return varType;
+
+  Type typeCheck(String text) {
+    Type varType = Type.UNKNOWN;
+    if (text.matches("[+-]?(0|[1-9][0-9]*)")) {
+      varType = Type.INT;
+    } else if (text.matches("'(\\\\.|[^\\\\'])'")){
+      varType = Type.CHAR;
+    } else if (text.matches("(['\"']).*?(['\"])")) {
+      varType = Type.STRING;
+    }
+    return varType;
   }
 
   // Lookup a variable by searching through the scope stack (innermost first)
@@ -117,7 +121,168 @@ grammar Emoticon;
       return symbolStack.peek().table.containsKey(name);
     }
   }
+  
+  // Execute a function body by re-visiting the parse tree
+  void executeStatement(ParserRuleContext ctx) {
+    if (ctx == null) {
+      return;
+    }
+    
+    // Check what type of statement this is and execute it
+    if (ctx instanceof EmoticonParser.AsContext) {
+      executeAssignment((EmoticonParser.AsContext) ctx);
+    } else if (ctx instanceof EmoticonParser.PsContext) {
+      executePrint((EmoticonParser.PsContext) ctx);
+    } else if (ctx instanceof EmoticonParser.BlockStatementContext) {
+      executeBlock((EmoticonParser.BlockStatementContext) ctx);
+    } else if (ctx instanceof EmoticonParser.IfstmtContext) {
+      executeIf((EmoticonParser.IfstmtContext) ctx);
+    } else if (ctx instanceof EmoticonParser.SContext) {
+      // It's a general statement context, figure out which type
+      EmoticonParser.SContext sCtx = (EmoticonParser.SContext) ctx;
+      if (sCtx.as() != null) {
+        executeAssignment(sCtx.as());
+      } else if (sCtx.ps() != null) {
+        executePrint(sCtx.ps());
+      } else if (sCtx.blockStatement() != null) {
+        executeBlock(sCtx.blockStatement());
+      } else if (sCtx.ifstmt() != null) {
+        executeIf(sCtx.ifstmt());
+      }
+    }
+  }
+  
+  void executeAssignment(EmoticonParser.AsContext ctx) {
+    String varName = ctx.IDENT().getText();
+    
+    // Check if it's expr or READ
+    if (ctx.expr() != null) {
+      Integer value = evaluateExpr(ctx.expr());
+      
+      Identifier newId = new Identifier();
+      newId.id = varName;
+      newId.value = value;
+      newId.type = typeCheck(String.valueOf(value));
+      newId.hasKnown = (value != null);
+      newId.hasBeenUsed = false;
+      
+      addVariable(newId);
+      System.out.println("DEBUG: Assign " + varName + " = " + value);
+    } else if (ctx.KW_READ() != null) {
+      Identifier newId = new Identifier();
+      newId.id = varName;
+      newId.value = 0;
+      newId.type = Type.INT;
+      newId.hasKnown = false;
+      newId.hasBeenUsed = false;
+      addVariable(newId);
+    }
+  }
+  
+  void executePrint(EmoticonParser.PsContext ctx) {
+    Integer value = evaluateExpr(ctx.expr());
+    if (value != null) {
+      System.out.println("DEBUG: Print value = " + value);
+    }
+  }
+  
+  void executeBlock(EmoticonParser.BlockStatementContext ctx) {
+    SymbolTable blockScope = new SymbolTable();
+    symbolStack.push(blockScope);
+    
+    for (EmoticonParser.SContext stmt : ctx.s()) {
+      executeStatement(stmt);
+    }
+    
+    symbolStack.pop();
+  }
+  
+  void executeIf(EmoticonParser.IfstmtContext ctx) {
+    SymbolTable ifScope = new SymbolTable();
+    symbolStack.push(ifScope);
+    
+    executeStatement(ctx.s());
+    
+    symbolStack.pop();
+  }
+  
+  Integer evaluateExpr(EmoticonParser.ExprContext ctx) {
+    if (ctx == null) return null;
+    
+    // Get the first term
+    Integer value = evaluateTerm(ctx.term(0));
+    if (value == null) return null;
+    
+    // Process additional terms with operators
+    for (int i = 1; i < ctx.term().size(); i++) {
+      Integer nextValue = evaluateTerm(ctx.term(i));
+      if (nextValue == null) return null;
+      
+      String op = ctx.getChild(i * 2 - 1).getText(); // Get operator
+      if (op.equals(":+)")) {
+        value = value + nextValue;
+      } else if (op.equals(":-)")) {
+        value = value - nextValue;
+      }
+    }
+    
+    return value;
+  }
+  
+  Integer evaluateTerm(EmoticonParser.TermContext ctx) {
+    if (ctx == null) return null;
+    
+    // Get the first factor
+    Integer value = evaluateFactor(ctx.factor(0));
+    if (value == null) return null;
+    
+    // Process additional factors with operators
+    for (int i = 1; i < ctx.factor().size(); i++) {
+      Integer nextValue = evaluateFactor(ctx.factor(i));
+      if (nextValue == null) return null;
+      
+      String op = ctx.getChild(i * 2 - 1).getText(); // Get operator
+      if (op.equals(":*)")) {
+        value = value * nextValue;
+      } else if (op.equals(":/)")) {
+        if (nextValue == 0) {
+          return null; // Division by zero
+        }
+        value = value / nextValue;
+      }
+    }
+    
+    return value;
+  }
+  
+  Integer evaluateFactor(EmoticonParser.FactorContext ctx) {
+    if (ctx == null) return null;
+    
+    // Check if it's an INT literal
+    if (ctx.INT() != null) {
+      return Integer.parseInt(ctx.INT().getText());
+    }
+    
+    // Check if it's an IDENT (variable)
+    if (ctx.IDENT() != null) {
+      String varName = ctx.IDENT().getText();
+      Identifier id = lookupVariable(varName);
+      if (id != null && id.value instanceof Integer) {
+        id.hasBeenUsed = true;
+        return (Integer) id.value;
+      }
+      return null;
+    }
+    
+    // Check if it's a parenthesized expression
+    if (ctx.expr() != null) {
+      return evaluateExpr(ctx.expr());
+    }
+    
+    return null;
+  }
 }
+
 // Keywords
 KW_READ : '-0-0-';
 KW_PRINT : ':P';
@@ -162,82 +327,83 @@ program :
     printDiagnostics();
   };
 
-s : as | ps | expr | arraystmt | stringstmt | blockStatement | ifstmt | forstmt | whilestmt | functionstmt | functioncall ;
+s : functioncall | as | ps | expr | arraystmt | stringstmt | blockStatement | ifstmt | forstmt | whilestmt | functionstmt ;
 
 blockStatement : LBRACE
   {  
-    SymbolTable currentSymbolTable = new SymbolTable();
-    System.out.println("Debug: Pushing new symbol table for block");
-    symbolStack.push(currentSymbolTable); 
+    if (!definingFunction) {
+      SymbolTable currentSymbolTable = new SymbolTable();
+      symbolStack.push(currentSymbolTable);
+    } else {
+      functionDefDepth++;
+    }
   } 
   (s)* RBRACE 
   { 
-    symbolStack.pop();
-    System.out.println("Debug: Popping symbol table for block");
+    if (!definingFunction) {
+      symbolStack.pop();
+    } else {
+      functionDefDepth--;
+    }
   } 
   ;
 
 as
   : IDENT 
     {
-      pendingLHS = $IDENT.getText();
-      // Check if it exists in ANY scope
-      Identifier existing = lookupVariable(pendingLHS);
-      lhsExistedBefore = (existing != null);
+      if (!definingFunction) {
+        pendingLHS = $IDENT.getText();
+        // Check if it exists in ANY scope
+        Identifier existing = lookupVariable(pendingLHS);
+        lhsExistedBefore = (existing != null);
+      }
     }
     ':=)' ( expr 
           {
-            Identifier newId = new Identifier();
-            newId.id = pendingLHS;
-            newId.value = $expr.value;
-            //TYPE CHECK HERE
-            newId.type = typeCheck(String.valueOf(newId.value));
-            System.out.println("DEBUG: Assign = " + String.valueOf(newId.value));
-            System.out.println("DEBUG: Type = " + newId.type);
-            newId.hasKnown = $expr.hasKnownValue;
-            newId.hasBeenUsed = false;
-            
-            // Add to CURRENT scope
-            addVariable(newId);
-            
-            pendingLHS = null;
+            if (!definingFunction) {
+              Identifier newId = new Identifier();
+              newId.id = pendingLHS;
+              newId.value = $expr.value;
+              //TYPE CHECK HERE
+              newId.type = typeCheck(String.valueOf(newId.value));
+              System.out.println("DEBUG: Assign " + pendingLHS + " = " + String.valueOf(newId.value));
+              newId.hasKnown = $expr.hasKnownValue;
+              newId.hasBeenUsed = false;
+              
+              // Add to CURRENT scope
+              addVariable(newId);
+              
+              pendingLHS = null;
+            }
           }
         | KW_READ
           {
-            Identifier newId = new Identifier();
-            newId.id = pendingLHS;
-            newId.value = 0;
-            newId.type = Type.INT;
-            newId.hasKnown = false;
-            newId.hasBeenUsed = false;
-            
-            addVariable(newId);
-            
-            pendingLHS = null;
+            if (!definingFunction) {
+              Identifier newId = new Identifier();
+              newId.id = pendingLHS;
+              newId.value = 0;
+              newId.type = Type.INT;
+              newId.hasKnown = false;
+              newId.hasBeenUsed = false;
+              
+              addVariable(newId);
+              
+              pendingLHS = null;
+            }
           }
         ) 
   ;
     
 ps : KW_PRINT '(' expr ')' 
     {
-      if ($expr.hasKnownValue) {
-        System.out.println("Debug: Print value = " + $expr.value);
-      } else {
-        System.out.println("Debug: Print unknown value");
+      if (!definingFunction) {
+        if ($expr.hasKnownValue) {
+          System.out.println("DEBUG: Print value = " + $expr.value);
+        }
       }
     }
 ;
 
-
-// expr : INT 
-//     | IDENT {}
-//     | '(' expr ')' {}
-//     | expr op expr{}
-//     | expr comp expr{}
-//     ;
-
-//SHOULD TYPE CHECK SOMEWHERE IN HERE 
-//SCRATCH THIS TYPE HECKING ONLY REALLY NEEDS TO BE DONE AT THE LOWEST LEVEL OF FACTOR 
 expr returns [boolean hasKnownValue, Integer value]
   : a=term
     {
@@ -263,7 +429,7 @@ expr returns [boolean hasKnownValue, Integer value]
     )*
   ;
 
-    term returns [boolean hasKnownValue, Integer value]
+term returns [boolean hasKnownValue, Integer value]
   : a=factor 
     {
       if ($a.hasKnownValue) {
@@ -276,7 +442,9 @@ expr returns [boolean hasKnownValue, Integer value]
   ( op=(MULTIPLY|DIVIDE) b=factor
     {
       if ($b.hasKnownValue && $op.getText().equals(":/)") && $b.value == 0) {
-        error($op, "division by zero");
+        if (!definingFunction) {
+          error($op, "division by zero");
+        }
         $hasKnownValue = false;
       } else if ($hasKnownValue && $b.hasKnownValue) {
         if ($op.getText().equals(":*)")) {
@@ -291,10 +459,7 @@ expr returns [boolean hasKnownValue, Integer value]
     )*
   ;
 
-
-// TO DO TOMORROW CHANGE INTEGER TO OBJECT AND ALLOW FOR OTHER DATA TYPES TO BE DETECTED.
-//type checking goes here 
-  factor returns [boolean hasKnownValue, Integer value]
+factor returns [boolean hasKnownValue, Integer value]
   : INT 
       { 
         $hasKnownValue = true; 
@@ -304,30 +469,39 @@ expr returns [boolean hasKnownValue, Integer value]
       {
         String id = $IDENT.getText();
         
-        // Use lookupVariable instead of mainTable.table.get
-        Identifier currentId = lookupVariable(id);
-        
-        if (currentId == null) {
-          if (pendingLHS != null && !lhsExistedBefore && id.equals(pendingLHS)) {
-            error($IDENT, "self-reference on first assignment of '" + pendingLHS + "'");
-          } else {
-            error($IDENT, "use of variable '" + id + "' before assignment");
-          }
+        if (definingFunction) {
+          // During function definition, just validate syntax
           $hasKnownValue = false;
-        } else if(currentId.type != Type.INT){
-          error($IDENT, id + "is not of type int");
+          $value = 0;
         } else {
-          currentId.hasBeenUsed = true;
-          $hasKnownValue = currentId.hasKnown;
-          Object val = currentId.value;
-          if (val instanceof Integer) {
-              $value = (Integer) val;
-          } else if (val instanceof String) {
-              $value = Integer.parseInt((String) val);
+          // Use lookupVariable instead of mainTable.table.get
+          Identifier currentId = lookupVariable(id);
+          
+          if (currentId == null) {
+            if (pendingLHS != null && !lhsExistedBefore && id.equals(pendingLHS)) {
+              error($IDENT, "self-reference on first assignment of '" + pendingLHS + "'");
+            } else {
+              error($IDENT, "use of variable '" + id + "' before assignment");
+            }
+            $hasKnownValue = false;
+            $value = 0;
+          } else if(currentId.type != Type.INT){
+            error($IDENT, id + " is not of type int");
+            $hasKnownValue = false;
+            $value = 0;
           } else {
-              error($IDENT, "Unsupported type for arithmetic: " + val.getClass().getSimpleName());
-              $hasKnownValue = false;
-              $value = 0;
+            currentId.hasBeenUsed = true;
+            $hasKnownValue = currentId.hasKnown;
+            Object val = currentId.value;
+            if (val instanceof Integer) {
+                $value = (Integer) val;
+            } else if (val instanceof String) {
+                $value = Integer.parseInt((String) val);
+            } else {
+                error($IDENT, "Unsupported type for arithmetic: " + val.getClass().getSimpleName());
+                $hasKnownValue = false;
+                $value = 0;
+            }
           }
         }
       }
@@ -345,89 +519,115 @@ expr returns [boolean hasKnownValue, Integer value]
 
 ifstmt : KW_IF 
   {
-    SymbolTable ifScope = new SymbolTable();
-    System.out.println("Debug: Pushing new symbol table for if");
-    symbolStack.push(ifScope);
+    if (!definingFunction) {
+      SymbolTable ifScope = new SymbolTable();
+      symbolStack.push(ifScope);
+    }
   }
   '(' expr ')' s 
   {
-    symbolStack.pop();
-    System.out.println("Debug: Popping symbol table for if");
+    if (!definingFunction) {
+      symbolStack.pop();
+    }
   }
   (elsestmt)?
   ;
 
 elsestmt : KW_ELSE_IF 
   {
-    SymbolTable elseIfScope = new SymbolTable();
-    System.out.println("Debug: Pushing new symbol table for else-if");
-    symbolStack.push(elseIfScope);
+    if (!definingFunction) {
+      SymbolTable elseIfScope = new SymbolTable();
+      symbolStack.push(elseIfScope);
+    }
   }
   '(' expr ')' s 
   {
-    symbolStack.pop();
-    System.out.println("Debug: Popping symbol table for else-if");
+    if (!definingFunction) {
+      symbolStack.pop();
+    }
   }
   (elsestmt)?
   | KW_ELSE 
   {
-    SymbolTable elseScope = new SymbolTable();
-    System.out.println("Debug: Pushing new symbol table for else");
-    symbolStack.push(elseScope);
+    if (!definingFunction) {
+      SymbolTable elseScope = new SymbolTable();
+      symbolStack.push(elseScope);
+    }
   }
   s
   {
-    symbolStack.pop();
-    System.out.println("Debug: Popping symbol table for else");
+    if (!definingFunction) {
+      symbolStack.pop();
+    }
   }
   ;
 
 forstmt : KW_FOR '(' 
   {
-    SymbolTable forScope = new SymbolTable();
-    System.out.println("Debug: Pushing new symbol table for for-loop");
-    symbolStack.push(forScope);
+    if (!definingFunction) {
+      SymbolTable forScope = new SymbolTable();
+      symbolStack.push(forScope);
+    }
   }
   as ';' expr ';' as ')' s
   {
-    symbolStack.pop();
-    System.out.println("Debug: Popping symbol table for for-loop");
+    if (!definingFunction) {
+      symbolStack.pop();
+    }
   }
   ;
 
 whilestmt : KW_WHILE 
   {
-    SymbolTable whileScope = new SymbolTable();
-    System.out.println("Debug: Pushing new symbol table for while-loop");
-    symbolStack.push(whileScope);
+    if (!definingFunction) {
+      SymbolTable whileScope = new SymbolTable();
+      symbolStack.push(whileScope);
+    }
   }
   '(' expr ')' s
   {
-    symbolStack.pop();
-    System.out.println("Debug: Popping symbol table for while-loop");
+    if (!definingFunction) {
+      symbolStack.pop();
+    }
   }
   ;
 
 functionstmt : KW_FUNCTION name=IDENT '(' param=IDENT ')' 
   {
-    // Store function definition
+    definingFunction = true;
+    functionDefDepth = 0;
     FunctionDef func = new FunctionDef();
     func.name = $name.getText();
     func.paramName = $param.getText();
     functions.put(func.name, func);
-    System.out.println("Debug: Defined function '" + func.name + "' with parameter '" + func.paramName + "'");
+    System.out.println("DEBUG: Defining function '" + func.name + "' with parameter '" + func.paramName + "'");
   }
-  s
+  body=s
+  {
+    definingFunction = false;
+    functionDefDepth = 0;
+    FunctionDef funcDef = functions.get($name.getText());
+    funcDef.body = $body.ctx;
+    System.out.println("DEBUG: Function '" + funcDef.name + "' definition complete");
+  }
   | KW_FUNCTION name=IDENT '('')' 
   {
-    // Store function definition
-    FunctionDef func = new FunctionDef();
-    func.name = $name.getText();
-    func.paramName = null;
-    functions.put(func.name, func);
-    System.out.println("Debug: Defined function '" + func.name + "' with no parameters");
+    definingFunction = true;
+    functionDefDepth = 0;
+    FunctionDef func2 = new FunctionDef();
+    func2.name = $name.getText();
+    func2.paramName = null;
+    functions.put(func2.name, func2);
+    System.out.println("DEBUG: Defining function '" + func2.name + "' with no parameters");
   }
-  s
+  body=s
+  {
+    definingFunction = false;
+    functionDefDepth = 0;
+    FunctionDef funcDef2 = functions.get($name.getText());
+    funcDef2.body = $body.ctx;
+    System.out.println("DEBUG: Function '" + funcDef2.name + "' definition complete");
+  }
   ;
 
 functioncall : IDENT '(' arg=expr ')'
@@ -437,7 +637,7 @@ functioncall : IDENT '(' arg=expr ')'
       error($IDENT, "function '" + funcName + "' not defined");
     } else {
       FunctionDef func = functions.get(funcName);
-      System.out.println("Debug: Calling function '" + funcName + "'");
+      System.out.println("DEBUG: Calling function '" + funcName + "' with argument " + $arg.value);
       
       // Create new scope for function call
       SymbolTable funcScope = new SymbolTable();
@@ -452,8 +652,17 @@ functioncall : IDENT '(' arg=expr ')'
         paramId.hasKnown = $arg.hasKnownValue;
         paramId.hasBeenUsed = false;
         addVariable(paramId);
-        System.out.println("Debug: Set parameter '" + func.paramName + "' = " + $arg.value);
+        System.out.println("DEBUG: Set parameter '" + func.paramName + "' = " + $arg.value);
       }
+      
+      // Execute function body
+      if (func.body != null) {
+        executeStatement(func.body);
+      }
+      
+      // Pop function scope after execution
+      symbolStack.pop();
+      System.out.println("DEBUG: Function '" + funcName + "' execution complete");
     }
   }
   | IDENT '('')'
@@ -466,11 +675,20 @@ functioncall : IDENT '(' arg=expr ')'
       if (func.paramName != null) {
         error($IDENT, "function '" + funcName + "' expects a parameter");
       } else {
-        System.out.println("Debug: Calling function '" + funcName + "'");
+        System.out.println("DEBUG: Calling function '" + funcName + "'");
         
         // Create new scope for function call
         SymbolTable funcScope = new SymbolTable();
         symbolStack.push(funcScope);
+        
+        // Execute function body
+        if (func.body != null) {
+          executeStatement(func.body);
+        }
+        
+        // Pop function scope after execution
+        symbolStack.pop();
+        System.out.println("DEBUG: Function '" + funcName + "' execution complete");
       }
     }
   }

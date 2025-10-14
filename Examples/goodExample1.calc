@@ -1,26 +1,19 @@
+<3 Function Call Test
 global :=) 100
 
-<3 Function with parameter - parameter 'param' should be in function scope
-=^._.^= myFunction() ><(((,^>
-  param :=) 50
+<3 Define function with parameter
+=^._.^= myFunction(param) ><(((,^>
   local :=) param :+) 10
   result :=) local :*) 2
   :P(result)
   :P(global)
 <^,)))><
 
-=^._.^= anothaone() ><(((,^>
-  param :=) 50
-  local :=) param :+) 10
-  result :=) local :*) 2
-  :P(result)
-  :P(global)
-<^,)))><
+<3 Call the function
+myFunction(5)
 
-anothaone()
-myFunction()
+<3 Call with different argument
+myFunction(20)
 
-<3 These should cause errors since they're out of scope
-x :=) param
-y :=) local
-z :=) result
+x :=) 15
+myFunction(x)
