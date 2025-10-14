@@ -731,7 +731,7 @@ public class EmoticonParser extends Parser {
 				              newId.value = ((AsContext)_localctx).expr.value;
 				              //TYPE CHECK HERE
 				              newId.type = typeCheck(String.valueOf(newId.value));
-				              System.out.println("DEBUG: Assign " + pendingLHS + " = " + String.valueOf(newId.value));
+				              System.out.println("DEBUG: Assign " + pendingLHS + " = " + String.valueOf(newId.value) " Type = " + newId.type);
 				              newId.hasKnown = ((AsContext)_localctx).expr.hasKnownValue;
 				              newId.hasBeenUsed = false;
 				              

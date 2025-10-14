@@ -2,11 +2,16 @@
 global :=) 100
 
 <3 Define function with parameter
-=^._.^= myFunction(param) ><(((,^>
+=^._.^= param(param) ><(((,^>
   local :=) param :+) 10
   result :=) local :*) 2
-  :P(result)
-  :P(global)
+  :P("This is params")
+<^,)))><
+
+=^._.^= noParam() ><(((,^>
+  local :=) param :+) 10
+  result :=) local :*) 2
+  :P("This is no param")
 <^,)))><
 
 <3 Call the function

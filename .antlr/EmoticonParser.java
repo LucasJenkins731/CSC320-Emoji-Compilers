@@ -265,7 +265,7 @@ public class EmoticonParser extends Parser {
 	      newId.hasBeenUsed = false;
 	      
 	      addVariable(newId);
-	      System.out.println("DEBUG: Assign " + varName + " = " + value);
+	      System.out.println(varName + " = " + value);
 	    } else if (ctx.KW_READ() != null) {
 	      Identifier newId = new Identifier();
 	      newId.id = varName;
@@ -280,7 +280,7 @@ public class EmoticonParser extends Parser {
 	  void executePrint(EmoticonParser.PsContext ctx) {
 	    Integer value = evaluateExpr(ctx.expr());
 	    if (value != null) {
-	      System.out.println("DEBUG: Print value = " + value);
+	      System.out.println("Print value = " + value);
 	    }
 	  }
 	  
@@ -699,7 +699,7 @@ public class EmoticonParser extends Parser {
 				              newId.value = ((AsContext)_localctx).expr.value;
 				              //TYPE CHECK HERE
 				              newId.type = typeCheck(String.valueOf(newId.value));
-				              System.out.println("DEBUG: Assign " + pendingLHS + " = " + String.valueOf(newId.value));
+				              System.out.println("Assign " + pendingLHS + " = " + String.valueOf(newId.value));
 				              newId.hasKnown = ((AsContext)_localctx).expr.hasKnownValue;
 				              newId.hasBeenUsed = false;
 				              
@@ -779,7 +779,7 @@ public class EmoticonParser extends Parser {
 
 			      if (!definingFunction) {
 			        if (((PsContext)_localctx).expr.hasKnownValue) {
-			          System.out.println("DEBUG: Print value = " + ((PsContext)_localctx).expr.value);
+			          System.out.println("Print value = " + ((PsContext)_localctx).expr.value);
 			        }
 			      }
 			    
@@ -1451,7 +1451,7 @@ public class EmoticonParser extends Parser {
 				    func.name = ((FunctionstmtContext)_localctx).name.getText();
 				    func.paramName = ((FunctionstmtContext)_localctx).param.getText();
 				    functions.put(func.name, func);
-				    System.out.println("DEBUG: Defining function '" + func.name + "' with parameter '" + func.paramName + "'");
+				    System.out.println("Defining function '" + func.name + "' with parameter '" + func.paramName + "'");
 				  
 				setState(171);
 				((FunctionstmtContext)_localctx).body = s();
@@ -1460,7 +1460,7 @@ public class EmoticonParser extends Parser {
 				    functionDefDepth = 0;
 				    FunctionDef funcDef = functions.get(((FunctionstmtContext)_localctx).name.getText());
 				    funcDef.body = ((FunctionstmtContext)_localctx).body;
-				    System.out.println("DEBUG: Function '" + funcDef.name + "' definition complete");
+				    System.out.println("Function '" + funcDef.name + "' definition complete");
 				  
 				}
 				break;
@@ -1482,7 +1482,7 @@ public class EmoticonParser extends Parser {
 				    func2.name = ((FunctionstmtContext)_localctx).name.getText();
 				    func2.paramName = null;
 				    functions.put(func2.name, func2);
-				    System.out.println("DEBUG: Defining function '" + func2.name + "' with no parameters");
+				    System.out.println("Definined function '" + func2.name + "' with no parameters");
 				  
 				setState(179);
 				((FunctionstmtContext)_localctx).body = s();
@@ -1491,7 +1491,6 @@ public class EmoticonParser extends Parser {
 				    functionDefDepth = 0;
 				    FunctionDef funcDef2 = functions.get(((FunctionstmtContext)_localctx).name.getText());
 				    funcDef2.body = ((FunctionstmtContext)_localctx).body;
-				    System.out.println("DEBUG: Function '" + funcDef2.name + "' definition complete");
 				  
 				}
 				break;
@@ -1548,7 +1547,7 @@ public class EmoticonParser extends Parser {
 				      error(((FunctioncallContext)_localctx).IDENT, "function '" + funcName + "' not defined");
 				    } else {
 				      FunctionDef func = functions.get(funcName);
-				      System.out.println("DEBUG: Calling function '" + funcName + "' with argument " + ((FunctioncallContext)_localctx).arg.value);
+				      System.out.println("Calling function '" + funcName + "' with argument " + ((FunctioncallContext)_localctx).arg.value);
 				      
 				      // Create new scope for function call
 				      SymbolTable funcScope = new SymbolTable();
@@ -1563,7 +1562,7 @@ public class EmoticonParser extends Parser {
 				        paramId.hasKnown = ((FunctioncallContext)_localctx).arg.hasKnownValue;
 				        paramId.hasBeenUsed = false;
 				        addVariable(paramId);
-				        System.out.println("DEBUG: Set parameter '" + func.paramName + "' = " + ((FunctioncallContext)_localctx).arg.value);
+				        System.out.println("Set parameter '" + func.paramName + "' = " + ((FunctioncallContext)_localctx).arg.value);
 				      }
 				      
 				      // Execute function body
@@ -1573,7 +1572,7 @@ public class EmoticonParser extends Parser {
 				      
 				      // Pop function scope after execution
 				      symbolStack.pop();
-				      System.out.println("DEBUG: Function '" + funcName + "' execution complete");
+				      System.out.println("Function '" + funcName + "' executed");
 				    }
 				  
 				}
@@ -1596,7 +1595,7 @@ public class EmoticonParser extends Parser {
 				      if (func.paramName != null) {
 				        error(((FunctioncallContext)_localctx).IDENT, "function '" + funcName + "' expects a parameter");
 				      } else {
-				        System.out.println("DEBUG: Calling function '" + funcName + "'");
+				        System.out.println("Calling " + funcName);
 				        
 				        // Create new scope for function call
 				        SymbolTable funcScope = new SymbolTable();
@@ -1609,7 +1608,7 @@ public class EmoticonParser extends Parser {
 				        
 				        // Pop function scope after execution
 				        symbolStack.pop();
-				        System.out.println("DEBUG: Function '" + funcName + "' execution complete");
+				        System.out.println("Function " + funcName + " executed");
 				      }
 				    }
 				  

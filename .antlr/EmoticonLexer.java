@@ -258,7 +258,7 @@ public class EmoticonLexer extends Lexer {
 	      newId.hasBeenUsed = false;
 	      
 	      addVariable(newId);
-	      System.out.println("DEBUG: Assign " + varName + " = " + value);
+	      System.out.println(varName + " = " + value);
 	    } else if (ctx.KW_READ() != null) {
 	      Identifier newId = new Identifier();
 	      newId.id = varName;
@@ -273,7 +273,7 @@ public class EmoticonLexer extends Lexer {
 	  void executePrint(EmoticonParser.PsContext ctx) {
 	    Integer value = evaluateExpr(ctx.expr());
 	    if (value != null) {
-	      System.out.println("DEBUG: Print value = " + value);
+	      System.out.println("Print value = " + value);
 	    }
 	  }
 	  

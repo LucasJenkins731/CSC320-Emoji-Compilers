@@ -167,7 +167,7 @@ grammar Emoticon;
       newId.hasBeenUsed = false;
       
       addVariable(newId);
-      System.out.println("DEBUG: Assign " + varName + " = " + value);
+      System.out.println(varName + " = " + value);
     } else if (ctx.KW_READ() != null) {
       Identifier newId = new Identifier();
       newId.id = varName;
@@ -182,7 +182,7 @@ grammar Emoticon;
   void executePrint(EmoticonParser.PsContext ctx) {
     Integer value = evaluateExpr(ctx.expr());
     if (value != null) {
-      System.out.println("DEBUG: Print value = " + value);
+      System.out.println("Print value = " + value);
     }
   }
   
@@ -366,7 +366,7 @@ as
               newId.value = $expr.value;
               //TYPE CHECK HERE
               newId.type = typeCheck(String.valueOf(newId.value));
-              System.out.println("DEBUG: Assign " + pendingLHS + " = " + String.valueOf(newId.value));
+              System.out.println("Assign " + pendingLHS + " = " + String.valueOf(newId.value));
               newId.hasKnown = $expr.hasKnownValue;
               newId.hasBeenUsed = false;
               
@@ -398,7 +398,7 @@ ps : KW_PRINT '(' expr ')'
     {
       if (!definingFunction) {
         if ($expr.hasKnownValue) {
-          System.out.println("DEBUG: Print value = " + $expr.value);
+          System.out.println("Print value = " + $expr.value);
         }
       }
     }
@@ -600,7 +600,7 @@ functionstmt : KW_FUNCTION name=IDENT '(' param=IDENT ')'
     func.name = $name.getText();
     func.paramName = $param.getText();
     functions.put(func.name, func);
-    System.out.println("DEBUG: Defining function '" + func.name + "' with parameter '" + func.paramName + "'");
+    System.out.println("Defining function '" + func.name + "' with parameter '" + func.paramName + "'");
   }
   body=s
   {
@@ -608,7 +608,7 @@ functionstmt : KW_FUNCTION name=IDENT '(' param=IDENT ')'
     functionDefDepth = 0;
     FunctionDef funcDef = functions.get($name.getText());
     funcDef.body = $body.ctx;
-    System.out.println("DEBUG: Function '" + funcDef.name + "' definition complete");
+    System.out.println("Function '" + funcDef.name + "' definition complete");
   }
   | KW_FUNCTION name=IDENT '('')' 
   {
@@ -618,7 +618,7 @@ functionstmt : KW_FUNCTION name=IDENT '(' param=IDENT ')'
     func2.name = $name.getText();
     func2.paramName = null;
     functions.put(func2.name, func2);
-    System.out.println("DEBUG: Defining function '" + func2.name + "' with no parameters");
+    System.out.println("Definined function '" + func2.name + "' with no parameters");
   }
   body=s
   {
@@ -626,7 +626,6 @@ functionstmt : KW_FUNCTION name=IDENT '(' param=IDENT ')'
     functionDefDepth = 0;
     FunctionDef funcDef2 = functions.get($name.getText());
     funcDef2.body = $body.ctx;
-    System.out.println("DEBUG: Function '" + funcDef2.name + "' definition complete");
   }
   ;
 
@@ -637,7 +636,7 @@ functioncall : IDENT '(' arg=expr ')'
       error($IDENT, "function '" + funcName + "' not defined");
     } else {
       FunctionDef func = functions.get(funcName);
-      System.out.println("DEBUG: Calling function '" + funcName + "' with argument " + $arg.value);
+      System.out.println("Calling function '" + funcName + "' with argument " + $arg.value);
       
       // Create new scope for function call
       SymbolTable funcScope = new SymbolTable();
@@ -652,7 +651,7 @@ functioncall : IDENT '(' arg=expr ')'
         paramId.hasKnown = $arg.hasKnownValue;
         paramId.hasBeenUsed = false;
         addVariable(paramId);
-        System.out.println("DEBUG: Set parameter '" + func.paramName + "' = " + $arg.value);
+        System.out.println("Set parameter '" + func.paramName + "' = " + $arg.value);
       }
       
       // Execute function body
@@ -662,7 +661,7 @@ functioncall : IDENT '(' arg=expr ')'
       
       // Pop function scope after execution
       symbolStack.pop();
-      System.out.println("DEBUG: Function '" + funcName + "' execution complete");
+      System.out.println("Function '" + funcName + "' executed");
     }
   }
   | IDENT '('')'
@@ -675,7 +674,7 @@ functioncall : IDENT '(' arg=expr ')'
       if (func.paramName != null) {
         error($IDENT, "function '" + funcName + "' expects a parameter");
       } else {
-        System.out.println("DEBUG: Calling function '" + funcName + "'");
+        System.out.println("Calling " + funcName);
         
         // Create new scope for function call
         SymbolTable funcScope = new SymbolTable();
@@ -688,7 +687,7 @@ functioncall : IDENT '(' arg=expr ')'
         
         // Pop function scope after execution
         symbolStack.pop();
-        System.out.println("DEBUG: Function '" + funcName + "' execution complete");
+        System.out.println("Function " + funcName + " executed");
       }
     }
   }
