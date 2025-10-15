@@ -1,10 +1,17 @@
-<3 Example of some bad math. (line 10)
+<3 Define x
+x :=) 1
 
-num :=) 1
-thing :=) 'a thing'
+<3 Define y and z in scope
+><(((,^>
+  y :=) 2
+  ><(((,^>
+   z :=) 3
+  <^,)))><  
+<^,)))><
 
-<3 just some math
-math :=) 5 :+) 4
+<3 Print x as it is in scope
+:P(x)
 
-<3 uh oh...
-maths :=) 4 :) 23
+<3 y and z will not print because they are out of scope
+:P(y)
+:P(z)
