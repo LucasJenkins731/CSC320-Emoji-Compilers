@@ -1,24 +1,21 @@
-<3 Function Call Test
-global :=) 100
+weeeeeeeeeeeeeeeee :=) 67
+woooooooooo :=) "hey"
+waaaaaaaaaa :=) 'c'
 
 <3 Define function with parameter
 =^._.^= param(param) ><(((,^>
   local :=) param :+) 10
   result :=) local :*) 2
-  :P("This is params")
+  :P(result)
 <^,)))><
 
 =^._.^= noParam() ><(((,^>
-  local :=) param :+) 10
+  local :=) 5 :+) 10
   result :=) local :*) 2
-  :P("This is no param")
 <^,)))><
 
 <3 Call the function
-myFunction(5)
+param(5)
 
 <3 Call with different argument
-myFunction(20)
-
-x :=) 15
-myFunction(x)
+noParam()

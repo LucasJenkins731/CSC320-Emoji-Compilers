@@ -65,10 +65,9 @@ grammar Emoticon;
     for (Map.Entry<String, Identifier> entry : mainTable.table.entrySet()) {
       if (!entry.getValue().hasBeenUsed) {
         if (!foundUnused) {
-          System.err.println("\nUnused variables:");
           foundUnused = true;
         }
-        System.err.println("Variable '" + entry.getKey() + "' declared but never used");
+        System.err.println(entry.getKey() + " declared but never used");
       }
     }
   }
@@ -182,7 +181,7 @@ grammar Emoticon;
   void executePrint(EmoticonParser.PsContext ctx) {
     Integer value = evaluateExpr(ctx.expr());
     if (value != null) {
-      System.out.println("Print value = " + value);
+      System.out.println(value);
     }
   }
   
@@ -327,7 +326,7 @@ program :
     printDiagnostics();
   };
 
-s : functioncall | as | ps | expr | arraystmt | stringstmt | blockStatement | ifstmt | forstmt | whilestmt | functionstmt ;
+s : functioncall | as | ps | expr | arraystmt | blockStatement | ifstmt | forstmt | whilestmt | functionstmt ;
 
 blockStatement : LBRACE
   {  
@@ -349,24 +348,23 @@ blockStatement : LBRACE
   ;
 
 as
-  : IDENT 
-    {
-      if (!definingFunction) {
+  : IDENT ':=)' 
+    (
+      expr
+      {
+        if (!definingFunction) {
         pendingLHS = $IDENT.getText();
         // Check if it exists in ANY scope
         Identifier existing = lookupVariable(pendingLHS);
         lhsExistedBefore = (existing != null);
       }
-    }
-    ':=)' ( expr 
-          {
-            if (!definingFunction) {
+      if (!definingFunction) {
               Identifier newId = new Identifier();
               newId.id = pendingLHS;
               newId.value = $expr.value;
               //TYPE CHECK HERE
               newId.type = typeCheck(String.valueOf(newId.value));
-              System.out.println("Assign " + pendingLHS + " = " + String.valueOf(newId.value));
+              System.out.println(pendingLHS + " = " + String.valueOf(newId.value) + " (" + "Type = " + newId.type + ")");
               newId.hasKnown = $expr.hasKnownValue;
               newId.hasBeenUsed = false;
               
@@ -375,25 +373,40 @@ as
               
               pendingLHS = null;
             }
-          }
-        | KW_READ
-          {
-            if (!definingFunction) {
-              Identifier newId = new Identifier();
-              newId.id = pendingLHS;
-              newId.value = 0;
-              newId.type = Type.INT;
-              newId.hasKnown = false;
-              newId.hasBeenUsed = false;
-              
-              addVariable(newId);
-              
-              pendingLHS = null;
-            }
-          }
-        ) 
+      }
+    |
+      KW_READ
+      {
+        Identifier newId = new Identifier();
+        newId.id = $IDENT.getText();
+        newId.value = 0;
+        newId.type = Type.INT;
+        addVariable(newId);
+        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+      }
+    |
+      STRING
+      {
+        Identifier newId = new Identifier();
+        newId.id = $IDENT.getText();
+        newId.value = $STRING.getText();
+        newId.type = Type.STRING;
+        addVariable(newId);
+        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+      }
+    |
+      CHAR
+      {
+        Identifier newId = new Identifier();
+        newId.id = $IDENT.getText();
+        newId.value = $CHAR.getText();
+        newId.type = Type.CHAR;
+        addVariable(newId);
+        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+      }
+    )
   ;
-    
+
 ps : KW_PRINT '(' expr ')' 
     {
       if (!definingFunction) {
@@ -608,7 +621,7 @@ functionstmt : KW_FUNCTION name=IDENT '(' param=IDENT ')'
     functionDefDepth = 0;
     FunctionDef funcDef = functions.get($name.getText());
     funcDef.body = $body.ctx;
-    System.out.println("Function '" + funcDef.name + "' definition complete");
+    System.out.println("Function '" + funcDef.name + "' defined");
   }
   | KW_FUNCTION name=IDENT '('')' 
   {
@@ -618,7 +631,7 @@ functionstmt : KW_FUNCTION name=IDENT '(' param=IDENT ')'
     func2.name = $name.getText();
     func2.paramName = null;
     functions.put(func2.name, func2);
-    System.out.println("Definined function '" + func2.name + "' with no parameters");
+    System.out.println("Defining function '" + func2.name + "'");
   }
   body=s
   {
@@ -626,6 +639,7 @@ functionstmt : KW_FUNCTION name=IDENT '(' param=IDENT ')'
     functionDefDepth = 0;
     FunctionDef funcDef2 = functions.get($name.getText());
     funcDef2.body = $body.ctx;
+    System.out.println("Function '" + funcDef2.name + "' defined");
   }
   ;
 
@@ -651,7 +665,6 @@ functioncall : IDENT '(' arg=expr ')'
         paramId.hasKnown = $arg.hasKnownValue;
         paramId.hasBeenUsed = false;
         addVariable(paramId);
-        System.out.println("Set parameter '" + func.paramName + "' = " + $arg.value);
       }
       
       // Execute function body
@@ -674,7 +687,7 @@ functioncall : IDENT '(' arg=expr ')'
       if (func.paramName != null) {
         error($IDENT, "function '" + funcName + "' expects a parameter");
       } else {
-        System.out.println("Calling " + funcName);
+        System.out.println("Calling function '" + funcName + "'");
         
         // Create new scope for function call
         SymbolTable funcScope = new SymbolTable();
@@ -687,7 +700,7 @@ functioncall : IDENT '(' arg=expr ')'
         
         // Pop function scope after execution
         symbolStack.pop();
-        System.out.println("Function " + funcName + " executed");
+        System.out.println("Function '" + funcName + "' executed");
       }
     }
   }
@@ -695,7 +708,7 @@ functioncall : IDENT '(' arg=expr ')'
 
 arraystmt : KW_ARRAY IDENT ':=)' '[' INT ']' s;
 
-stringstmt : IDENT ':=)' STRING;
+//stringstmt : IDENT ':=)' STRING;
 
 operators : ADD | SUBTRACT | MULTIPLY | DIVIDE;
 

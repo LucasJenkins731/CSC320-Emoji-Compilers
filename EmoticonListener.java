@@ -158,16 +158,6 @@ public interface EmoticonListener extends ParseTreeListener {
 	 */
 	void exitArraystmt(EmoticonParser.ArraystmtContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link EmoticonParser#stringstmt}.
-	 * @param ctx the parse tree
-	 */
-	void enterStringstmt(EmoticonParser.StringstmtContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link EmoticonParser#stringstmt}.
-	 * @param ctx the parse tree
-	 */
-	void exitStringstmt(EmoticonParser.StringstmtContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link EmoticonParser#operators}.
 	 * @param ctx the parse tree
 	 */

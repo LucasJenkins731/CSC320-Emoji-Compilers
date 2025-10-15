@@ -156,10 +156,9 @@ public class EmoticonLexer extends Lexer {
 	    for (Map.Entry<String, Identifier> entry : mainTable.table.entrySet()) {
 	      if (!entry.getValue().hasBeenUsed) {
 	        if (!foundUnused) {
-	          System.err.println("\nUnused variables:");
 	          foundUnused = true;
 	        }
-	        System.err.println("Variable '" + entry.getKey() + "' declared but never used");
+	        System.err.println(entry.getKey() + " declared but never used");
 	      }
 	    }
 	  }
@@ -258,7 +257,7 @@ public class EmoticonLexer extends Lexer {
 	      newId.hasBeenUsed = false;
 	      
 	      addVariable(newId);
-	      System.out.println("DEBUG: Assign " + varName + " = " + value);
+	      System.out.println(varName + " = " + value);
 	    } else if (ctx.KW_READ() != null) {
 	      Identifier newId = new Identifier();
 	      newId.id = varName;
@@ -273,7 +272,7 @@ public class EmoticonLexer extends Lexer {
 	  void executePrint(EmoticonParser.PsContext ctx) {
 	    Integer value = evaluateExpr(ctx.expr());
 	    if (value != null) {
-	      System.out.println("DEBUG: Print value = " + value);
+	      System.out.println(value);
 	    }
 	  }
 	  

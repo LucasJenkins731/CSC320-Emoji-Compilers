@@ -197,18 +197,6 @@ public class EmoticonBaseListener implements EmoticonListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterStringstmt(EmoticonParser.StringstmtContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitStringstmt(EmoticonParser.StringstmtContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
 	@Override public void enterOperators(EmoticonParser.OperatorsContext ctx) { }
 	/**
 	 * {@inheritDoc}
