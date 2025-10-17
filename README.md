@@ -13,13 +13,17 @@ javac -cp [jar file path] *.java
 
 Now you're all set! 
 
-antlr4-parse.exe Emoticon.g4 program -gui [Example file path]
+To run a file into antlr and see all of its debug statements type this into the console
+
+java -cp .;[jar file path] org.antlr.v4.gui.TestRig Emoticon program -gui [Example file path]
 
 This line creates a gui of the grammar. 
 
 Alternatively if the gui does not load run this line instead
 
-antlr4-parse.exe Emoticon.g4 program -tree [Example file path]
+java -cp .;[jar file path] org.antlr.v4.gui.TestRig Emoticon program -tree [Example file path]
+
+this will display similar contents to the gui into the terminal 
 
 Emoticon Cheat Sheet:
 https://quinnipiacuniversity-my.sharepoint.com/:w:/g/personal/lgjenkins_quinnipiac_edu/EQX40YidXydMp9gg33d_NaYBfDYWCMoBeLag5HEhVlo5rA?e=BcfYGb

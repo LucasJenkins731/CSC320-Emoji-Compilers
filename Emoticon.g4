@@ -40,10 +40,9 @@ grammar Emoticon;
   // Error tracking
   boolean hasErrors = false;
   
-  // Track if we're currently defining a function (to skip execution during definition)
   boolean definingFunction = false;
-  int functionDefDepth = 0; // Track nesting depth during function definition
-    
+  int functionDefDepth = 0;
+
   void error(Token t, String msg) {
     diagnostics.add("line " + t.getLine() + ":" + t.getCharPositionInLine() + " " + msg);
     hasErrors = true;
@@ -84,7 +83,6 @@ grammar Emoticon;
     return varType;
   }
 
-  // Lookup a variable by searching through the scope stack (innermost first)
   Identifier lookupVariable(String name) {
     // Search from top of stack (innermost scope) down
     for (int i = symbolStack.size() - 1; i >= 0; i--) {
@@ -102,7 +100,7 @@ grammar Emoticon;
     return null; // Variable not found in any scope
   }
 
-  // Add a variable to the current scope (top of stack, or main if stack is empty)
+  // Add a variable to the current scope
   void addVariable(Identifier id) {
     if (symbolStack.isEmpty()) {
       mainTable.table.put(id.id, id);
@@ -112,7 +110,7 @@ grammar Emoticon;
     }
   }
 
-  // Check if variable exists in current scope only
+  // Check if variable exists in current scope
   boolean existsInCurrentScope(String name) {
     if (symbolStack.isEmpty()) {
       return mainTable.table.containsKey(name);
@@ -121,7 +119,7 @@ grammar Emoticon;
     }
   }
   
-  // Execute a function body by re-visiting the parse tree
+  // Execute declared function
   void executeStatement(ParserRuleContext ctx) {
     if (ctx == null) {
       return;
@@ -153,8 +151,7 @@ grammar Emoticon;
   
   void executeAssignment(EmoticonParser.AsContext ctx) {
     String varName = ctx.IDENT().getText();
-    
-    // Check if it's expr or READ
+
     if (ctx.expr() != null) {
       Integer value = evaluateExpr(ctx.expr());
       

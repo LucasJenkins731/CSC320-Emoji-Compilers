@@ -1,7 +1,3 @@
-testInt :=) 67
-testString :=) "hey"
-testChar :=) 'c'
-
 <3 Define function with parameter
 =^._.^= param(x) ><(((,^>
   y :=) x :+) 20

@@ -1,5 +1,5 @@
 // Generated from c:/Users/pieco/Desktop/Emoticon language/Emoticon.g4 by ANTLR 4.13.1
- import java.util.*; 
+ import java.util.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; 
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -173,6 +173,18 @@ public class EmoticonBaseListener implements EmoticonListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterFunctioncall(EmoticonParser.FunctioncallContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFunctioncall(EmoticonParser.FunctioncallContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterArraystmt(EmoticonParser.ArraystmtContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -180,18 +192,6 @@ public class EmoticonBaseListener implements EmoticonListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitArraystmt(EmoticonParser.ArraystmtContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterStringstmt(EmoticonParser.StringstmtContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitStringstmt(EmoticonParser.StringstmtContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
