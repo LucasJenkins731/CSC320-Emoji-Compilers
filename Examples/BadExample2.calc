@@ -1,7 +1,14 @@
+y :=) 16 :+) 4 :/) 2
+:P(y)
+<3 might be expected by user to print 10 but because of operator precedence, prints 18
+
+y :=) (16 :+) 4) :/) 2
+:P(y)
+<3 should now print user's desired result
+
 
 <3 Define x
 x :=) 1
-
 
 ><(((,^>
 
@@ -15,6 +22,6 @@ x :=) 1
 
 
 
-<3 will show an error of extraneous input since we did not close the block
+<3 will show an error of extraneous input since the first block isn't closed.
 :P(x)
 
