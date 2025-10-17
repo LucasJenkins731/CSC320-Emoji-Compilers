@@ -1,10 +1,9 @@
-<3 Good example of some simple if, if else, and else statements along with a for and while loop.
+<3 example of various types.
+testInt1 :=) 67
+testInt2 :=) 41
+testString :=) "hey"
+testChar :=) 'c'
 
-:) (1 :==) 0) :P (a)
-:| (1 :==) 1) :P (b)
-:( (1 :==) 1) :P (c)
-
->:( (i :=) 1; i :==) 1; i :+) 1) :P(a)
-
-D:< (i :==) 1) :P(z)
-
+:P(testInt1)
+:P(testInt2)
+:P(testInt1 :+) testInt2)
