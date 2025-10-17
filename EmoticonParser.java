@@ -150,7 +150,7 @@ public class EmoticonParser extends Parser {
 	  void printDiagnostics() {    
 	    if (!diagnostics.isEmpty()) {
 	      for (String d : diagnostics) {
-	        System.err.println("Error: " + d);
+	        System.err.println(d);
 	      }
 	    }    
 	    checkUnusedVariables();

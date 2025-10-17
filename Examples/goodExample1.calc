@@ -1,21 +1,21 @@
-weeeeeeeeeeeeeeeee :=) 67
-woooooooooo :=) "hey"
-waaaaaaaaaa :=) 'c'
+testInt :=) 67
+testString :=) "hey"
+testChar :=) 'c'
 
 <3 Define function with parameter
-=^._.^= param(param) ><(((,^>
-  local :=) param :+) 10
-  result :=) local :*) 2
-  :P(result)
+=^._.^= param(x) ><(((,^>
+  y :=) x :+) 20
+  :P(y)
 <^,)))><
 
+<3 Define punction with no parameters
 =^._.^= noParam() ><(((,^>
-  local :=) 5 :+) 10
-  result :=) local :*) 2
+  y :=) 50 :+) 50
+  :P(y)
 <^,)))><
 
-<3 Call the function
+<3 Call param with parameter 5
 param(5)
 
-<3 Call with different argument
+<3 Call noParam with no parameters
 noParam()
