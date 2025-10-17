@@ -113,8 +113,8 @@ public class EmoticonLexer extends Lexer {
 	  
 	  class FunctionDef {
 	    String name;
-	    String paramName; // null if no parameter
-	    ParserRuleContext body; // Store the parse tree of the function body
+	    String paramName;
+	    ParserRuleContext body;
 	  }
 	  
 	  SymbolTable mainTable = new SymbolTable();
@@ -175,7 +175,6 @@ public class EmoticonLexer extends Lexer {
 	  }
 
 	  Identifier lookupVariable(String name) {
-	    // Search from top of stack (innermost scope) down
 	    for (int i = symbolStack.size() - 1; i >= 0; i--) {
 	      SymbolTable table = symbolStack.get(i);
 	      if (table.table.containsKey(name)) {
@@ -183,15 +182,14 @@ public class EmoticonLexer extends Lexer {
 	      }
 	    }
 	    
-	    // Finally check the main/global table
 	    if (mainTable.table.containsKey(name)) {
 	      return mainTable.table.get(name);
 	    }
 	    
-	    return null; // Variable not found in any scope
+	    return null;
 	  }
 
-	  // Add a variable to the current scope
+	  // Add variable to the current scope
 	  void addVariable(Identifier id) {
 	    if (symbolStack.isEmpty()) {
 	      mainTable.table.put(id.id, id);
@@ -216,7 +214,7 @@ public class EmoticonLexer extends Lexer {
 	      return;
 	    }
 	    
-	    // Check what type of statement this is and execute it
+	    // Check statmenet type and execute
 	    if (ctx instanceof EmoticonParser.AsContext) {
 	      executeAssignment((EmoticonParser.AsContext) ctx);
 	    } else if (ctx instanceof EmoticonParser.PsContext) {
@@ -226,7 +224,6 @@ public class EmoticonLexer extends Lexer {
 	    } else if (ctx instanceof EmoticonParser.IfstmtContext) {
 	      executeIf((EmoticonParser.IfstmtContext) ctx);
 	    } else if (ctx instanceof EmoticonParser.SContext) {
-	      // It's a general statement context, figure out which type
 	      EmoticonParser.SContext sCtx = (EmoticonParser.SContext) ctx;
 	      if (sCtx.as() != null) {
 	        executeAssignment(sCtx.as());
@@ -295,17 +292,12 @@ public class EmoticonLexer extends Lexer {
 	  
 	  Integer evaluateExpr(EmoticonParser.ExprContext ctx) {
 	    if (ctx == null) return null;
-	    
-	    // Get the first term
 	    Integer value = evaluateTerm(ctx.term(0));
 	    if (value == null) return null;
-	    
-	    // Process additional terms with operators
 	    for (int i = 1; i < ctx.term().size(); i++) {
 	      Integer nextValue = evaluateTerm(ctx.term(i));
 	      if (nextValue == null) return null;
-	      
-	      String op = ctx.getChild(i * 2 - 1).getText(); // Get operator
+	      String op = ctx.getChild(i * 2 - 1).getText();
 	      if (op.equals(":+)")) {
 	        value = value + nextValue;
 	      } else if (op.equals(":-)")) {
@@ -319,11 +311,11 @@ public class EmoticonLexer extends Lexer {
 	  Integer evaluateTerm(EmoticonParser.TermContext ctx) {
 	    if (ctx == null) return null;
 	    
-	    // Get the first factor
+	    // Get first factor
 	    Integer value = evaluateFactor(ctx.factor(0));
 	    if (value == null) return null;
 	    
-	    // Process additional factors with operators
+	    // Process other factors with operators
 	    for (int i = 1; i < ctx.factor().size(); i++) {
 	      Integer nextValue = evaluateFactor(ctx.factor(i));
 	      if (nextValue == null) return null;
@@ -333,7 +325,7 @@ public class EmoticonLexer extends Lexer {
 	        value = value * nextValue;
 	      } else if (op.equals(":/)")) {
 	        if (nextValue == 0) {
-	          return null; // Division by zero
+	          return null;
 	        }
 	        value = value / nextValue;
 	      }

@@ -120,8 +120,8 @@ public class EmoticonParser extends Parser {
 	  
 	  class FunctionDef {
 	    String name;
-	    String paramName; // null if no parameter
-	    ParserRuleContext body; // Store the parse tree of the function body
+	    String paramName;
+	    ParserRuleContext body;
 	  }
 	  
 	  SymbolTable mainTable = new SymbolTable();
@@ -182,7 +182,6 @@ public class EmoticonParser extends Parser {
 	  }
 
 	  Identifier lookupVariable(String name) {
-	    // Search from top of stack (innermost scope) down
 	    for (int i = symbolStack.size() - 1; i >= 0; i--) {
 	      SymbolTable table = symbolStack.get(i);
 	      if (table.table.containsKey(name)) {
@@ -190,15 +189,14 @@ public class EmoticonParser extends Parser {
 	      }
 	    }
 	    
-	    // Finally check the main/global table
 	    if (mainTable.table.containsKey(name)) {
 	      return mainTable.table.get(name);
 	    }
 	    
-	    return null; // Variable not found in any scope
+	    return null;
 	  }
 
-	  // Add a variable to the current scope
+	  // Add variable to the current scope
 	  void addVariable(Identifier id) {
 	    if (symbolStack.isEmpty()) {
 	      mainTable.table.put(id.id, id);
@@ -223,7 +221,7 @@ public class EmoticonParser extends Parser {
 	      return;
 	    }
 	    
-	    // Check what type of statement this is and execute it
+	    // Check statmenet type and execute
 	    if (ctx instanceof EmoticonParser.AsContext) {
 	      executeAssignment((EmoticonParser.AsContext) ctx);
 	    } else if (ctx instanceof EmoticonParser.PsContext) {
@@ -233,7 +231,6 @@ public class EmoticonParser extends Parser {
 	    } else if (ctx instanceof EmoticonParser.IfstmtContext) {
 	      executeIf((EmoticonParser.IfstmtContext) ctx);
 	    } else if (ctx instanceof EmoticonParser.SContext) {
-	      // It's a general statement context, figure out which type
 	      EmoticonParser.SContext sCtx = (EmoticonParser.SContext) ctx;
 	      if (sCtx.as() != null) {
 	        executeAssignment(sCtx.as());
@@ -302,17 +299,12 @@ public class EmoticonParser extends Parser {
 	  
 	  Integer evaluateExpr(EmoticonParser.ExprContext ctx) {
 	    if (ctx == null) return null;
-	    
-	    // Get the first term
 	    Integer value = evaluateTerm(ctx.term(0));
 	    if (value == null) return null;
-	    
-	    // Process additional terms with operators
 	    for (int i = 1; i < ctx.term().size(); i++) {
 	      Integer nextValue = evaluateTerm(ctx.term(i));
 	      if (nextValue == null) return null;
-	      
-	      String op = ctx.getChild(i * 2 - 1).getText(); // Get operator
+	      String op = ctx.getChild(i * 2 - 1).getText();
 	      if (op.equals(":+)")) {
 	        value = value + nextValue;
 	      } else if (op.equals(":-)")) {
@@ -326,11 +318,11 @@ public class EmoticonParser extends Parser {
 	  Integer evaluateTerm(EmoticonParser.TermContext ctx) {
 	    if (ctx == null) return null;
 	    
-	    // Get the first factor
+	    // Get first factor
 	    Integer value = evaluateFactor(ctx.factor(0));
 	    if (value == null) return null;
 	    
-	    // Process additional factors with operators
+	    // Process other factors with operators
 	    for (int i = 1; i < ctx.factor().size(); i++) {
 	      Integer nextValue = evaluateFactor(ctx.factor(i));
 	      if (nextValue == null) return null;
@@ -340,7 +332,7 @@ public class EmoticonParser extends Parser {
 	        value = value * nextValue;
 	      } else if (op.equals(":/)")) {
 	        if (nextValue == 0) {
-	          return null; // Division by zero
+	          return null;
 	        }
 	        value = value / nextValue;
 	      }
@@ -1044,11 +1036,9 @@ public class EmoticonParser extends Parser {
 				        String id = ((FactorContext)_localctx).IDENT.getText();
 				        
 				        if (definingFunction) {
-				          // During function definition, just validate syntax
 				          ((FactorContext)_localctx).hasKnownValue =  false;
 				          ((FactorContext)_localctx).value =  0;
 				        } else {
-				          // Use lookupVariable instead of mainTable.table.get
 				          Identifier currentId = lookupVariable(id);
 				          
 				          if (currentId == null) {
@@ -1574,13 +1564,9 @@ public class EmoticonParser extends Parser {
 				        paramId.hasBeenUsed = false;
 				        addVariable(paramId);
 				      }
-				      
-				      // Execute function body
 				      if (func.body != null) {
 				        executeStatement(func.body);
 				      }
-				      
-				      // Pop function scope after execution
 				      symbolStack.pop();
 				      System.out.println("Function '" + funcName + "' executed");
 				    }
@@ -1606,17 +1592,11 @@ public class EmoticonParser extends Parser {
 				        error(((FunctioncallContext)_localctx).IDENT, "function '" + funcName + "' expects a parameter");
 				      } else {
 				        System.out.println("Calling function '" + funcName + "'");
-				        
-				        // Create new scope for function call
 				        SymbolTable funcScope = new SymbolTable();
-				        symbolStack.push(funcScope);
-				        
-				        // Execute function body
+				        symbolStack.push(funcScope);y
 				        if (func.body != null) {
 				          executeStatement(func.body);
 				        }
-				        
-				        // Pop function scope after execution
 				        symbolStack.pop();
 				        System.out.println("Function '" + funcName + "' executed");
 				      }
