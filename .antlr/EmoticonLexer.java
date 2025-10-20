@@ -1,4 +1,4 @@
-// Generated from /Users/connorryan/Desktop/CSC320-Emoji-Compilers/Emoticon.g4 by ANTLR 4.13.1
+// Generated from c:/Users/pieco/Desktop/Emoticon language/Emoticon.g4 by ANTLR 4.13.1
  import java.util.*; 
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
