@@ -1,6 +1,7 @@
 <3 example of various types.
 testInt1 :=) 67
 testInt2 :=) 41
+testFloat :=) "23.2222"
 testString :=) "hey"
 testChar :=) 'c'
 

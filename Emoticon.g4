@@ -5,7 +5,7 @@ grammar Emoticon;
 @members {
 
   enum Type {
-    INT, STRING, CHAR, UNKNOWN
+    INT, FLOAT, STRING, CHAR, UNKNOWN
   }
 
   class Identifier {
@@ -70,11 +70,14 @@ grammar Emoticon;
       }
     }
   }
-
+//[+-]?[0-9]*.[0-9]+
+//"('+'|'-')? ('0'|[1-9][0-9]*) '.' ('0'|[1-9][0-9]*)"
   Type typeCheck(String text) {
     Type varType = Type.UNKNOWN;
     if (text.matches("[+-]?(0|[1-9][0-9]*)")) {
       varType = Type.INT;
+    } else if (text.matches("[+-]?[0-9]*.[0-9]+")){
+      varType = Type.FLOAT;
     } else if (text.matches("'(\\\\.|[^\\\\'])'")){
       varType = Type.CHAR;
     } else if (text.matches("(['\"']).*?(['\"])")) {
@@ -294,6 +297,7 @@ SUBTRACT : ':-)';
 MULTIPLY : ':*)';
 DIVIDE : ':/)';
 INT : ('+'|'-')? ('0'|[1-9][0-9]*);
+FLOAT : [+-]?[0-9]*.[0-9]+;
 CHAR : '\'' ( '\\' . | ~('\\'|'\'')) '\'';
 STRING : ('\''|'"') .*? ('\''|'"');
 WS : [ \t\r\n]+ -> skip;
@@ -390,6 +394,16 @@ as
         newId.id = $IDENT.getText();
         newId.value = $CHAR.getText();
         newId.type = Type.CHAR;
+        addVariable(newId);
+        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+      }
+    |
+      FLOAT
+      {
+        Identifier newId = new Identifier();
+        newId.id = $IDENT.getText();
+        newId.value = $FLOAT.getText();
+        newId.type = Type.FLOAT;
         addVariable(newId);
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
       }
@@ -672,7 +686,7 @@ functioncall : IDENT '(' arg=expr ')'
       } else {
         System.out.println("Calling function '" + funcName + "'");
         SymbolTable funcScope = new SymbolTable();
-        symbolStack.push(funcScope);y
+        symbolStack.push(funcScope);
         if (func.body != null) {
           executeStatement(func.body);
         }
