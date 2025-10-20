@@ -1,8 +1,17 @@
-<3 Good example of some basic math
+<3 Define function with parameter
+=^._.^= param(x) ><(((,^>
+  y :=) x :+) 20
+  :P(y)
+<^,)))><
 
-<3 random stuff
-a :=) 37 :+) 42 
-b :=) -0-0-  
-c :=) 9 :*) 15  
-d :=) (23 :-) 7) :/) (2 :+) 17) 
-e :=) (a :+) c) :/) (d :*) c) 
+<3 Define punction with no parameters
+=^._.^= noParam() ><(((,^>
+  y :=) 50 :+) 50
+  :P(y)
+<^,)))><
+
+<3 Call param with parameter 5
+param(5)
+
+<3 Call noParam with no parameters
+noParam()

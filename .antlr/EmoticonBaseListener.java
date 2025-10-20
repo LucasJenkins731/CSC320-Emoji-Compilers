@@ -1,5 +1,5 @@
-// Generated from /Users/connorryan/Desktop/CSC320-Emoji-Compilers/Emoticon.g4 by ANTLR 4.13.1
- import java.util.*; 
+// Generated from c:/Users/pieco/Desktop/Emoticon language/Emoticon.g4 by ANTLR 4.13.1
+ import java.util.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; 
 
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -41,6 +41,18 @@ public class EmoticonBaseListener implements EmoticonListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterBlockStatement(EmoticonParser.BlockStatementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitBlockStatement(EmoticonParser.BlockStatementContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterAs(EmoticonParser.AsContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -60,6 +72,42 @@ public class EmoticonBaseListener implements EmoticonListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitPs(EmoticonParser.PsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterExpr(EmoticonParser.ExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitExpr(EmoticonParser.ExprContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterTerm(EmoticonParser.TermContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitTerm(EmoticonParser.TermContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFactor(EmoticonParser.FactorContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFactor(EmoticonParser.FactorContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -125,6 +173,18 @@ public class EmoticonBaseListener implements EmoticonListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterFunctioncall(EmoticonParser.FunctioncallContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFunctioncall(EmoticonParser.FunctioncallContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterArraystmt(EmoticonParser.ArraystmtContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -137,25 +197,13 @@ public class EmoticonBaseListener implements EmoticonListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void enterStringstmt(EmoticonParser.StringstmtContext ctx) { }
+	@Override public void enterOperators(EmoticonParser.OperatorsContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
-	@Override public void exitStringstmt(EmoticonParser.StringstmtContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterOp(EmoticonParser.OpContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitOp(EmoticonParser.OpContext ctx) { }
+	@Override public void exitOperators(EmoticonParser.OperatorsContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -168,18 +216,6 @@ public class EmoticonBaseListener implements EmoticonListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitComp(EmoticonParser.CompContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void enterExpr(EmoticonParser.ExprContext ctx) { }
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>The default implementation does nothing.</p>
-	 */
-	@Override public void exitExpr(EmoticonParser.ExprContext ctx) { }
 
 	/**
 	 * {@inheritDoc}

@@ -1,15 +1,24 @@
-<3 Good example of functions, strings, arrays, and comment blocks 
 
-=^._.^= ahhhhh (ahhhhhhhh) :P(y)
+x :=) 5
+y :=) 6
+z :=) 7
 
-(o_o) ughabogah :=) [10] :P(a)
+<3 variables inside blocks are used instead of global variables and variables can be called in the further nested blocks.
+><(((,^>
+    x :=) 500
+    ><(((,^>
+        y :=) 600
+        ><(((,^>
+            z :=) 700
+            ><(((,^>
+                :P(z)
+            <^,)))><
+            :P(y)
+        <^,)))><
+        :P(x)
+    <^,)))><
+<^,)))><
 
-hi :=) 'jtskweekrkwe'
-
-OWO 
-Connor 
-Ryan 
-is 
-bad at smash
- UWU
-
+:P(x)
+:P(y)
+:P(z)
