@@ -290,13 +290,7 @@ KW_INT : 'int';
 KW_STRING : 'string';
 KW_CHAR : 'char';
 
-<<<<<<< HEAD
-
-//hi
-//Other tokens
-=======
 // Other tokens
->>>>>>> d491941213aab1e8b6cffe1b7ea39baf9cbf2425
 IDENT : [A-Za-z][A-Za-z0-9_]* | [_][A-Za-z0-9_]+;
 ADD : ':+)';
 SUBTRACT : ':-)';

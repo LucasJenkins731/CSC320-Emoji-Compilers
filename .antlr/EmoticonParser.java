@@ -1,9 +1,5 @@
 // Generated from c:/Users/pieco/Desktop/Emoticon language/Emoticon.g4 by ANTLR 4.13.1
-<<<<<<< HEAD
- import java.util.*; 
-=======
  import java.util.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; 
->>>>>>> d491941213aab1e8b6cffe1b7ea39baf9cbf2425
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
