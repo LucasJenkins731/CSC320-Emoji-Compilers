@@ -8,3 +8,4 @@ testChar :=) 'c'
 :P(testInt1)
 :P(testInt2)
 :P(testInt1 :+) testInt2)
+:P(testString)
