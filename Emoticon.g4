@@ -8,6 +8,18 @@ grammar Emoticon;
     INT, FLOAT, STRING, CHAR, UNKNOWN
   }
 
+  class ExprResult {
+    Type type;
+    float numericalValue;
+    String stringValue;
+    boolean hasKnownValue;
+
+    ExprResult(){
+      hasKnownValue = false;
+    }
+
+  }
+
   class Identifier {
     String id;
     Object value;
@@ -354,11 +366,15 @@ as
       if (!definingFunction) {
               Identifier newId = new Identifier();
               newId.id = pendingLHS;
-              newId.value = $expr.value;
+              if($expr.result.type == Type.INT || $expr.result.type == Type.FLOAT){
+              newId.value = $expr.result.numericalValue;
+              } else {
+                newId.value = $expr.result.stringlValue;
+              }
               //TYPE CHECK HERE
               newId.type = typeCheck(String.valueOf(newId.value));
               System.out.println(pendingLHS + " = " + String.valueOf(newId.value) + " (" + "Type = " + newId.type + ")");
-              newId.hasKnown = $expr.hasKnownValue;
+              newId.hasKnown = $expr.result.hasKnownValue;
               newId.hasBeenUsed = false;
               
               // Add to CURRENT scope
@@ -412,123 +428,145 @@ as
 
 ps : KW_PRINT '(' expr ')' 
     {
-      if (!definingFunction) {
-        if ($expr.hasKnownValue) {
-          System.out.println("Print value = " + $expr.value);
+      if($expr.result.hasKnownValue){
+        if($expr.result.type == Type.INT || $expr.result.type == Type.FLOAT){
+          System.out.println($expr.result.numericalValue);
+        } else {
+          System.out.println($expr.result.stringValue);
         }
       }
     }
 ;
 
-expr returns [boolean hasKnownValue, Integer value]
+expr returns [ExprResult result]
   : a=term
     {
-      if ($a.hasKnownValue) {
-        $hasKnownValue = true;
-        $value = $a.value;
-      } else {
-        $hasKnownValue = false;
-      } 
+      ExprResult resultA = a.result;
+      $result = a.result;
     }
-    (op=(ADD | SUBTRACT) b=term
-    {
-      if ($hasKnownValue && $b.hasKnownValue) {
-        if ($op.getText().equals(":+)")) {
-          $value = $value + $b.value;
-        } else {
-          $value = $value - $b.value;
-        }
-      } else {
-        $hasKnownValue = false;
-      }
-    }
-    )*
-  ;
-
-term returns [boolean hasKnownValue, Integer value]
-  : a=factor 
-    {
-      if ($a.hasKnownValue) {
-        $hasKnownValue = true;
-        $value = $a.value;
-      } else {
-        $hasKnownValue = false;
-      }
-    }
-  ( op=(MULTIPLY|DIVIDE) b=factor
-    {
-      if ($b.hasKnownValue && $op.getText().equals(":/)") && $b.value == 0) {
-        if (!definingFunction) {
-          error($op, "division by zero");
-        }
-        $hasKnownValue = false;
-      } else if ($hasKnownValue && $b.hasKnownValue) {
-        if ($op.getText().equals(":*)")) {
-          $value = $value * $b.value;
-        } else {
-          $value = $value / $b.value;
-        }
-      } else {
-        $hasKnownValue = false;
-      }
-    }
-    )*
-  ;
-
-factor returns [boolean hasKnownValue, Integer value]
-  : INT 
-      { 
-        $hasKnownValue = true; 
-        $value = Integer.parseInt($INT.getText());
-      }
-  | IDENT 
+    ( op=(ADD|SUBTRACT) b=factor
       {
-        String id = $IDENT.getText();
-        
-        if (definingFunction) {
-          $hasKnownValue = false;
-          $value = 0;
-        } else {
-          Identifier currentId = lookupVariable(id);
-          
-          if (currentId == null) {
-            if (pendingLHS != null && !lhsExistedBefore && id.equals(pendingLHS)) {
-              error($IDENT, "self-reference on first assignment of '" + pendingLHS + "'");
+        ExprResult resultB = b.result;
+          if((resultA.type == Type.INT || resultA.type == Type.FLOAT)){
+            if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
+              if($op.getText().equals(":+)")){
+                resultA.numericalValue += resultB.numericalValue;
+              } else {
+                resultA.numericalValue -= resultB.numericalValue;
+              }
+              $result.numericalValue = resultA.numericalValue;
             } else {
-              error($IDENT, "use of variable '" + id + "' before assignment");
+              error($op, "cannot do arithmetic on non-numerical types");
+              $result.hasKnownValue = false;
             }
-            $hasKnownValue = false;
-            $value = 0;
-          } else if(currentId.type != Type.INT){
-            error($IDENT, id + " is not of type int");
-            $hasKnownValue = false;
-            $value = 0;
-          } else {
-            currentId.hasBeenUsed = true;
-            $hasKnownValue = currentId.hasKnown;
-            Object val = currentId.value;
-            if (val instanceof Integer) {
-                $value = (Integer) val;
-            } else if (val instanceof String) {
-                $value = Integer.parseInt((String) val);
+          } else if(resultB.type == Type.STRING || resultB.type == Type.CHAR){
+            if($op.getText().equals(":+)")){
+              $result.stringValue = resultA.stringValue + resultB.stringValue;
             } else {
-                error($IDENT, "Unsupported type for arithmetic: " + val.getClass().getSimpleName());
-                $hasKnownValue = false;
-                $value = 0;
-            }
+            error($op, "cannot subtract strings");
+            $result.HasKnownValue = false;
           }
-        }
-      }
-  | '(' expr ')' 
-      { 
-        if ($expr.hasKnownValue) {
-          $hasKnownValue = true;
-          $value = $expr.value;
         } else {
-          $hasKnownValue = false;
-          $value = 0;
+          error($op, "unknown type");
+          $result.hasKnownValue = false;
         }
       }
+    )*
+  ;
+
+term returns [ExprResult result]
+  : a=factor
+    {
+      ExprResult resultA = a.result;
+      $result = a.result;
+    }
+    ( op=(MULTIPLY|DIVIDE) b=factor
+      {
+        ExprResult resultB = b.result;
+        if(resultA.type == Type.INT || resultA.type == Type.FLOAT){
+          if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
+            //now do math
+            if(resultB.numericalValue == 0 && $op.getText().equals(":/)")){
+              error($op, "division by zero");
+            } else if($op.getText().equals(":*)")){
+              resultA.numericalValue *= resultB.numericalValue;
+            } else {
+              resultA.numericalValue /= resultB.numericalValue;
+            }
+            $result.numericalValue = resultA.numericalValue;
+            if(resultA.type == Type.FLOAT || resultB.type || Type.FLOAT){
+              $result.type == Type.FLOAT;
+            } else {
+              $result.type == Type.INT;
+            }
+          } else {
+            error($op, "cannot do arithmetic on non-numeric types");
+            $result.hasKnownValue = false;
+          }
+        } else {
+          error($op, "cannot do arithmetic on non-numeric types");
+            $result.hasKnownValue = false;
+        }
+      }
+    )*
+  ;
+    
+
+factor returns [ExprResult result] 
+  : INT
+    {
+      $result = new ExprResult();
+      $result.type = Type.INT;
+      $result.numericalValue = Integer.parseInt($INT.getText());
+      $result.hasKnownValue = true;
+    }
+  | FLOAT
+    {
+      $result = new ExprResult();
+      $result.type = Type.FLOAT;
+      $result.numericalValue = Float.parseFloat($FLOAT.getText());
+      $result.hasKnownValue = true;
+    }
+  | CHAR
+    {
+      $result = new ExprResult();
+      $result.type = Type.CHAR;
+      $result.stringValue = $CHAR.getText().charAt(0);
+      $result.hasKnownValue = true;
+    }
+  | STRING
+    {
+      $result = new ExprResult();
+      $result.type = Type.STRING;
+      $result.stringValue = $STRING.getText();
+      $result.hasKnownValue = true;
+    }
+  | IDENT
+    {
+      String id = $IDENT.getText();
+      Identifier var = lookupVariable(id);
+      $result = new ExprResult();
+
+      if(var == null){
+        error(id, "variable is not yet defined");
+      } else {
+        $result.type = var.type;
+        $result.hasKnownValue = var.hasKnown;
+        if(var.type == Type.INT || var.type == Type.FLOAT){
+          if(var.value instanceof Integer){
+            $result.numericalValue = (Integer)var.value;
+          } else {
+            $result.numericalValue = (Float)var.value;
+          }
+        } else{
+            $result.stringValue = (String)var.value;
+        }
+      }
+    }
+  | '(' expr ')' 
+    {
+      $result = $expr.result;
+    }
   ;
 
 ifstmt : KW_IF 
@@ -651,7 +689,7 @@ functioncall : IDENT '(' arg=expr ')'
       error($IDENT, "function '" + funcName + "' not defined");
     } else {
       FunctionDef func = functions.get(funcName);
-      System.out.println("Calling function '" + funcName + "' with argument " + $arg.value);
+      System.out.println("Calling function '" + funcName + "' with argument " + $arg.result.value);
       
       // Create new scope for function call
       SymbolTable funcScope = new SymbolTable();
@@ -661,9 +699,9 @@ functioncall : IDENT '(' arg=expr ')'
       if (func.paramName != null) {
         Identifier paramId = new Identifier();
         paramId.id = func.paramName;
-        paramId.value = $arg.value;
+        paramId.value = $arg.result.value;
         paramId.type = Type.INT;
-        paramId.hasKnown = $arg.hasKnownValue;
+        paramId.hasKnown = $arg.result.hasKnownValue;
         paramId.hasBeenUsed = false;
         addVariable(paramId);
       }

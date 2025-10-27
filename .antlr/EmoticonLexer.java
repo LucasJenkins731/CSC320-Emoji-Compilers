@@ -99,6 +99,18 @@ public class EmoticonLexer extends Lexer {
 	    INT, FLOAT, STRING, CHAR, UNKNOWN
 	  }
 
+	  class ExprResult {
+	    Type type;
+	    float numericalValue;
+	    String stringValue;
+	    boolean hasKnownValue;
+
+	    ExprResult(){
+	      hasKnownValue = false;
+	    }
+
+	  }
+
 	  class Identifier {
 	    String id;
 	    Object value;
