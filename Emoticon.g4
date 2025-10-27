@@ -369,7 +369,7 @@ as
               if($expr.result.type == Type.INT || $expr.result.type == Type.FLOAT){
               newId.value = $expr.result.numericalValue;
               } else {
-                newId.value = $expr.result.stringlValue;
+                newId.value = $expr.result.stringValue;
               }
               //TYPE CHECK HERE
               newId.type = typeCheck(String.valueOf(newId.value));
@@ -441,12 +441,12 @@ ps : KW_PRINT '(' expr ')'
 expr returns [ExprResult result]
   : a=term
     {
-      ExprResult resultA = a.result;
-      $result = a.result;
+      ExprResult resultA = $a.result;
+      $result = $a.result;
     }
     ( op=(ADD|SUBTRACT) b=factor
       {
-        ExprResult resultB = b.result;
+        ExprResult resultB = $b.result;
           if((resultA.type == Type.INT || resultA.type == Type.FLOAT)){
             if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
               if($op.getText().equals(":+)")){
@@ -464,7 +464,7 @@ expr returns [ExprResult result]
               $result.stringValue = resultA.stringValue + resultB.stringValue;
             } else {
             error($op, "cannot subtract strings");
-            $result.HasKnownValue = false;
+            $result.hasKnownValue = false;
           }
         } else {
           error($op, "unknown type");
@@ -477,12 +477,12 @@ expr returns [ExprResult result]
 term returns [ExprResult result]
   : a=factor
     {
-      ExprResult resultA = a.result;
-      $result = a.result;
+      ExprResult resultA = $a.result;
+      $result = $a.result;
     }
     ( op=(MULTIPLY|DIVIDE) b=factor
       {
-        ExprResult resultB = b.result;
+        ExprResult resultB = $b.result;
         if(resultA.type == Type.INT || resultA.type == Type.FLOAT){
           if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
             //now do math
@@ -494,10 +494,10 @@ term returns [ExprResult result]
               resultA.numericalValue /= resultB.numericalValue;
             }
             $result.numericalValue = resultA.numericalValue;
-            if(resultA.type == Type.FLOAT || resultB.type || Type.FLOAT){
-              $result.type == Type.FLOAT;
+            if(resultA.type == Type.FLOAT || resultB.type == Type.FLOAT){
+              $result.type = Type.FLOAT;
             } else {
-              $result.type == Type.INT;
+              $result.type = Type.INT;
             }
           } else {
             error($op, "cannot do arithmetic on non-numeric types");
@@ -531,7 +531,7 @@ factor returns [ExprResult result]
     {
       $result = new ExprResult();
       $result.type = Type.CHAR;
-      $result.stringValue = $CHAR.getText().charAt(0);
+      $result.stringValue = String.valueOf($CHAR.getText().charAt(0));
       $result.hasKnownValue = true;
     }
   | STRING
@@ -548,7 +548,7 @@ factor returns [ExprResult result]
       $result = new ExprResult();
 
       if(var == null){
-        error(id, "variable is not yet defined");
+        error($IDENT, "variable is not yet defined");
       } else {
         $result.type = var.type;
         $result.hasKnownValue = var.hasKnown;
@@ -689,8 +689,11 @@ functioncall : IDENT '(' arg=expr ')'
       error($IDENT, "function '" + funcName + "' not defined");
     } else {
       FunctionDef func = functions.get(funcName);
-      System.out.println("Calling function '" + funcName + "' with argument " + $arg.result.value);
-      
+      if($arg.result.type == Type.INT || $arg.result.type == Type.FLOAT){
+        System.out.println("Calling function '" + funcName + "' with argument " + $arg.result.numericalValue);
+      } else {
+        System.out.println("Calling function '" + funcName + "' with argument " + $arg.result.stringValue);
+      }
       // Create new scope for function call
       SymbolTable funcScope = new SymbolTable();
       symbolStack.push(funcScope);
@@ -699,7 +702,11 @@ functioncall : IDENT '(' arg=expr ')'
       if (func.paramName != null) {
         Identifier paramId = new Identifier();
         paramId.id = func.paramName;
-        paramId.value = $arg.result.value;
+        if($arg.result.type == Type.INT || $arg.result.type == Type.FLOAT){
+        paramId.value = $arg.result.numericalValue;
+      } else {
+        paramId.value = $arg.result.stringValue;
+      }
         paramId.type = Type.INT;
         paramId.hasKnown = $arg.result.hasKnownValue;
         paramId.hasBeenUsed = false;

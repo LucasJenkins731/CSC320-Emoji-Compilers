@@ -694,7 +694,7 @@ public class EmoticonParser extends Parser {
 				              if(((AsContext)_localctx).expr.result.type == Type.INT || ((AsContext)_localctx).expr.result.type == Type.FLOAT){
 				              newId.value = ((AsContext)_localctx).expr.result.numericalValue;
 				              } else {
-				                newId.value = ((AsContext)_localctx).expr.result.stringlValue;
+				                newId.value = ((AsContext)_localctx).expr.result.stringValue;
 				              }
 				              //TYPE CHECK HERE
 				              newId.type = typeCheck(String.valueOf(newId.value));
@@ -870,8 +870,8 @@ public class EmoticonParser extends Parser {
 			setState(87);
 			((ExprContext)_localctx).a = term();
 
-			      ExprResult resultA = a.result;
-			      ((ExprContext)_localctx).result =  a.result;
+			      ExprResult resultA = ((ExprContext)_localctx).a.result;
+			      ((ExprContext)_localctx).result =  ((ExprContext)_localctx).a.result;
 			    
 			setState(95);
 			_errHandler.sync(this);
@@ -893,7 +893,7 @@ public class EmoticonParser extends Parser {
 				setState(90);
 				((ExprContext)_localctx).b = factor();
 
-				        ExprResult resultB = b.result;
+				        ExprResult resultB = ((ExprContext)_localctx).b.result;
 				          if((resultA.type == Type.INT || resultA.type == Type.FLOAT)){
 				            if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
 				              if(((ExprContext)_localctx).op.getText().equals(":+)")){
@@ -911,7 +911,7 @@ public class EmoticonParser extends Parser {
 				              _localctx.result.stringValue = resultA.stringValue + resultB.stringValue;
 				            } else {
 				            error(((ExprContext)_localctx).op, "cannot subtract strings");
-				            _localctx.result.HasKnownValue = false;
+				            _localctx.result.hasKnownValue = false;
 				          }
 				        } else {
 				          error(((ExprContext)_localctx).op, "unknown type");
@@ -973,8 +973,8 @@ public class EmoticonParser extends Parser {
 			setState(98);
 			((TermContext)_localctx).a = factor();
 
-			      ExprResult resultA = a.result;
-			      ((TermContext)_localctx).result =  a.result;
+			      ExprResult resultA = ((TermContext)_localctx).a.result;
+			      ((TermContext)_localctx).result =  ((TermContext)_localctx).a.result;
 			    
 			setState(106);
 			_errHandler.sync(this);
@@ -996,7 +996,7 @@ public class EmoticonParser extends Parser {
 				setState(101);
 				((TermContext)_localctx).b = factor();
 
-				        ExprResult resultB = b.result;
+				        ExprResult resultB = ((TermContext)_localctx).b.result;
 				        if(resultA.type == Type.INT || resultA.type == Type.FLOAT){
 				          if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
 				            //now do math
@@ -1008,10 +1008,10 @@ public class EmoticonParser extends Parser {
 				              resultA.numericalValue /= resultB.numericalValue;
 				            }
 				            _localctx.result.numericalValue = resultA.numericalValue;
-				            if(resultA.type == Type.FLOAT || resultB.type || Type.FLOAT){
-				              _localctx.result.type == Type.FLOAT;
+				            if(resultA.type == Type.FLOAT || resultB.type == Type.FLOAT){
+				              _localctx.result.type = Type.FLOAT;
 				            } else {
-				              _localctx.result.type == Type.INT;
+				              _localctx.result.type = Type.INT;
 				            }
 				          } else {
 				            error(((TermContext)_localctx).op, "cannot do arithmetic on non-numeric types");
@@ -1107,7 +1107,7 @@ public class EmoticonParser extends Parser {
 
 				      ((FactorContext)_localctx).result =  new ExprResult();
 				      _localctx.result.type = Type.CHAR;
-				      _localctx.result.stringValue = ((FactorContext)_localctx).CHAR.getText().charAt(0);
+				      _localctx.result.stringValue = String.valueOf(((FactorContext)_localctx).CHAR.getText().charAt(0));
 				      _localctx.result.hasKnownValue = true;
 				    
 				}
@@ -1136,7 +1136,7 @@ public class EmoticonParser extends Parser {
 				      ((FactorContext)_localctx).result =  new ExprResult();
 
 				      if(var == null){
-				        error(id, "variable is not yet defined");
+				        error(((FactorContext)_localctx).IDENT, "variable is not yet defined");
 				      } else {
 				        _localctx.result.type = var.type;
 				        _localctx.result.hasKnownValue = var.hasKnown;
@@ -1624,8 +1624,11 @@ public class EmoticonParser extends Parser {
 				      error(((FunctioncallContext)_localctx).IDENT, "function '" + funcName + "' not defined");
 				    } else {
 				      FunctionDef func = functions.get(funcName);
-				      System.out.println("Calling function '" + funcName + "' with argument " + ((FunctioncallContext)_localctx).arg.result.value);
-				      
+				      if(((FunctioncallContext)_localctx).arg.result.type == Type.INT || ((FunctioncallContext)_localctx).arg.result.type == Type.FLOAT){
+				        System.out.println("Calling function '" + funcName + "' with argument " + ((FunctioncallContext)_localctx).arg.result.numericalValue);
+				      } else {
+				        System.out.println("Calling function '" + funcName + "' with argument " + ((FunctioncallContext)_localctx).arg.result.stringValue);
+				      }
 				      // Create new scope for function call
 				      SymbolTable funcScope = new SymbolTable();
 				      symbolStack.push(funcScope);
@@ -1634,7 +1637,11 @@ public class EmoticonParser extends Parser {
 				      if (func.paramName != null) {
 				        Identifier paramId = new Identifier();
 				        paramId.id = func.paramName;
-				        paramId.value = ((FunctioncallContext)_localctx).arg.result.value;
+				        if(((FunctioncallContext)_localctx).arg.result.type == Type.INT || ((FunctioncallContext)_localctx).arg.result.type == Type.FLOAT){
+				        paramId.value = ((FunctioncallContext)_localctx).arg.result.numericalValue;
+				      } else {
+				        paramId.value = ((FunctioncallContext)_localctx).arg.result.stringValue;
+				      }
 				        paramId.type = Type.INT;
 				        paramId.hasKnown = ((FunctioncallContext)_localctx).arg.result.hasKnownValue;
 				        paramId.hasBeenUsed = false;
