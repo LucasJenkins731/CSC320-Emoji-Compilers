@@ -1,6 +1,6 @@
 grammar Emoticon;
 
-@header { import java.util.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; }
+@header { import java.util.*; import java.io.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; }
 
 @members {
 
@@ -45,6 +45,9 @@ grammar Emoticon;
   
   // Diagnostics
   List<String> diagnostics = new ArrayList<>();
+
+  // for KW_READ in assignment
+  Scanner readInput = new Scanner(System.in);
   
   // LHS tracking
   // String pendingLHS = null;
@@ -89,7 +92,7 @@ grammar Emoticon;
     Type varType = Type.UNKNOWN;
     if (text.matches("[+-]?(0|[1-9][0-9]*)")) {
       varType = Type.INT;
-    } else if (text.matches("[+-]?[0-9]*.[0-9]+")){
+    } else if (text.matches("[+-]?(\\d*\\.\\d+|\\d+\\.\\d*)([eE][+-]?\\d+)?")){
       varType = Type.FLOAT;
     } else if (text.matches("'(\\\\.|[^\\\\'])'")){
       varType = Type.CHAR;
@@ -414,7 +417,13 @@ as
       }
     | KW_READ
       {
-        //FILL IN STUFF HERE
+        String input = readInput.nextLine();
+        Identifier newID = new Identifier();
+        newId.id = $IDENT.getText();
+        newId.value = input;
+        newId.type = typeCheck(input);
+        addVariable(newId);
+        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
       }
     )
   ;

@@ -1,5 +1,5 @@
 // Generated from c:/Users/pieco/Desktop/Emoticon language/Emoticon.g4 by ANTLR 4.13.1
- import java.util.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; 
+ import java.util.*; import java.io.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; 
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
@@ -143,6 +143,9 @@ public class EmoticonParser extends Parser {
 	  
 	  // Diagnostics
 	  List<String> diagnostics = new ArrayList<>();
+
+	  // for KW_READ in assignment
+	  Scanner readInput = new Scanner(System.in);
 	  
 	  // LHS tracking
 	  // String pendingLHS = null;
@@ -187,7 +190,7 @@ public class EmoticonParser extends Parser {
 	    Type varType = Type.UNKNOWN;
 	    if (text.matches("[+-]?(0|[1-9][0-9]*)")) {
 	      varType = Type.INT;
-	    } else if (text.matches("[+-]?[0-9]*.[0-9]+")){
+	    } else if (text.matches("[+-]?(\\d*\\.\\d+|\\d+\\.\\d*)([eE][+-]?\\d+)?")){
 	      varType = Type.FLOAT;
 	    } else if (text.matches("'(\\\\.|[^\\\\'])'")){
 	      varType = Type.CHAR;
@@ -764,7 +767,13 @@ public class EmoticonParser extends Parser {
 				setState(79);
 				match(KW_READ);
 
-				        //FILL IN STUFF HERE
+				        String input = readInput.nextLine();
+				        Identifier newID = new Identifier();
+				        newId.id = ((AsContext)_localctx).IDENT.getText();
+				        newId.value = input;
+				        newId.type = typeCheck(input);
+				        addVariable(newId);
+				        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
 				      
 				}
 				break;
