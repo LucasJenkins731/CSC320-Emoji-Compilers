@@ -138,8 +138,8 @@ public class EmoticonLexer extends Lexer {
 	  List<String> diagnostics = new ArrayList<>();
 	  
 	  // LHS tracking
-	  String pendingLHS = null;
-	  boolean lhsExistedBefore = false;
+	  // String pendingLHS = null;
+	  // boolean lhsExistedBefore = false;
 	  
 	  // Error tracking
 	  boolean hasErrors = false;

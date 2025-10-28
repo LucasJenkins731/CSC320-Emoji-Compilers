@@ -47,8 +47,8 @@ grammar Emoticon;
   List<String> diagnostics = new ArrayList<>();
   
   // LHS tracking
-  String pendingLHS = null;
-  boolean lhsExistedBefore = false;
+  // String pendingLHS = null;
+  // boolean lhsExistedBefore = false;
   
   // Error tracking
   boolean hasErrors = false;
@@ -353,49 +353,39 @@ blockStatement : LBRACE
   } 
   ;
 
+//ID being an old asset and having value of type object may cause complications in the future.
 as
   : IDENT ':=)' 
     (
       expr
       {
-        if (!definingFunction) {
-        pendingLHS = $IDENT.getText();
-        // Check if it exists in ANY scope
-        Identifier existing = lookupVariable(pendingLHS);
-        lhsExistedBefore = (existing != null);
+
+        String id = $IDENT.getText();
+        Identifier var = lookupVariable(id);
+        Identifier newId = new Identifier();
+        newId.id = id;
+        if($expr.result.type == Type.INT || $expr.result.type == Type.FLOAT){
+          newId.value = $expr.result.numericalValue;
+        } else {
+          newId.value = $expr.result.stringValue;
+        }
+        newId.type = $expr.result.type;
+        System.out.println(id + " = " + String.valueOf(newId.value) + " (" + "Type = " + newId.type + ")");
+        newId.hasKnown = $expr.result.hasKnownValue;
+        newId.hasBeenUsed = false;
+        addVariable(newId);      
       }
-      if (!definingFunction) {
-              Identifier newId = new Identifier();
-              newId.id = pendingLHS;
-              if($expr.result.type == Type.INT || $expr.result.type == Type.FLOAT){
-              newId.value = $expr.result.numericalValue;
-              } else {
-                newId.value = $expr.result.stringValue;
-              }
-              //TYPE CHECK HERE
-              newId.type = typeCheck(String.valueOf(newId.value));
-              System.out.println(pendingLHS + " = " + String.valueOf(newId.value) + " (" + "Type = " + newId.type + ")");
-              newId.hasKnown = $expr.result.hasKnownValue;
-              newId.hasBeenUsed = false;
-              
-              // Add to CURRENT scope
-              addVariable(newId);
-              
-              pendingLHS = null;
-            }
-      }
-    |
-      KW_READ
+      
+    | INT
       {
         Identifier newId = new Identifier();
         newId.id = $IDENT.getText();
-        newId.value = 0;
+        newId.value = $INT.getText();
         newId.type = Type.INT;
         addVariable(newId);
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
       }
-    |
-      STRING
+    | STRING
       {
         Identifier newId = new Identifier();
         newId.id = $IDENT.getText();
@@ -404,8 +394,7 @@ as
         addVariable(newId);
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
       }
-    |
-      CHAR
+    | CHAR
       {
         Identifier newId = new Identifier();
         newId.id = $IDENT.getText();
@@ -414,8 +403,7 @@ as
         addVariable(newId);
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
       }
-    |
-      FLOAT
+    | FLOAT
       {
         Identifier newId = new Identifier();
         newId.id = $IDENT.getText();
@@ -423,6 +411,10 @@ as
         newId.type = Type.FLOAT;
         addVariable(newId);
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+      }
+    | KW_READ
+      {
+        //FILL IN STUFF HERE
       }
     )
   ;
