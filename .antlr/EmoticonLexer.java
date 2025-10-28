@@ -104,6 +104,7 @@ public class EmoticonLexer extends Lexer {
 	    float numericalValue;
 	    String stringValue;
 	    boolean hasKnownValue;
+	    String code;
 
 	    ExprResult(){
 	      hasKnownValue = false;

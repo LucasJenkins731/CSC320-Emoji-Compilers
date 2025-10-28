@@ -13,6 +13,7 @@ grammar Emoticon;
     float numericalValue;
     String stringValue;
     boolean hasKnownValue;
+    String code;
 
     ExprResult(){
       hasKnownValue = false;
@@ -455,9 +456,11 @@ expr returns [ExprResult result]
                 resultA.numericalValue -= resultB.numericalValue;
               }
               $result.numericalValue = resultA.numericalValue;
+              $result.code = ""+resultA.numericalValue;
             } else {
               error($op, "cannot do arithmetic on non-numerical types");
               $result.hasKnownValue = false;
+              $result.code = "(" + resultA.code + $op.getText() + resultB.code + ")";
             }
           } else if(resultB.type == Type.STRING || resultB.type == Type.CHAR){
             if($op.getText().equals(":+)")){
@@ -465,6 +468,7 @@ expr returns [ExprResult result]
             } else {
             error($op, "cannot subtract strings");
             $result.hasKnownValue = false;
+            $result.code = "(" + resultA.code + $op.getText() + resultB.code + ")";
           }
         } else {
           error($op, "unknown type");
@@ -488,12 +492,15 @@ term returns [ExprResult result]
             //now do math
             if(resultB.numericalValue == 0 && $op.getText().equals(":/)")){
               error($op, "division by zero");
+              $result.hasKnownValue = false;
+              $result.code = "Error";
             } else if($op.getText().equals(":*)")){
               resultA.numericalValue *= resultB.numericalValue;
             } else {
               resultA.numericalValue /= resultB.numericalValue;
             }
             $result.numericalValue = resultA.numericalValue;
+            $result.code = ""+resultA.numericalValue;
             if(resultA.type == Type.FLOAT || resultB.type == Type.FLOAT){
               $result.type = Type.FLOAT;
             } else {
@@ -502,10 +509,12 @@ term returns [ExprResult result]
           } else {
             error($op, "cannot do arithmetic on non-numeric types");
             $result.hasKnownValue = false;
+            $result.code = "(" + resultA.code + $op.getText() + resultB.code + ")";
           }
         } else {
           error($op, "cannot do arithmetic on non-numeric types");
             $result.hasKnownValue = false;
+            $result.code = "(" + resultA.code + $op.getText() + resultB.code + ")";
         }
       }
     )*
@@ -519,6 +528,7 @@ factor returns [ExprResult result]
       $result.type = Type.INT;
       $result.numericalValue = Integer.parseInt($INT.getText());
       $result.hasKnownValue = true;
+      $result.code = ""+$result.numericalValue;
     }
   | FLOAT
     {
@@ -526,6 +536,7 @@ factor returns [ExprResult result]
       $result.type = Type.FLOAT;
       $result.numericalValue = Float.parseFloat($FLOAT.getText());
       $result.hasKnownValue = true;
+      $result.code = ""+$result.numericalValue;
     }
   | CHAR
     {
@@ -533,6 +544,7 @@ factor returns [ExprResult result]
       $result.type = Type.CHAR;
       $result.stringValue = String.valueOf($CHAR.getText().charAt(0));
       $result.hasKnownValue = true;
+      $result.code = ""+$result.stringValue;
     }
   | STRING
     {
@@ -540,6 +552,7 @@ factor returns [ExprResult result]
       $result.type = Type.STRING;
       $result.stringValue = $STRING.getText();
       $result.hasKnownValue = true;
+      $result.code = ""+$result.stringValue;
     }
   | IDENT
     {
@@ -562,6 +575,8 @@ factor returns [ExprResult result]
             $result.stringValue = (String)var.value;
         }
       }
+      $result.hasKnownValue = true;
+      $result.code = id;
     }
   | '(' expr ')' 
     {

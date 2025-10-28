@@ -111,6 +111,7 @@ public class EmoticonParser extends Parser {
 	    float numericalValue;
 	    String stringValue;
 	    boolean hasKnownValue;
+	    String code;
 
 	    ExprResult(){
 	      hasKnownValue = false;
@@ -902,9 +903,11 @@ public class EmoticonParser extends Parser {
 				                resultA.numericalValue -= resultB.numericalValue;
 				              }
 				              _localctx.result.numericalValue = resultA.numericalValue;
+				              _localctx.result.code = ""+resultA.numericalValue;
 				            } else {
 				              error(((ExprContext)_localctx).op, "cannot do arithmetic on non-numerical types");
 				              _localctx.result.hasKnownValue = false;
+				              _localctx.result.code = "(" + resultA.code + ((ExprContext)_localctx).op.getText() + resultB.code + ")";
 				            }
 				          } else if(resultB.type == Type.STRING || resultB.type == Type.CHAR){
 				            if(((ExprContext)_localctx).op.getText().equals(":+)")){
@@ -912,6 +915,7 @@ public class EmoticonParser extends Parser {
 				            } else {
 				            error(((ExprContext)_localctx).op, "cannot subtract strings");
 				            _localctx.result.hasKnownValue = false;
+				            _localctx.result.code = "(" + resultA.code + ((ExprContext)_localctx).op.getText() + resultB.code + ")";
 				          }
 				        } else {
 				          error(((ExprContext)_localctx).op, "unknown type");
@@ -1002,12 +1006,15 @@ public class EmoticonParser extends Parser {
 				            //now do math
 				            if(resultB.numericalValue == 0 && ((TermContext)_localctx).op.getText().equals(":/)")){
 				              error(((TermContext)_localctx).op, "division by zero");
+				              _localctx.result.hasKnownValue = false;
+				              _localctx.result.code = "Error";
 				            } else if(((TermContext)_localctx).op.getText().equals(":*)")){
 				              resultA.numericalValue *= resultB.numericalValue;
 				            } else {
 				              resultA.numericalValue /= resultB.numericalValue;
 				            }
 				            _localctx.result.numericalValue = resultA.numericalValue;
+				            _localctx.result.code = ""+resultA.numericalValue;
 				            if(resultA.type == Type.FLOAT || resultB.type == Type.FLOAT){
 				              _localctx.result.type = Type.FLOAT;
 				            } else {
@@ -1016,10 +1023,12 @@ public class EmoticonParser extends Parser {
 				          } else {
 				            error(((TermContext)_localctx).op, "cannot do arithmetic on non-numeric types");
 				            _localctx.result.hasKnownValue = false;
+				            _localctx.result.code = "(" + resultA.code + ((TermContext)_localctx).op.getText() + resultB.code + ")";
 				          }
 				        } else {
 				          error(((TermContext)_localctx).op, "cannot do arithmetic on non-numeric types");
 				            _localctx.result.hasKnownValue = false;
+				            _localctx.result.code = "(" + resultA.code + ((TermContext)_localctx).op.getText() + resultB.code + ")";
 				        }
 				      
 				}
@@ -1083,6 +1092,7 @@ public class EmoticonParser extends Parser {
 				      _localctx.result.type = Type.INT;
 				      _localctx.result.numericalValue = Integer.parseInt(((FactorContext)_localctx).INT.getText());
 				      _localctx.result.hasKnownValue = true;
+				      _localctx.result.code = ""+_localctx.result.numericalValue;
 				    
 				}
 				break;
@@ -1096,6 +1106,7 @@ public class EmoticonParser extends Parser {
 				      _localctx.result.type = Type.FLOAT;
 				      _localctx.result.numericalValue = Float.parseFloat(((FactorContext)_localctx).FLOAT.getText());
 				      _localctx.result.hasKnownValue = true;
+				      _localctx.result.code = ""+_localctx.result.numericalValue;
 				    
 				}
 				break;
@@ -1109,6 +1120,7 @@ public class EmoticonParser extends Parser {
 				      _localctx.result.type = Type.CHAR;
 				      _localctx.result.stringValue = String.valueOf(((FactorContext)_localctx).CHAR.getText().charAt(0));
 				      _localctx.result.hasKnownValue = true;
+				      _localctx.result.code = ""+_localctx.result.stringValue;
 				    
 				}
 				break;
@@ -1122,6 +1134,7 @@ public class EmoticonParser extends Parser {
 				      _localctx.result.type = Type.STRING;
 				      _localctx.result.stringValue = ((FactorContext)_localctx).STRING.getText();
 				      _localctx.result.hasKnownValue = true;
+				      _localctx.result.code = ""+_localctx.result.stringValue;
 				    
 				}
 				break;
@@ -1150,6 +1163,8 @@ public class EmoticonParser extends Parser {
 				            _localctx.result.stringValue = (String)var.value;
 				        }
 				      }
+				      _localctx.result.hasKnownValue = true;
+				      _localctx.result.code = id;
 				    
 				}
 				break;
