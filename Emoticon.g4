@@ -1,6 +1,6 @@
 grammar Emoticon;
 
-@header { import java.util.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; }
+@header { import java.util.*; import java.io.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; }
 
 @members {
 
@@ -13,6 +13,7 @@ grammar Emoticon;
     float numericalValue;
     String stringValue;
     boolean hasKnownValue;
+    String code;
 
     ExprResult(){
       hasKnownValue = false;
@@ -44,10 +45,13 @@ grammar Emoticon;
   
   // Diagnostics
   List<String> diagnostics = new ArrayList<>();
+
+  // for KW_READ in assignment
+  Scanner readInput = new Scanner(System.in);
   
   // LHS tracking
-  String pendingLHS = null;
-  boolean lhsExistedBefore = false;
+  // String pendingLHS = null;
+  // boolean lhsExistedBefore = false;
   
   // Error tracking
   boolean hasErrors = false;
@@ -88,7 +92,7 @@ grammar Emoticon;
     Type varType = Type.UNKNOWN;
     if (text.matches("[+-]?(0|[1-9][0-9]*)")) {
       varType = Type.INT;
-    } else if (text.matches("[+-]?[0-9]*.[0-9]+")){
+    } else if (text.matches("[+-]?(\\d*\\.\\d+|\\d+\\.\\d*)([eE][+-]?\\d+)?")){
       varType = Type.FLOAT;
     } else if (text.matches("'(\\\\.|[^\\\\'])'")){
       varType = Type.CHAR;
@@ -352,49 +356,39 @@ blockStatement : LBRACE
   } 
   ;
 
+//ID being an old asset and having value of type object may cause complications in the future.
 as
   : IDENT ':=)' 
     (
       expr
       {
-        if (!definingFunction) {
-        pendingLHS = $IDENT.getText();
-        // Check if it exists in ANY scope
-        Identifier existing = lookupVariable(pendingLHS);
-        lhsExistedBefore = (existing != null);
+
+        String id = $IDENT.getText();
+        Identifier var = lookupVariable(id);
+        Identifier newId = new Identifier();
+        newId.id = id;
+        if($expr.result.type == Type.INT || $expr.result.type == Type.FLOAT){
+          newId.value = $expr.result.numericalValue;
+        } else {
+          newId.value = $expr.result.stringValue;
+        }
+        newId.type = $expr.result.type;
+        System.out.println(id + " = " + String.valueOf(newId.value) + " (" + "Type = " + newId.type + ")");
+        newId.hasKnown = $expr.result.hasKnownValue;
+        newId.hasBeenUsed = false;
+        addVariable(newId);      
       }
-      if (!definingFunction) {
-              Identifier newId = new Identifier();
-              newId.id = pendingLHS;
-              if($expr.result.type == Type.INT || $expr.result.type == Type.FLOAT){
-              newId.value = $expr.result.numericalValue;
-              } else {
-                newId.value = $expr.result.stringValue;
-              }
-              //TYPE CHECK HERE
-              newId.type = typeCheck(String.valueOf(newId.value));
-              System.out.println(pendingLHS + " = " + String.valueOf(newId.value) + " (" + "Type = " + newId.type + ")");
-              newId.hasKnown = $expr.result.hasKnownValue;
-              newId.hasBeenUsed = false;
-              
-              // Add to CURRENT scope
-              addVariable(newId);
-              
-              pendingLHS = null;
-            }
-      }
-    |
-      KW_READ
+      
+    | INT
       {
         Identifier newId = new Identifier();
         newId.id = $IDENT.getText();
-        newId.value = 0;
+        newId.value = $INT.getText();
         newId.type = Type.INT;
         addVariable(newId);
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
       }
-    |
-      STRING
+    | STRING
       {
         Identifier newId = new Identifier();
         newId.id = $IDENT.getText();
@@ -403,8 +397,7 @@ as
         addVariable(newId);
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
       }
-    |
-      CHAR
+    | CHAR
       {
         Identifier newId = new Identifier();
         newId.id = $IDENT.getText();
@@ -413,13 +406,22 @@ as
         addVariable(newId);
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
       }
-    |
-      FLOAT
+    | FLOAT
       {
         Identifier newId = new Identifier();
         newId.id = $IDENT.getText();
         newId.value = $FLOAT.getText();
         newId.type = Type.FLOAT;
+        addVariable(newId);
+        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+      }
+    | KW_READ
+      {
+        String input = readInput.nextLine();
+        Identifier newID = new Identifier();
+        newId.id = $IDENT.getText();
+        newId.value = input;
+        newId.type = typeCheck(input);
         addVariable(newId);
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
       }
@@ -455,9 +457,11 @@ expr returns [ExprResult result]
                 resultA.numericalValue -= resultB.numericalValue;
               }
               $result.numericalValue = resultA.numericalValue;
+              $result.code = ""+resultA.numericalValue;
             } else {
               error($op, "cannot do arithmetic on non-numerical types");
               $result.hasKnownValue = false;
+              $result.code = "(" + resultA.code + $op.getText() + resultB.code + ")";
             }
           } else if(resultB.type == Type.STRING || resultB.type == Type.CHAR){
             if($op.getText().equals(":+)")){
@@ -465,6 +469,7 @@ expr returns [ExprResult result]
             } else {
             error($op, "cannot subtract strings");
             $result.hasKnownValue = false;
+            $result.code = "(" + resultA.code + $op.getText() + resultB.code + ")";
           }
         } else {
           error($op, "unknown type");
@@ -488,12 +493,15 @@ term returns [ExprResult result]
             //now do math
             if(resultB.numericalValue == 0 && $op.getText().equals(":/)")){
               error($op, "division by zero");
+              $result.hasKnownValue = false;
+              $result.code = "Error";
             } else if($op.getText().equals(":*)")){
               resultA.numericalValue *= resultB.numericalValue;
             } else {
               resultA.numericalValue /= resultB.numericalValue;
             }
             $result.numericalValue = resultA.numericalValue;
+            $result.code = ""+resultA.numericalValue;
             if(resultA.type == Type.FLOAT || resultB.type == Type.FLOAT){
               $result.type = Type.FLOAT;
             } else {
@@ -502,10 +510,12 @@ term returns [ExprResult result]
           } else {
             error($op, "cannot do arithmetic on non-numeric types");
             $result.hasKnownValue = false;
+            $result.code = "(" + resultA.code + $op.getText() + resultB.code + ")";
           }
         } else {
           error($op, "cannot do arithmetic on non-numeric types");
             $result.hasKnownValue = false;
+            $result.code = "(" + resultA.code + $op.getText() + resultB.code + ")";
         }
       }
     )*
@@ -519,6 +529,7 @@ factor returns [ExprResult result]
       $result.type = Type.INT;
       $result.numericalValue = Integer.parseInt($INT.getText());
       $result.hasKnownValue = true;
+      $result.code = ""+$result.numericalValue;
     }
   | FLOAT
     {
@@ -526,6 +537,7 @@ factor returns [ExprResult result]
       $result.type = Type.FLOAT;
       $result.numericalValue = Float.parseFloat($FLOAT.getText());
       $result.hasKnownValue = true;
+      $result.code = ""+$result.numericalValue;
     }
   | CHAR
     {
@@ -533,6 +545,7 @@ factor returns [ExprResult result]
       $result.type = Type.CHAR;
       $result.stringValue = String.valueOf($CHAR.getText().charAt(0));
       $result.hasKnownValue = true;
+      $result.code = ""+$result.stringValue;
     }
   | STRING
     {
@@ -540,6 +553,7 @@ factor returns [ExprResult result]
       $result.type = Type.STRING;
       $result.stringValue = $STRING.getText();
       $result.hasKnownValue = true;
+      $result.code = ""+$result.stringValue;
     }
   | IDENT
     {
@@ -562,6 +576,8 @@ factor returns [ExprResult result]
             $result.stringValue = (String)var.value;
         }
       }
+      $result.hasKnownValue = true;
+      $result.code = id;
     }
   | '(' expr ')' 
     {

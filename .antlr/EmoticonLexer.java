@@ -1,5 +1,5 @@
-// Generated from c:/Users/lukie/OneDrive/Documents/Senior Semester I/CSC 320/Emoticon Master/Emoticon.g4 by ANTLR 4.13.1
- import java.util.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; 
+// Generated from c:/Users/pieco/Desktop/Emoticon language/Emoticon.g4 by ANTLR 4.13.1
+ import java.util.*; import java.io.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; 
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.Token;
@@ -104,6 +104,7 @@ public class EmoticonLexer extends Lexer {
 	    float numericalValue;
 	    String stringValue;
 	    boolean hasKnownValue;
+	    String code;
 
 	    ExprResult(){
 	      hasKnownValue = false;
@@ -135,10 +136,13 @@ public class EmoticonLexer extends Lexer {
 	  
 	  // Diagnostics
 	  List<String> diagnostics = new ArrayList<>();
+
+	  // for KW_READ in assignment
+	  Scanner readInput = new Scanner(System.in);
 	  
 	  // LHS tracking
-	  String pendingLHS = null;
-	  boolean lhsExistedBefore = false;
+	  // String pendingLHS = null;
+	  // boolean lhsExistedBefore = false;
 	  
 	  // Error tracking
 	  boolean hasErrors = false;
@@ -179,7 +183,7 @@ public class EmoticonLexer extends Lexer {
 	    Type varType = Type.UNKNOWN;
 	    if (text.matches("[+-]?(0|[1-9][0-9]*)")) {
 	      varType = Type.INT;
-	    } else if (text.matches("[+-]?[0-9]*.[0-9]+")){
+	    } else if (text.matches("[+-]?(\\d*\\.\\d+|\\d+\\.\\d*)([eE][+-]?\\d+)?")){
 	      varType = Type.FLOAT;
 	    } else if (text.matches("'(\\\\.|[^\\\\'])'")){
 	      varType = Type.CHAR;
