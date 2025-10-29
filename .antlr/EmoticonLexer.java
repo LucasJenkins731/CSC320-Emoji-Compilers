@@ -1,4 +1,4 @@
-// Generated from c:/Users/pieco/Desktop/Emoticon language/Emoticon.g4 by ANTLR 4.13.1
+// Generated from /Users/connorryan/Desktop/CSC320-Emoji-Compilers/Emoticon.g4 by ANTLR 4.13.1
  import java.util.*; import java.io.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; 
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
@@ -140,10 +140,6 @@ public class EmoticonLexer extends Lexer {
 	  // for KW_READ in assignment
 	  Scanner readInput = new Scanner(System.in);
 	  
-	  // LHS tracking
-	  // String pendingLHS = null;
-	  // boolean lhsExistedBefore = false;
-	  
 	  // Error tracking
 	  boolean hasErrors = false;
 	  
@@ -155,13 +151,14 @@ public class EmoticonLexer extends Lexer {
 	    hasErrors = true;
 	  }
 
-	  void printDiagnostics() {    
+	  int printDiagnostics() {    
 	    if (!diagnostics.isEmpty()) {
 	      for (String d : diagnostics) {
 	        System.err.println(d);
 	      }
 	    }    
 	    checkUnusedVariables();
+	    return diagnostics.size();
 	  }
 	  
 	  void checkUnusedVariables() {
@@ -177,8 +174,7 @@ public class EmoticonLexer extends Lexer {
 	      }
 	    }
 	  }
-	//[+-]?[0-9]*.[0-9]+
-	//"('+'|'-')? ('0'|[1-9][0-9]*) '.' ('0'|[1-9][0-9]*)"
+
 	  Type typeCheck(String text) {
 	    Type varType = Type.UNKNOWN;
 	    if (text.matches("[+-]?(0|[1-9][0-9]*)")) {
@@ -226,158 +222,38 @@ public class EmoticonLexer extends Lexer {
 	      return symbolStack.peek().table.containsKey(name);
 	    }
 	  }
-	  
-	  // Execute declared function
-	  void executeStatement(ParserRuleContext ctx) {
-	    if (ctx == null) {
-	      return;
-	    }
-	    
-	    // Check statmenet type and execute
-	    if (ctx instanceof EmoticonParser.AsContext) {
-	      executeAssignment((EmoticonParser.AsContext) ctx);
-	    } else if (ctx instanceof EmoticonParser.PsContext) {
-	      executePrint((EmoticonParser.PsContext) ctx);
-	    } else if (ctx instanceof EmoticonParser.BlockStatementContext) {
-	      executeBlock((EmoticonParser.BlockStatementContext) ctx);
-	    } else if (ctx instanceof EmoticonParser.IfstmtContext) {
-	      executeIf((EmoticonParser.IfstmtContext) ctx);
-	    } else if (ctx instanceof EmoticonParser.SContext) {
-	      EmoticonParser.SContext sCtx = (EmoticonParser.SContext) ctx;
-	      if (sCtx.as() != null) {
-	        executeAssignment(sCtx.as());
-	      } else if (sCtx.ps() != null) {
-	        executePrint(sCtx.ps());
-	      } else if (sCtx.blockStatement() != null) {
-	        executeBlock(sCtx.blockStatement());
-	      } else if (sCtx.ifstmt() != null) {
-	        executeIf(sCtx.ifstmt());
-	      }
-	    }
-	  }
-	  
-	  void executeAssignment(EmoticonParser.AsContext ctx) {
-	    String varName = ctx.IDENT().getText();
 
-	    if (ctx.expr() != null) {
-	      Integer value = evaluateExpr(ctx.expr());
-	      
-	      Identifier newId = new Identifier();
-	      newId.id = varName;
-	      newId.value = value;
-	      newId.type = typeCheck(String.valueOf(value));
-	      newId.hasKnown = (value != null);
-	      newId.hasBeenUsed = false;
-	      
-	      addVariable(newId);
-	      System.out.println(varName + " = " + value);
-	    } else if (ctx.KW_READ() != null) {
-	      Identifier newId = new Identifier();
-	      newId.id = varName;
-	      newId.value = 0;
-	      newId.type = Type.INT;
-	      newId.hasKnown = false;
-	      newId.hasBeenUsed = false;
-	      addVariable(newId);
-	    }
+	  /** Code generation material */
+	  StringBuilder sb = new StringBuilder(); // Stores the generated program!
+
+	  void emit(String s) { sb.append(s); }   // Short-hand for adding to the program
+
+	  // Emit the preamble material for our program
+	  void openProgram() {
+	    emit("import java.util.*;\n");
+	    emit("public class EmoticonProgramTests {\n");
+	    emit("  public static void main(String[] args) throws Exception {\n");
+	    emit("    Scanner in = new Scanner(System.in);\n");
 	  }
-	  
-	  void executePrint(EmoticonParser.PsContext ctx) {
-	    Integer value = evaluateExpr(ctx.expr());
-	    if (value != null) {
-	      System.out.println(value);
-	    }
+
+	  // Emit the postamble material for our program
+	  void closeProgram() {
+	    emit("  }\n");
+	    emit("}\n");
 	  }
-	  
-	  void executeBlock(EmoticonParser.BlockStatementContext ctx) {
-	    SymbolTable blockScope = new SymbolTable();
-	    symbolStack.push(blockScope);
-	    
-	    for (EmoticonParser.SContext stmt : ctx.s()) {
-	      executeStatement(stmt);
-	    }
-	    
-	    symbolStack.pop();
+
+	  // Declare LHS if first-time assignment; otherwise plain assignment.
+	  void generateAssign(boolean declare, String name, String rhsJavaCode) {
+	    emit("    " + (declare ? "double " : " ") + name + " = " + rhsJavaCode + ";\n");
 	  }
-	  
-	  void executeIf(EmoticonParser.IfstmtContext ctx) {
-	    SymbolTable ifScope = new SymbolTable();
-	    symbolStack.push(ifScope);
-	    
-	    executeStatement(ctx.s());
-	    
-	    symbolStack.pop();
-	  }
-	  
-	  Integer evaluateExpr(EmoticonParser.ExprContext ctx) {
-	    if (ctx == null) return null;
-	    Integer value = evaluateTerm(ctx.term(0));
-	    if (value == null) return null;
-	    for (int i = 1; i < ctx.term().size(); i++) {
-	      Integer nextValue = evaluateTerm(ctx.term(i));
-	      if (nextValue == null) return null;
-	      String op = ctx.getChild(i * 2 - 1).getText();
-	      if (op.equals(":+)")) {
-	        value = value + nextValue;
-	      } else if (op.equals(":-)")) {
-	        value = value - nextValue;
-	      }
+
+	  // Write the generated Java to file.
+	  void writeFile() {
+	    try (PrintWriter pw = new PrintWriter("EmoticonProgramTests.java", "UTF-8")) {
+	      pw.print(sb.toString());
+	    } catch (Exception e) {
+	      System.err.println("error: failed to write EmoticonProgramTests.java: " + e.getMessage());
 	    }
-	    
-	    return value;
-	  }
-	  
-	  Integer evaluateTerm(EmoticonParser.TermContext ctx) {
-	    if (ctx == null) return null;
-	    
-	    // Get first factor
-	    Integer value = evaluateFactor(ctx.factor(0));
-	    if (value == null) return null;
-	    
-	    // Process other factors with operators
-	    for (int i = 1; i < ctx.factor().size(); i++) {
-	      Integer nextValue = evaluateFactor(ctx.factor(i));
-	      if (nextValue == null) return null;
-	      
-	      String op = ctx.getChild(i * 2 - 1).getText(); // Get operator
-	      if (op.equals(":*)")) {
-	        value = value * nextValue;
-	      } else if (op.equals(":/)")) {
-	        if (nextValue == 0) {
-	          return null;
-	        }
-	        value = value / nextValue;
-	      }
-	    }
-	    
-	    return value;
-	  }
-	  
-	  Integer evaluateFactor(EmoticonParser.FactorContext ctx) {
-	    if (ctx == null) return null;
-	    
-	    // Check if it's an INT literal
-	    if (ctx.INT() != null) {
-	      return Integer.parseInt(ctx.INT().getText());
-	    }
-	    
-	    // Check if it's an IDENT (variable)
-	    if (ctx.IDENT() != null) {
-	      String varName = ctx.IDENT().getText();
-	      Identifier id = lookupVariable(varName);
-	      if (id != null && id.value instanceof Integer) {
-	        id.hasBeenUsed = true;
-	        return (Integer) id.value;
-	      }
-	      return null;
-	    }
-	    
-	    // Check if it's a parenthesized expression
-	    if (ctx.expr() != null) {
-	      return evaluateExpr(ctx.expr());
-	    }
-	    
-	    return null;
 	  }
 
 
