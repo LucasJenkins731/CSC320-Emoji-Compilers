@@ -257,7 +257,11 @@ as
         System.out.println(id + " = " + String.valueOf(newId.value) + " (" + "Type = " + newId.type + ")");
         newId.hasKnown = $expr.result.hasKnownValue;
         newId.hasBeenUsed = false;
-        addVariable(newId);      
+        addVariable(newId);
+        
+        // Generate Java code for assignment
+        boolean isNewVariable = (var == null);
+        generateAssign(isNewVariable, id, $expr.result.code);
       }
       
     | INT
@@ -268,6 +272,9 @@ as
         newId.type = Type.INT;
         addVariable(newId);
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+        
+        // Generate Java code for assignment
+        generateAssign(true, newId.id, $INT.getText());
       }
     | STRING
       {
@@ -277,6 +284,9 @@ as
         newId.type = Type.STRING;
         addVariable(newId);
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+        
+        // Generate Java code for assignment
+        emit("    String " + newId.id + " = " + $STRING.getText() + ";\n");
       }
     | CHAR
       {
@@ -286,6 +296,9 @@ as
         newId.type = Type.CHAR;
         addVariable(newId);
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+        
+        // Generate Java code for assignment
+        emit("    char " + newId.id + " = " + $CHAR.getText() + ";\n");
       }
     | FLOAT
       {
@@ -295,6 +308,9 @@ as
         newId.type = Type.FLOAT;
         addVariable(newId);
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+        
+        // Generate Java code for assignment
+        generateAssign(true, newId.id, $FLOAT.getText());
       }
     | KW_READ
       {
@@ -318,6 +334,9 @@ ps : KW_PRINT '(' expr ')'
           System.out.println($expr.result.stringValue);
         }
       }
+      
+      // Generate Java code for print statement
+      emit("    System.out.println(" + $expr.result.code + ");\n");
     }
 ;
 

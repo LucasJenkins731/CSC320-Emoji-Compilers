@@ -1,4 +1,4 @@
-// Generated from c:/Users/lukie/OneDrive/Documents/Senior Semester I/CSC 320/Emoticon Master/Emoticon.g4 by ANTLR 4.13.1
+// Generated from /Users/connorryan/Desktop/CSC320-Emoji-Compilers/Emoticon.g4 by ANTLR 4.13.1
  import java.util.*; import java.io.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; 
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
@@ -583,7 +583,11 @@ public class EmoticonParser extends Parser {
 				        System.out.println(id + " = " + String.valueOf(newId.value) + " (" + "Type = " + newId.type + ")");
 				        newId.hasKnown = ((AsContext)_localctx).expr.result.hasKnownValue;
 				        newId.hasBeenUsed = false;
-				        addVariable(newId);      
+				        addVariable(newId);
+				        
+				        // Generate Java code for assignment
+				        boolean isNewVariable = (var == null);
+				        generateAssign(isNewVariable, id, ((AsContext)_localctx).expr.result.code);
 				      
 				}
 				break;
@@ -598,6 +602,9 @@ public class EmoticonParser extends Parser {
 				        newId.type = Type.INT;
 				        addVariable(newId);
 				        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+				        
+				        // Generate Java code for assignment
+				        generateAssign(true, newId.id, ((AsContext)_localctx).INT.getText());
 				      
 				}
 				break;
@@ -612,6 +619,9 @@ public class EmoticonParser extends Parser {
 				        newId.type = Type.STRING;
 				        addVariable(newId);
 				        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+				        
+				        // Generate Java code for assignment
+				        emit("    String " + newId.id + " = " + ((AsContext)_localctx).STRING.getText() + ";\n");
 				      
 				}
 				break;
@@ -626,6 +636,9 @@ public class EmoticonParser extends Parser {
 				        newId.type = Type.CHAR;
 				        addVariable(newId);
 				        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+				        
+				        // Generate Java code for assignment
+				        emit("    char " + newId.id + " = " + ((AsContext)_localctx).CHAR.getText() + ";\n");
 				      
 				}
 				break;
@@ -640,6 +653,9 @@ public class EmoticonParser extends Parser {
 				        newId.type = Type.FLOAT;
 				        addVariable(newId);
 				        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+				        
+				        // Generate Java code for assignment
+				        generateAssign(true, newId.id, ((AsContext)_localctx).FLOAT.getText());
 				      
 				}
 				break;
@@ -709,6 +725,9 @@ public class EmoticonParser extends Parser {
 			          System.out.println(((PsContext)_localctx).expr.result.stringValue);
 			        }
 			      }
+			      
+			      // Generate Java code for print statement
+			      emit("    System.out.println(" + ((PsContext)_localctx).expr.result.code + ");\n");
 			    
 			}
 		}

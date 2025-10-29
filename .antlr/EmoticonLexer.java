@@ -1,4 +1,4 @@
-// Generated from c:/Users/lukie/OneDrive/Documents/Senior Semester I/CSC 320/Emoticon Master/Emoticon.g4 by ANTLR 4.13.1
+// Generated from /Users/connorryan/Desktop/CSC320-Emoji-Compilers/Emoticon.g4 by ANTLR 4.13.1
  import java.util.*; import java.io.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; 
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
