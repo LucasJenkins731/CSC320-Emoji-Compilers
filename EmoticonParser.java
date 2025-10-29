@@ -1,6 +1,5 @@
 // Generated from Emoticon.g4 by ANTLR 4.13.2
  import java.util.*; import java.io.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; 
- import java.util.*; import java.io.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; 
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
 import org.antlr.v4.runtime.*;
@@ -147,9 +146,6 @@ public class EmoticonParser extends Parser {
 
 	  // for KW_READ in assignment
 	  Scanner readInput = new Scanner(System.in);
-
-	  // for KW_READ in assignment
-	  Scanner readInput = new Scanner(System.in);
 	  
 	  // Error tracking
 	  boolean hasErrors = false;
@@ -163,14 +159,12 @@ public class EmoticonParser extends Parser {
 	  }
 
 	  int printDiagnostics() {    
-	  int printDiagnostics() {    
 	    if (!diagnostics.isEmpty()) {
 	      for (String d : diagnostics) {
 	        System.err.println(d);
 	      }
 	    }    
 	    checkUnusedVariables();
-	    return diagnostics.size();
 	    return diagnostics.size();
 	  }
 	  
@@ -188,12 +182,10 @@ public class EmoticonParser extends Parser {
 	    }
 	  }
 
-
 	  Type typeCheck(String text) {
 	    Type varType = Type.UNKNOWN;
 	    if (text.matches("[+-]?(0|[1-9][0-9]*)")) {
 	      varType = Type.INT;
-	    } else if (text.matches("[+-]?(\\d*\\.\\d+|\\d+\\.\\d*)([eE][+-]?\\d+)?")){
 	    } else if (text.matches("[+-]?(\\d*\\.\\d+|\\d+\\.\\d*)([eE][+-]?\\d+)?")){
 	      varType = Type.FLOAT;
 	    } else if (text.matches("'(\\\\.|[^\\\\'])'")){
@@ -268,37 +260,6 @@ public class EmoticonParser extends Parser {
 	      pw.print(sb.toString());
 	    } catch (Exception e) {
 	      System.err.println("error: failed to write EmoticonProgramTests.java: " + e.getMessage());
-
-	  /** Code generation material */
-	  StringBuilder sb = new StringBuilder(); // Stores the generated program!
-
-	  void emit(String s) { sb.append(s); }   // Short-hand for adding to the program
-
-	  // Emit the preamble material for our program
-	  void openProgram() {
-	    emit("import java.util.*;\n");
-	    emit("public class EmoticonProgramTests {\n");
-	    emit("  public static void main(String[] args) throws Exception {\n");
-	    emit("    Scanner in = new Scanner(System.in);\n");
-	  }
-
-	  // Emit the postamble material for our program
-	  void closeProgram() {
-	    emit("  }\n");
-	    emit("}\n");
-	  }
-
-	  // Declare LHS if first-time assignment; otherwise plain assignment.
-	  void generateAssign(boolean declare, String name, String rhsJavaCode) {
-	    emit("    " + (declare ? "double " : " ") + name + " = " + rhsJavaCode + ";\n");
-	  }
-
-	  // Write the generated Java to file.
-	  void writeFile() {
-	    try (PrintWriter pw = new PrintWriter("EmoticonProgramTests.java", "UTF-8")) {
-	      pw.print(sb.toString());
-	    } catch (Exception e) {
-	      System.err.println("error: failed to write EmoticonProgramTests.java: " + e.getMessage());
 	    }
 	  }
 
@@ -339,11 +300,8 @@ public class EmoticonParser extends Parser {
 			{
 			 openProgram(); 
 			setState(38);
-			 openProgram(); 
-			setState(38);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
-			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 394542688L) != 0)) {
 			while ((((_la) & ~0x3f) == 0 && ((1L << _la) & 394542688L) != 0)) {
 				{
 				{
@@ -352,25 +310,12 @@ public class EmoticonParser extends Parser {
 				}
 				}
 				setState(40);
-				setState(40);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
 			setState(41);
-			}
-			setState(41);
 			match(EOF);
 
-			      int numErrors = printDiagnostics();
-			      if (numErrors == 0) {
-			        // Successful, so write out the generated code
-			        closeProgram();
-			        writeFile();
-			      } else {
-			        System.err.println(numErrors + " errors detected. Code not generated.");
-			        System.exit(1);  // Error code
-			      }
-			    
 			      int numErrors = printDiagnostics();
 			      if (numErrors == 0) {
 			        // Successful, so write out the generated code
@@ -657,20 +602,6 @@ public class EmoticonParser extends Parser {
 				setState(69);
 				((AsContext)_localctx).expr = expr();
 
-				        String id = ((AsContext)_localctx).IDENT.getText();
-				        Identifier var = lookupVariable(id);
-				        Identifier newId = new Identifier();
-				        newId.id = id;
-				        if(((AsContext)_localctx).expr.result.type == Type.INT || ((AsContext)_localctx).expr.result.type == Type.FLOAT){
-				          newId.value = ((AsContext)_localctx).expr.result.numericalValue;
-				        } else {
-				          newId.value = ((AsContext)_localctx).expr.result.stringValue;
-				        }
-				        newId.type = ((AsContext)_localctx).expr.result.type;
-				        System.out.println(id + " = " + String.valueOf(newId.value) + " (" + "Type = " + newId.type + ")");
-				        newId.hasKnown = ((AsContext)_localctx).expr.result.hasKnownValue;
-				        newId.hasBeenUsed = false;
-				        addVariable(newId);      
 				        String id = ((AsContext)_localctx).IDENT.getText();
 				        Identifier var = lookupVariable(id);
 				        Identifier newId = new Identifier();
