@@ -1,0 +1,6 @@
+x :=) 10
+y :=) 20.0
+z :=) "This will declare as a double"
+:P(x)
+:P(y)
+:P(z)
