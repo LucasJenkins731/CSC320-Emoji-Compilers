@@ -4,6 +4,6 @@ public class EmoticonProgramTests {
     Scanner in = new Scanner(System.in);
     double y = 20.0;
     double x = 10.0;
-    System.out.println(30.0);
+    System.out.println();
   }
 }
