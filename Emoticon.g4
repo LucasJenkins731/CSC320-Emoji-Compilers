@@ -12,6 +12,7 @@ grammar Emoticon;
     Type type;
     float numericalValue;
     String stringValue;
+    Boolean booleanValue;
     boolean hasKnownValue;
     String code;
 
@@ -188,6 +189,10 @@ ADD : ':+)';
 SUBTRACT : ':-)';
 MULTIPLY : ':*)';
 DIVIDE : ':/)';
+GREATERTHAN : ':>)'; // A is greater than B
+LESSTHAN : ':<)'; // A is less than B
+GREATERTHANOREQUALTO : ':>=)';
+LESSTHANOREQUALTO : ':<=)';
 INT : ('+'|'-')? ('0'|[1-9][0-9]*);
 FLOAT : [+-]?[0-9]*.[0-9]+;
 CHAR : '\'' ( '\\' . | ~('\\'|'\'')) '\'';
@@ -339,6 +344,34 @@ ps : KW_PRINT '(' expr ')'
       emit("    System.out.println(" + $expr.result.code + ");\n");
     }
 ;
+condition returns [ExprResult result]
+  @init {
+    $result = new ExprResult();
+    ExrResult resultA = $a.result;
+  }
+  : a=expr
+    {
+      $result = $a.result;
+    } 
+    ( conditional=(GREATERTHAN|LESSTHAN|GREATERTHANOREQUALTO|LESSTHANOREQUALTO)
+      b=expr
+      {
+        ExrResult resultB = $b.result;
+         if((resultA.type == Type.INT || resultA.type == Type.FLOAT)){
+          if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
+            double temp =  resultA.numericalValue - resultB.numericalValue;
+            if($conditional.getText().equals(":>)") || ($conditional.getText().equals(":>)")){
+              //check for if its positiove or negative
+            } else {
+              $result.numericalValue -= resultB.numericalValue;
+            }
+          }
+        }
+      }
+
+    )
+  ;
+
 
 expr returns [ExprResult result]
   @init {
@@ -540,20 +573,42 @@ elsestmt : KW_ELSE_IF
   }
   ;
 
-forstmt : KW_FOR '(' 
-  {
-    if (!definingFunction) {
+//middle part should be a conditional.
+// forstmt : KW_FOR '(' as ';' s ';' as ')' 
+//   {
+
+//       SymbolTable forScope = new SymbolTable();
+//       symbolStack.push(forScope);
+    
+//   }
+//   as ';' expr ';' as ')' s
+//   {
+
+//     emit("for (" )" );
+
+
+//     if (!definingFunction) {
+//       symbolStack.pop();
+//     }
+//   }
+//   ;
+
+  forstmt : KW_FOR '('
+    {
+      //create the block statement stuff
       SymbolTable forScope = new SymbolTable();
       symbolStack.push(forScope);
+
+      // now do assign
     }
-  }
-  as ';' expr ';' as ')' s
-  {
-    if (!definingFunction) {
-      symbolStack.pop();
-    }
-  }
-  ;
+    a=as
+    ';'
+    //should have a conditional here 
+    ';'
+    b=as
+    ')'
+
+    ;
 
 whilestmt : KW_WHILE 
   {
@@ -641,5 +696,7 @@ functioncall : IDENT '(' arg=expr ')'
 arraystmt : KW_ARRAY IDENT ':=)' '[' INT ']' s;
 
 operators : ADD | SUBTRACT | MULTIPLY | DIVIDE;
+
+conditionals : GREATERTHAN | LESSTHAN | GREATERTHANOREQUALTO | LESSTHANOREQUALTO;
 
 comp : COMPARISON;
