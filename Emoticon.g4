@@ -27,6 +27,11 @@ grammar Emoticon;
     Type type;
     boolean hasKnown;
     boolean hasBeenUsed;
+
+    //Array Specific
+    int arraySize;
+    Object[] arrayValues;
+    boolean isArray;
   }
 
   class SymbolTable {
@@ -188,13 +193,16 @@ ADD : ':+)';
 SUBTRACT : ':-)';
 MULTIPLY : ':*)';
 DIVIDE : ':/)';
+LBRACKET : '[';
+RBRACKET : ']';
 INT : ('+'|'-')? ('0'|[1-9][0-9]*);
-FLOAT : [+-]?[0-9]*.[0-9]+;
+// FLOAT : ('+'|'-')?[0-9]*'.'[0-9]+;
 CHAR : '\'' ( '\\' . | ~('\\'|'\'')) '\'';
 STRING : ('\''|'"') .*? ('\''|'"');
 WS : [ \t\r\n]+ -> skip;
 LPAREN : '(';
 RPAREN : ')';
+COMMA : ',';
 COMMENT : '<3'~[\n\r]* -> skip;
 COMMENT_BLOCK : 'OWO' .*? 'UWU' -> skip;
 COMPARISON : ':==)';
@@ -240,7 +248,14 @@ blockStatement : LBRACE
   ;
 
 as
-  : IDENT ':=)' 
+  : arrayAccess ':=)' expr
+    {
+      String arrayCode = $arrayAccess.result.code;
+      if ($arrayAccess.result.type != Type.UNKNOWN) {
+        emit("    " + arrayCode + " = " + $expr.result.code + ";\n");
+      }
+    }
+  | IDENT ':=)' 
     (
       expr
       {
@@ -300,7 +315,7 @@ as
         // Generate Java code for assignment
         emit("    char " + newId.id + " = " + $CHAR.getText() + ";\n");
       }
-    | FLOAT
+    /*| FLOAT
       {
         Identifier newId = new Identifier();
         newId.id = $IDENT.getText();
@@ -311,7 +326,7 @@ as
         
         // Generate Java code for assignment
         generateAssign(true, newId.id, $FLOAT.getText());
-      }
+      }*/
     | KW_READ
       {
         String input = readInput.nextLine();
@@ -321,6 +336,10 @@ as
         newId.type = typeCheck(input);
         addVariable(newId);
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+      }
+    | //ARRAY 
+      {
+        // add array functionality
       }
     )
   ;
@@ -433,16 +452,16 @@ factor returns [ExprResult result]
       $result.type = Type.INT;
       $result.numericalValue = Integer.parseInt($INT.getText());
       $result.hasKnownValue = true;
-      $result.code = ""+$result.numericalValue;
+      $result.code = Integer.toString((int)$result.numericalValue);
     }
-  | FLOAT
+  /*| FLOAT
     {
       $result = new ExprResult();
       $result.type = Type.FLOAT;
       $result.numericalValue = Float.parseFloat($FLOAT.getText());
       $result.hasKnownValue = true;
       $result.code = ""+$result.numericalValue;
-    }
+    }*/
   | CHAR
     {
       $result = new ExprResult();
@@ -458,6 +477,10 @@ factor returns [ExprResult result]
       $result.stringValue = $STRING.getText();
       $result.hasKnownValue = true;
       $result.code = ""+$result.stringValue;
+    }
+  | arrayAccess
+    {
+      $result = $arrayAccess.result;
     }
   | IDENT
     {
@@ -638,7 +661,79 @@ functioncall : IDENT '(' arg=expr ')'
   }
   ;
 
-arraystmt : KW_ARRAY IDENT ':=)' '[' INT ']' s;
+arraystmt : KW_ARRAY IDENT ':=)' LBRACKET size=INT RBRACKET (':=)' arrayInitializer)?
+{
+    String arrayName = $IDENT.getText();
+    int arraySize = Integer.parseInt($size.getText());
+    
+    // Check if already declared
+    if (existsInCurrentScope(arrayName)) {
+        error($IDENT, "Array '" + arrayName + "' already declared");
+    } else {
+        // Create array identifier
+        Identifier arrayId = new Identifier();
+        arrayId.id = arrayName;
+        arrayId.type = Type.ARRAY;
+        arrayId.isArray = true;
+        arrayId.arraySize = arraySize;
+        arrayId.arrayValues = new Object[arraySize];
+        arrayId.hasKnown = true;
+        
+        addVariable(arrayId);
+        
+        // Generate Java code for array declaration
+        emit("    double[] " + arrayName + " = new double[" + arraySize + "];\n");
+
+        // If initializer is present:
+        if ($arrayInitializer.ctx != null) {
+            // Generate initialization code
+            for (int i = 0; i < $arrayInitializer.values.size(); i++) {
+                emit("    " + arrayName + "[" + i + "] = " + 
+                     $arrayInitializer.values.get(i) + ";\n");
+            }
+        }
+    }
+}
+;
+
+//arrayInitializer : '[' exprList? ']' ;
+
+arrayInitializer returns [List<String> values]
+@init { $values = new ArrayList<>(); }
+: LBRACKET (first=expr { $values.add($first.result.code); } 
+      (COMMA rest=expr { $values.add($rest.result.code); })*)? RBRACKET
+;
+
+exprList : expr (COMMA expr)* ;
+
+arrayAccess returns [ExprResult result]
+@init { $result = new ExprResult(); }
+: IDENT LBRACKET index=expr RBRACKET
+{
+    String arrayName = $IDENT.getText();
+    Identifier arrayVar = lookupVariable(arrayName);
+    
+    if (arrayVar == null) {
+        error($IDENT, "Undefined array '" + arrayName + "'");
+        $result.type = Type.UNKNOWN;
+    } else if (!arrayVar.isArray) {
+        error($IDENT, "'" + arrayName + "' is not an array");
+        $result.type = Type.UNKNOWN;
+    } else {
+        arrayVar.hasBeenUsed = true;
+        $result.type = Type.FLOAT; // Assuming numeric arrays for now
+        $result.code = arrayName + "[" + $index.result.code + "]";
+        
+        // Optional: bounds checking at compile time if index is constant
+        if ($index.result.hasKnownValue && $index.result.type == Type.INT) {
+            int indexValue = (int)$index.result.numericalValue;
+            if (indexValue < 0 || indexValue >= arrayVar.arraySize) {
+                error($start, "Array index " + indexValue + " out of bounds [0, " + (arrayVar.arraySize-1) + "]");
+            }
+        }
+    }
+}
+;
 
 operators : ADD | SUBTRACT | MULTIPLY | DIVIDE;
 

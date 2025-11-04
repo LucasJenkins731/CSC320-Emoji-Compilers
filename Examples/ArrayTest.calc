@@ -1,0 +1,21 @@
+<3 Array functionality test
+
+<3 Declare an array of size 3
+(o_o) numbers :=) [3]
+
+<3 Assign values to array elements
+numbers[0] :=) 10
+numbers[1] :=) 20
+numbers[2] :=) 30
+
+<3 Use arrays in expressions
+sum :=) numbers[0] :+) numbers[1]
+:P(sum)
+
+<3 Print individual elements
+:P(numbers[2])
+
+<3 Declare array with initialization
+(o_o) values :=) [2] :=) [100, 200]
+:P(values[0])
+:P(values[1])
