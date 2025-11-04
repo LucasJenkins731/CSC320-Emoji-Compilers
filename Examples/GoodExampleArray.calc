@@ -1,0 +1,10 @@
+<3 Array declaration
+(o_o) numbers :=) [5]
+
+<3 Array assignment  
+numbers[0] :=) 10
+numbers[1] :=) 20
+
+<3 Array access in expressions
+sum :=) numbers[0] :+) numbers[1]
+:P(sum)
