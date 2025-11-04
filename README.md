@@ -27,3 +27,10 @@ this will display similar contents to the gui into the terminal
 
 Emoticon Cheat Sheet:
 https://quinnipiacuniversity-my.sharepoint.com/:w:/g/personal/lgjenkins_quinnipiac_edu/EQX40YidXydMp9gg33d_NaYBfDYWCMoBeLag5HEhVlo5rA?e=BcfYGb
+
+Commands to run code generation:
+antlr4 Emoticon.g4
+
+javac -cp “/filepath/antlr-4.13.2-complete.jar:." *.java
+
+java -cp “/filepath/antlr-4.13.2-complete.jar:." TestDriver Examples/GoodExample3.calc

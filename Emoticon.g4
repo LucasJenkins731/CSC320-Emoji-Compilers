@@ -5,7 +5,7 @@ grammar Emoticon;
 @members {
 
   enum Type {
-    INT, FLOAT, STRING, CHAR, UNKNOWN
+    INT, FLOAT, STRING, CHAR, ARRAY, UNKNOWN
   }
 
   class ExprResult {

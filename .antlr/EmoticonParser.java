@@ -103,7 +103,7 @@ public class EmoticonParser extends Parser {
 
 
 	  enum Type {
-	    INT, FLOAT, STRING, CHAR, UNKNOWN
+	    INT, FLOAT, STRING, CHAR, ARRAY, UNKNOWN
 	  }
 
 	  class ExprResult {
