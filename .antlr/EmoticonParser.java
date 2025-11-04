@@ -162,13 +162,14 @@ public class EmoticonParser extends Parser {
 	    hasErrors = true;
 	  }
 
-	  void printDiagnostics() {    
+	  int printDiagnostics() {    
 	    if (!diagnostics.isEmpty()) {
 	      for (String d : diagnostics) {
 	        System.err.println(d);
 	      }
 	    }    
 	    checkUnusedVariables();
+	    return diagnostics.size();
 	  }
 	  
 	  void checkUnusedVariables() {
@@ -184,8 +185,7 @@ public class EmoticonParser extends Parser {
 	      }
 	    }
 	  }
-	//[+-]?[0-9]*.[0-9]+
-	//"('+'|'-')? ('0'|[1-9][0-9]*) '.' ('0'|[1-9][0-9]*)"
+
 	  Type typeCheck(String text) {
 	    Type varType = Type.UNKNOWN;
 	    if (text.matches("[+-]?(0|[1-9][0-9]*)")) {
@@ -768,7 +768,7 @@ public class EmoticonParser extends Parser {
 				match(KW_READ);
 
 				        String input = readInput.nextLine();
-				        Identifier newID = new Identifier();
+				        Identifier newId = new Identifier();
 				        newId.id = ((AsContext)_localctx).IDENT.getText();
 				        newId.value = input;
 				        newId.type = typeCheck(input);
@@ -847,15 +847,12 @@ public class EmoticonParser extends Parser {
 		public ExprResult result;
 		public TermContext a;
 		public Token op;
-		public FactorContext b;
-		public TermContext term() {
-			return getRuleContext(TermContext.class,0);
+		public TermContext b;
+		public List<TermContext> term() {
+			return getRuleContexts(TermContext.class);
 		}
-		public List<FactorContext> factor() {
-			return getRuleContexts(FactorContext.class);
-		}
-		public FactorContext factor(int i) {
-			return getRuleContext(FactorContext.class,i);
+		public TermContext term(int i) {
+			return getRuleContext(TermContext.class,i);
 		}
 		public List<TerminalNode> ADD() { return getTokens(EmoticonParser.ADD); }
 		public TerminalNode ADD(int i) {
@@ -902,7 +899,7 @@ public class EmoticonParser extends Parser {
 					consume();
 				}
 				setState(92);
-				((ExprContext)_localctx).b = factor();
+				((ExprContext)_localctx).b = term();
 
 				        ExprResult resultB = ((ExprContext)_localctx).b.result;
 				          if((resultA.type == Type.INT || resultA.type == Type.FLOAT)){
@@ -1013,7 +1010,6 @@ public class EmoticonParser extends Parser {
 				        ExprResult resultB = ((TermContext)_localctx).b.result;
 				        if(resultA.type == Type.INT || resultA.type == Type.FLOAT){
 				          if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
-				            //now do math
 				            if(resultB.numericalValue == 0 && ((TermContext)_localctx).op.getText().equals(":/)")){
 				              error(((TermContext)_localctx).op, "division by zero");
 				              _localctx.result.hasKnownValue = false;
@@ -1916,7 +1912,7 @@ public class EmoticonParser extends Parser {
 		"\u0000TU\u0005\u001c\u0000\u0000UV\u0003\n\u0005\u0000VW\u0005\u001d\u0000"+
 		"\u0000WX\u0006\u0004\uffff\uffff\u0000X\t\u0001\u0000\u0000\u0000YZ\u0003"+
 		"\f\u0006\u0000Za\u0006\u0005\uffff\uffff\u0000[\\\u0007\u0000\u0000\u0000"+
-		"\\]\u0003\u000e\u0007\u0000]^\u0006\u0005\uffff\uffff\u0000^`\u0001\u0000"+
+		"\\]\u0003\f\u0006\u0000]^\u0006\u0005\uffff\uffff\u0000^`\u0001\u0000"+
 		"\u0000\u0000_[\u0001\u0000\u0000\u0000`c\u0001\u0000\u0000\u0000a_\u0001"+
 		"\u0000\u0000\u0000ab\u0001\u0000\u0000\u0000b\u000b\u0001\u0000\u0000"+
 		"\u0000ca\u0001\u0000\u0000\u0000de\u0003\u000e\u0007\u0000el\u0006\u0006"+

@@ -155,13 +155,14 @@ public class EmoticonLexer extends Lexer {
 	    hasErrors = true;
 	  }
 
-	  void printDiagnostics() {    
+	  int printDiagnostics() {    
 	    if (!diagnostics.isEmpty()) {
 	      for (String d : diagnostics) {
 	        System.err.println(d);
 	      }
 	    }    
 	    checkUnusedVariables();
+	    return diagnostics.size();
 	  }
 	  
 	  void checkUnusedVariables() {
@@ -177,8 +178,7 @@ public class EmoticonLexer extends Lexer {
 	      }
 	    }
 	  }
-	//[+-]?[0-9]*.[0-9]+
-	//"('+'|'-')? ('0'|[1-9][0-9]*) '.' ('0'|[1-9][0-9]*)"
+
 	  Type typeCheck(String text) {
 	    Type varType = Type.UNKNOWN;
 	    if (text.matches("[+-]?(0|[1-9][0-9]*)")) {

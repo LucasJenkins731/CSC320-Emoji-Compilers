@@ -64,13 +64,14 @@ grammar Emoticon;
     hasErrors = true;
   }
 
-  void printDiagnostics() {    
+  int printDiagnostics() {    
     if (!diagnostics.isEmpty()) {
       for (String d : diagnostics) {
         System.err.println(d);
       }
     }    
     checkUnusedVariables();
+    return diagnostics.size();
   }
   
   void checkUnusedVariables() {
@@ -86,8 +87,7 @@ grammar Emoticon;
       }
     }
   }
-//[+-]?[0-9]*.[0-9]+
-//"('+'|'-')? ('0'|[1-9][0-9]*) '.' ('0'|[1-9][0-9]*)"
+
   Type typeCheck(String text) {
     Type varType = Type.UNKNOWN;
     if (text.matches("[+-]?(0|[1-9][0-9]*)")) {
@@ -418,7 +418,7 @@ as
     | KW_READ
       {
         String input = readInput.nextLine();
-        Identifier newID = new Identifier();
+        Identifier newId = new Identifier();
         newId.id = $IDENT.getText();
         newId.value = input;
         newId.type = typeCheck(input);
@@ -446,7 +446,7 @@ expr returns [ExprResult result]
       ExprResult resultA = $a.result;
       $result = $a.result;
     }
-    ( op=(ADD|SUBTRACT) b=factor
+    ( op=(ADD|SUBTRACT) b=term
       {
         ExprResult resultB = $b.result;
           if((resultA.type == Type.INT || resultA.type == Type.FLOAT)){
@@ -490,7 +490,6 @@ term returns [ExprResult result]
         ExprResult resultB = $b.result;
         if(resultA.type == Type.INT || resultA.type == Type.FLOAT){
           if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
-            //now do math
             if(resultB.numericalValue == 0 && $op.getText().equals(":/)")){
               error($op, "division by zero");
               $result.hasKnownValue = false;
@@ -759,8 +758,6 @@ functioncall : IDENT '(' arg=expr ')'
   ;
 
 arraystmt : KW_ARRAY IDENT ':=)' '[' INT ']' s;
-
-//stringstmt : IDENT ':=)' STRING;
 
 operators : ADD | SUBTRACT | MULTIPLY | DIVIDE;
 
