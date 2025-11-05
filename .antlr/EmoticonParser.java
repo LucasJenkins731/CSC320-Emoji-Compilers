@@ -260,9 +260,21 @@ public class EmoticonParser extends Parser {
 	    emit("}\n");
 	  }
 
+	  // Helper method to convert Type enum to Java type string
+	  String getJavaType(Type type) {
+	    switch (type) {
+	      case INT: return "int";
+	      case FLOAT: return "double";
+	      case STRING: return "String";
+	      case CHAR: return "char";
+	      default: return "double"; // fallback
+	    }
+	  }
+
 	  // Declare LHS if first-time assignment; otherwise plain assignment.
-	  void generateAssign(boolean declare, String name, String rhsJavaCode) {
-	    emit("    " + (declare ? "double " : " ") + name + " = " + rhsJavaCode + ";\n");
+	  void generateAssign(boolean declare, String name, String rhsJavaCode, Type type) {
+	    String javaType = getJavaType(type);
+	    emit("    " + (declare ? javaType + " " : " ") + name + " = " + rhsJavaCode + ";\n");
 	  }
 
 	  // Write the generated Java to file.
@@ -621,7 +633,7 @@ public class EmoticonParser extends Parser {
 					        
 					        // Generate Java code for assignment
 					        boolean isNewVariable = (var == null);
-					        generateAssign(isNewVariable, id, ((AsContext)_localctx).expr.result.code);
+					        generateAssign(isNewVariable, id, ((AsContext)_localctx).expr.result.code, ((AsContext)_localctx).expr.result.type);
 					      
 					}
 					break;
@@ -638,7 +650,7 @@ public class EmoticonParser extends Parser {
 					        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
 					        
 					        // Generate Java code for assignment
-					        generateAssign(true, newId.id, ((AsContext)_localctx).INT.getText());
+					        generateAssign(true, newId.id, ((AsContext)_localctx).INT.getText(), Type.INT);
 					      
 					}
 					break;
@@ -655,7 +667,7 @@ public class EmoticonParser extends Parser {
 					        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
 					        
 					        // Generate Java code for assignment
-					        emit("    String " + newId.id + " = " + ((AsContext)_localctx).STRING.getText() + ";\n");
+					        generateAssign(true, newId.id, ((AsContext)_localctx).STRING.getText(), Type.STRING);
 					      
 					}
 					break;
@@ -672,7 +684,7 @@ public class EmoticonParser extends Parser {
 					        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
 					        
 					        // Generate Java code for assignment
-					        emit("    char " + newId.id + " = " + ((AsContext)_localctx).CHAR.getText() + ";\n");
+					        generateAssign(true, newId.id, ((AsContext)_localctx).CHAR.getText(), Type.CHAR);
 					      
 					}
 					break;
@@ -688,6 +700,9 @@ public class EmoticonParser extends Parser {
 					        newId.type = typeCheck(input);
 					        addVariable(newId);
 					        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+					        
+					        // Generate Java code for assignment
+					        generateAssign(true, newId.id, "in.nextLine()", newId.type);
 					      
 					}
 					break;
@@ -807,6 +822,7 @@ public class EmoticonParser extends Parser {
 		enterRule(_localctx, 10, RULE_condition);
 
 		    ((ConditionContext)_localctx).result =  new ExprResult();
+		    ExprResult resultA = ((ConditionContext)_localctx).a.result;
 		  
 		int _la;
 		try {
@@ -838,23 +854,21 @@ public class EmoticonParser extends Parser {
 				setState(109);
 				((ConditionContext)_localctx).b = expr();
 
-				        // build a boolean expression string using the operand codes
-				        String javaOp;
-				        String tok = ((ConditionContext)_localctx).conditional.getText();
-				        if (":>)".equals(tok)) javaOp = ">";
-				        else if (":<)".equals(tok)) javaOp = "<";
-				        else if (":>=)".equals(tok)) javaOp = ">=";
-				        else if (":<=)".equals(tok)) javaOp = "<=";
-				        else javaOp = tok; // fallback
-
-				        // ensure numeric comparisons for now
-				        if (((((ConditionContext)_localctx).a.result.type == Type.INT || ((ConditionContext)_localctx).a.result.type == Type.FLOAT)
-				             && (((ConditionContext)_localctx).b.result.type == Type.INT || ((ConditionContext)_localctx).b.result.type == Type.FLOAT))
-				            || (((ConditionContext)_localctx).a.result.type == Type.STRING && ((ConditionContext)_localctx).b.result.type == Type.STRING)
-				            || (((ConditionContext)_localctx).a.result.type == Type.CHAR && ((ConditionContext)_localctx).b.result.type == Type.CHAR)) {
-				          _localctx.result.code = ((ConditionContext)_localctx).a.result.code + " " + javaOp + " " + ((ConditionContext)_localctx).b.result.code;
-				          _localctx.result.hasKnownValue = false; // conservatively unknown
-				          _localctx.result.type = Type.UNKNOWN;
+				        ExprResult resultB = ((ConditionContext)_localctx).b.result;
+				         if((resultA.type == Type.INT || resultA.type == Type.FLOAT)){
+				          if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
+				              _localctx.result.code = "(" + resultA.code + ((ConditionContext)_localctx).conditional.getText() + resultB.code + ")";
+				          }
+				        } else if (resultA.type == Type.CHAR){
+				          if(resultB.type == Type.CHAR){
+				            if(((ConditionContext)_localctx).conditional.getText().equals(":==)")){
+				              _localctx.result.code = "(" + resultA.code + ":==)" + resultB.code + ")";
+				            } else {
+				              error(((ConditionContext)_localctx).conditional, "incorrect conditional used");
+				              _localctx.result.hasKnownValue = false;
+				              _localctx.result.code = "(" + _localctx.result.code + ((ConditionContext)_localctx).conditional.getText() + resultB.code + ")";
+				            }
+				          }
 				        } else {
 				          error(((ConditionContext)_localctx).conditional, "incomparable types used in condition");
 				          _localctx.result.code = "false";

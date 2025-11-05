@@ -156,9 +156,21 @@ grammar Emoticon;
     emit("}\n");
   }
 
+  // Helper method to convert Type enum to Java type string
+  String getJavaType(Type type) {
+    switch (type) {
+      case INT: return "int";
+      case FLOAT: return "double";
+      case STRING: return "String";
+      case CHAR: return "char";
+      default: return "double"; // fallback
+    }
+  }
+
   // Declare LHS if first-time assignment; otherwise plain assignment.
-  void generateAssign(boolean declare, String name, String rhsJavaCode) {
-    emit("    " + (declare ? "double " : " ") + name + " = " + rhsJavaCode + ";\n");
+  void generateAssign(boolean declare, String name, String rhsJavaCode, Type type) {
+    String javaType = getJavaType(type);
+    emit("    " + (declare ? javaType + " " : " ") + name + " = " + rhsJavaCode + ";\n");
   }
 
   // Write the generated Java to file.
@@ -280,7 +292,7 @@ as
         
         // Generate Java code for assignment
         boolean isNewVariable = (var == null);
-        generateAssign(isNewVariable, id, $expr.result.code);
+        generateAssign(isNewVariable, id, $expr.result.code, $expr.result.type);
       }
       
     | INT
@@ -293,7 +305,7 @@ as
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
         
         // Generate Java code for assignment
-        generateAssign(true, newId.id, $INT.getText());
+        generateAssign(true, newId.id, $INT.getText(), Type.INT);
       }
     | STRING
       {
@@ -305,7 +317,7 @@ as
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
         
         // Generate Java code for assignment
-        emit("    String " + newId.id + " = " + $STRING.getText() + ";\n");
+        generateAssign(true, newId.id, $STRING.getText(), Type.STRING);
       }
     | CHAR
       {
@@ -317,7 +329,7 @@ as
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
         
         // Generate Java code for assignment
-        emit("    char " + newId.id + " = " + $CHAR.getText() + ";\n");
+        generateAssign(true, newId.id, $CHAR.getText(), Type.CHAR);
       }
     /*| FLOAT
       {
@@ -329,7 +341,7 @@ as
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
         
         // Generate Java code for assignment
-        generateAssign(true, newId.id, $FLOAT.getText());
+        generateAssign(true, newId.id, $FLOAT.getText(), Type.FLOAT);
       }*/
     | KW_READ
       {
@@ -340,6 +352,9 @@ as
         newId.type = typeCheck(input);
         addVariable(newId);
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+        
+        // Generate Java code for assignment
+        generateAssign(true, newId.id, "in.nextLine()", newId.type);
       }
     | //ARRAY 
       {
@@ -365,6 +380,7 @@ ps : KW_PRINT '(' expr ')'
 condition returns [ExprResult result]
   @init {
     $result = new ExprResult();
+    ExprResult resultA = $a.result;
   }
   : a=expr
     {
@@ -374,23 +390,21 @@ condition returns [ExprResult result]
     ( conditional=(GREATERTHAN|LESSTHAN|GREATERTHANOREQUALTO|LESSTHANOREQUALTO)
       b=expr
       {
-        // build a boolean expression string using the operand codes
-        String javaOp;
-        String tok = $conditional.getText();
-        if (":>)".equals(tok)) javaOp = ">";
-        else if (":<)".equals(tok)) javaOp = "<";
-        else if (":>=)".equals(tok)) javaOp = ">=";
-        else if (":<=)".equals(tok)) javaOp = "<=";
-        else javaOp = tok; // fallback
-
-        // ensure numeric comparisons for now
-        if ((($a.result.type == Type.INT || $a.result.type == Type.FLOAT)
-             && ($b.result.type == Type.INT || $b.result.type == Type.FLOAT))
-            || ($a.result.type == Type.STRING && $b.result.type == Type.STRING)
-            || ($a.result.type == Type.CHAR && $b.result.type == Type.CHAR)) {
-          $result.code = $a.result.code + " " + javaOp + " " + $b.result.code;
-          $result.hasKnownValue = false; // conservatively unknown
-          $result.type = Type.UNKNOWN;
+        ExprResult resultB = $b.result;
+         if((resultA.type == Type.INT || resultA.type == Type.FLOAT)){
+          if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
+              $result.code = "(" + resultA.code + $conditional.getText() + resultB.code + ")";
+          }
+        } else if (resultA.type == Type.CHAR){
+          if(resultB.type == Type.CHAR){
+            if($conditional.getText().equals(":==)")){
+              $result.code = "(" + resultA.code + ":==)" + resultB.code + ")";
+            } else {
+              error($conditional, "incorrect conditional used");
+              $result.hasKnownValue = false;
+              $result.code = "(" + $result.code + $conditional.getText() + resultB.code + ")";
+            }
+          }
         } else {
           error($conditional, "incomparable types used in condition");
           $result.code = "false";
