@@ -1,4 +1,4 @@
-// Generated from c:/Users/pieco/Desktop/Emoticon language/Emoticon.g4 by ANTLR 4.13.1
+// Generated from /Users/connorryan/Desktop/CSC320-Emoji-Compilers/Emoticon.g4 by ANTLR 4.13.1
  import java.util.*; import java.io.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; 
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.CharStream;
@@ -251,9 +251,21 @@ public class EmoticonLexer extends Lexer {
 	    emit("}\n");
 	  }
 
+	  // Helper method to convert Type enum to Java type string
+	  String getJavaType(Type type) {
+	    switch (type) {
+	      case INT: return "int";
+	      case FLOAT: return "double";
+	      case STRING: return "String";
+	      case CHAR: return "char";
+	      default: return "double"; // fallback
+	    }
+	  }
+
 	  // Declare LHS if first-time assignment; otherwise plain assignment.
-	  void generateAssign(boolean declare, String name, String rhsJavaCode) {
-	    emit("    " + (declare ? "double " : " ") + name + " = " + rhsJavaCode + ";\n");
+	  void generateAssign(boolean declare, String name, String rhsJavaCode, Type type) {
+	    String javaType = getJavaType(type);
+	    emit("    " + (declare ? javaType + " " : " ") + name + " = " + rhsJavaCode + ";\n");
 	  }
 
 	  // Write the generated Java to file.

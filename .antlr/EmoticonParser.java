@@ -1,4 +1,4 @@
-// Generated from c:/Users/pieco/Desktop/Emoticon language/Emoticon.g4 by ANTLR 4.13.1
+// Generated from /Users/connorryan/Desktop/CSC320-Emoji-Compilers/Emoticon.g4 by ANTLR 4.13.1
  import java.util.*; import java.io.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; 
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
@@ -260,9 +260,21 @@ public class EmoticonParser extends Parser {
 	    emit("}\n");
 	  }
 
+	  // Helper method to convert Type enum to Java type string
+	  String getJavaType(Type type) {
+	    switch (type) {
+	      case INT: return "int";
+	      case FLOAT: return "double";
+	      case STRING: return "String";
+	      case CHAR: return "char";
+	      default: return "double"; // fallback
+	    }
+	  }
+
 	  // Declare LHS if first-time assignment; otherwise plain assignment.
-	  void generateAssign(boolean declare, String name, String rhsJavaCode) {
-	    emit("    " + (declare ? "double " : " ") + name + " = " + rhsJavaCode + ";\n");
+	  void generateAssign(boolean declare, String name, String rhsJavaCode, Type type) {
+	    String javaType = getJavaType(type);
+	    emit("    " + (declare ? javaType + " " : " ") + name + " = " + rhsJavaCode + ";\n");
 	  }
 
 	  // Write the generated Java to file.
@@ -621,7 +633,7 @@ public class EmoticonParser extends Parser {
 					        
 					        // Generate Java code for assignment
 					        boolean isNewVariable = (var == null);
-					        generateAssign(isNewVariable, id, ((AsContext)_localctx).expr.result.code);
+					        generateAssign(isNewVariable, id, ((AsContext)_localctx).expr.result.code, ((AsContext)_localctx).expr.result.type);
 					      
 					}
 					break;
@@ -638,7 +650,7 @@ public class EmoticonParser extends Parser {
 					        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
 					        
 					        // Generate Java code for assignment
-					        generateAssign(true, newId.id, ((AsContext)_localctx).INT.getText());
+					        generateAssign(true, newId.id, ((AsContext)_localctx).INT.getText(), Type.INT);
 					      
 					}
 					break;
@@ -655,7 +667,7 @@ public class EmoticonParser extends Parser {
 					        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
 					        
 					        // Generate Java code for assignment
-					        emit("    String " + newId.id + " = " + ((AsContext)_localctx).STRING.getText() + ";\n");
+					        generateAssign(true, newId.id, ((AsContext)_localctx).STRING.getText(), Type.STRING);
 					      
 					}
 					break;
@@ -672,7 +684,7 @@ public class EmoticonParser extends Parser {
 					        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
 					        
 					        // Generate Java code for assignment
-					        emit("    char " + newId.id + " = " + ((AsContext)_localctx).CHAR.getText() + ";\n");
+					        generateAssign(true, newId.id, ((AsContext)_localctx).CHAR.getText(), Type.CHAR);
 					      
 					}
 					break;
@@ -688,6 +700,9 @@ public class EmoticonParser extends Parser {
 					        newId.type = typeCheck(input);
 					        addVariable(newId);
 					        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+					        
+					        // Generate Java code for assignment
+					        generateAssign(true, newId.id, "in.nextLine()", newId.type);
 					      
 					}
 					break;
@@ -807,7 +822,7 @@ public class EmoticonParser extends Parser {
 		enterRule(_localctx, 10, RULE_condition);
 
 		    ((ConditionContext)_localctx).result =  new ExprResult();
-		    ExrResult resultA = ((ConditionContext)_localctx).a.result;
+		    ExprResult resultA = ((ConditionContext)_localctx).a.result;
 		  
 		int _la;
 		try {
@@ -838,7 +853,7 @@ public class EmoticonParser extends Parser {
 				setState(109);
 				((ConditionContext)_localctx).b = expr();
 
-				        ExrResult resultB = ((ConditionContext)_localctx).b.result;
+				        ExprResult resultB = ((ConditionContext)_localctx).b.result;
 				         if((resultA.type == Type.INT || resultA.type == Type.FLOAT)){
 				          if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
 				              _localctx.result.code = "(" + resultA.code + ((ConditionContext)_localctx).conditional.getText() + resultB.code + ")";

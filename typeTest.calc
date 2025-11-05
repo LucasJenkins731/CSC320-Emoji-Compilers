@@ -1,0 +1,14 @@
+<3 Test different data types
+name :=) "John Doe"
+age :=) 25
+grade :=) 'A'
+message :=) "Hello World"
+initial :=) 'J'
+count :=) 100
+
+:P(name)
+:P(age)
+:P(grade)
+:P(message)
+:P(initial)
+:P(count)
