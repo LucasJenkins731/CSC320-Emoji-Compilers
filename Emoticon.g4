@@ -524,9 +524,9 @@ factor returns [ExprResult result]
     {
       $result = new ExprResult();
       $result.type = Type.CHAR;
-      $result.stringValue = String.valueOf($CHAR.getText().charAt(0));
+      $result.stringValue = String.valueOf($CHAR.getText().charAt(1));
       $result.hasKnownValue = true;
-      $result.code = ""+$result.stringValue;
+      $result.code = $CHAR.getText();
     }
   | STRING
     {

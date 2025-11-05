@@ -1171,9 +1171,9 @@ public class EmoticonParser extends Parser {
 
 				      ((FactorContext)_localctx).result =  new ExprResult();
 				      _localctx.result.type = Type.CHAR;
-				      _localctx.result.stringValue = String.valueOf(((FactorContext)_localctx).CHAR.getText().charAt(0));
+				      _localctx.result.stringValue = String.valueOf(((FactorContext)_localctx).CHAR.getText().charAt(1));
 				      _localctx.result.hasKnownValue = true;
-				      _localctx.result.code = ""+_localctx.result.stringValue;
+				      _localctx.result.code = ((FactorContext)_localctx).CHAR.getText();
 				    
 				}
 				break;
