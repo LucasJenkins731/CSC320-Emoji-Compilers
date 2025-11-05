@@ -108,6 +108,7 @@ public class EmoticonLexer extends Lexer {
 	    float numericalValue;
 	    String stringValue;
 	    boolean hasKnownValue;
+	    boolean forAssign;
 	    String code;
 
 	    ExprResult(){
@@ -154,6 +155,8 @@ public class EmoticonLexer extends Lexer {
 	  
 	  boolean definingFunction = false;
 	  int functionDefDepth = 0;
+
+	  boolean forAssign = false;// global check to semicolons in for stmt
 
 	  void error(Token t, String msg) {
 	    diagnostics.add("line " + t.getLine() + ":" + t.getCharPositionInLine() + " " + msg);
@@ -251,12 +254,24 @@ public class EmoticonLexer extends Lexer {
 	    emit("}\n");
 	  }
 
+	  // Helper method to convert Type enum to Java type string
+	  String getJavaType(Type type) {
+	    switch (type) {
+	      case INT: return "int";
+	      case FLOAT: return "double";
+	      case STRING: return "String";
+	      case CHAR: return "char";
+	      default: return "double"; // fallback
+	    }
+	  }
+
 	  // Declare LHS if first-time assignment; otherwise plain assignment.
-	  void generateAssign(boolean declare, String name, String rhsJavaCode, boolean forAssign) {
+	  void generateAssign(boolean declare, String name, String rhsJavaCode, Type type, boolean forAssign) {
+	    String javaType = getJavaType(type);
 	    if(!forAssign){
-	      emit("    " + (declare ? "double " : " ") + name + " = " + rhsJavaCode + ";\n");
+	      emit("    " + (declare ? javaType + " " : " ") + name + " = " + rhsJavaCode + ";\n");
 	    } else {
-	      emit("    " + (declare ? "double " : " ") + name + " = " + rhsJavaCode);
+	      emit("    " + (declare ? javaType + " " : " ") + name + " = " + rhsJavaCode);
 	    }
 	  }
 

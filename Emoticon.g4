@@ -13,6 +13,7 @@ grammar Emoticon;
     float numericalValue;
     String stringValue;
     boolean hasKnownValue;
+    boolean forAssign;
     String code;
 
     ExprResult(){
@@ -59,6 +60,8 @@ grammar Emoticon;
   
   boolean definingFunction = false;
   int functionDefDepth = 0;
+
+  boolean forAssign = false;// global check to semicolons in for stmt
 
   void error(Token t, String msg) {
     diagnostics.add("line " + t.getLine() + ":" + t.getCharPositionInLine() + " " + msg);
@@ -156,12 +159,24 @@ grammar Emoticon;
     emit("}\n");
   }
 
+  // Helper method to convert Type enum to Java type string
+  String getJavaType(Type type) {
+    switch (type) {
+      case INT: return "int";
+      case FLOAT: return "double";
+      case STRING: return "String";
+      case CHAR: return "char";
+      default: return "double"; // fallback
+    }
+  }
+
   // Declare LHS if first-time assignment; otherwise plain assignment.
-  void generateAssign(boolean declare, String name, String rhsJavaCode, boolean forAssign) {
+  void generateAssign(boolean declare, String name, String rhsJavaCode, Type type, boolean forAssign) {
+    String javaType = getJavaType(type);
     if(!forAssign){
-      emit("    " + (declare ? "double " : " ") + name + " = " + rhsJavaCode + ";\n");
+      emit("    " + (declare ? javaType + " " : " ") + name + " = " + rhsJavaCode + ";\n");
     } else {
-      emit("    " + (declare ? "double " : " ") + name + " = " + rhsJavaCode);
+      emit("    " + (declare ? javaType + " " : " ") + name + " = " + rhsJavaCode);
     }
   }
 
@@ -227,6 +242,7 @@ program
         // Successful, so write out the generated code
         closeProgram();
         writeFile();
+        System.err.println("Success!");
       } else {
         System.err.println(numErrors + " errors detected. Code not generated.");
         System.exit(1);  // Error code
@@ -284,7 +300,7 @@ as
         
         // Generate Java code for assignment
         boolean isNewVariable = (var == null);
-        generateAssign(isNewVariable, id, $expr.result.code, false);
+        generateAssign(isNewVariable, id, $expr.result.code, $expr.result.type, forAssign);
       }
       
     | INT
@@ -297,7 +313,7 @@ as
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
         
         // Generate Java code for assignment
-        generateAssign(true, newId.id, $INT.getText(), false);
+        generateAssign(true, newId.id, $INT.getText(), Type.INT, forAssign);
       }
     | STRING
       {
@@ -309,7 +325,7 @@ as
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
         
         // Generate Java code for assignment
-        emit("    String " + newId.id + " = " + $STRING.getText() + ";\n");
+        generateAssign(true, newId.id, $STRING.getText(), Type.STRING, forAssign);
       }
     | CHAR
       {
@@ -321,7 +337,7 @@ as
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
         
         // Generate Java code for assignment
-        emit("    Char " + newId.id + " = " + $CHAR.getText() + ";\n");
+        generateAssign(true, newId.id, $CHAR.getText(), Type.CHAR, forAssign);
       }
     /*| FLOAT
       {
@@ -333,7 +349,7 @@ as
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
         
         // Generate Java code for assignment
-        generateAssign(true, newId.id, $FLOAT.getText());
+        generateAssign(true, newId.id, $FLOAT.getText(), Type.FLOAT);
       }*/
     | KW_READ
       {
@@ -344,6 +360,9 @@ as
         newId.type = typeCheck(input);
         addVariable(newId);
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+        
+        // Generate Java code for assignment
+        generateAssign(true, newId.id, "in.nextLine()", newId.type, forAssign);
       }
     | //ARRAY 
       {
@@ -369,35 +388,39 @@ ps : KW_PRINT '(' expr ')'
 condition returns [ExprResult result]
   @init {
     $result = new ExprResult();
-    ExrResult resultA = $a.result;
   }
   : a=expr
     {
+      // start with the lhs expr result
       $result = $a.result;
-    } 
+    }
     ( conditional=(GREATERTHAN|LESSTHAN|GREATERTHANOREQUALTO|LESSTHANOREQUALTO)
       b=expr
       {
-        ExrResult resultB = $b.result;
-         if((resultA.type == Type.INT || resultA.type == Type.FLOAT)){
-          if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
-              $result.code = "(" + resultA.code + $conditional.getText() + resultB.code + ")";
-          }
-        } else if (resultA.type == Type.CHAR){
-          if(resultB.type == Type.CHAR){
-            if($conditional.getText().equals(":==)")){
-              $result.code = "(" + resultA.code + ":==)" + resultB.code + ")";
-            } else {
-              error($conditional, "incorrect conditional used");
-              $result.hasKnownValue = false;
-              $result.code = "(" + $result.code + $conditional.getText() + resultB.code + ")";
-            }
-          }
+        // map emoticon tokens to Java operators
+        String tok = $conditional.getText();
+        String javaOp;
+        if (":>)".equals(tok)) javaOp = ">";
+        else if (":<)".equals(tok)) javaOp = "<";
+        else if (":>=)".equals(tok)) javaOp = ">=";
+        else if (":<=)".equals(tok)) javaOp = "<=";
+        else if (":==)".equals(tok)) javaOp = "==";
+        else javaOp = tok;
+
+        // ensure operands are comparable (allow numeric, char, string comparisons as needed)
+        if ((($a.result.type == Type.INT || $a.result.type == Type.FLOAT)
+             && ($b.result.type == Type.INT || $b.result.type == Type.FLOAT))
+            || ($a.result.type == Type.CHAR && $b.result.type == Type.CHAR)
+            || ($a.result.type == Type.STRING && $b.result.type == Type.STRING)) {
+          $result.code = $a.result.code + " " + javaOp + " " + $b.result.code;
+          $result.hasKnownValue = false; // conservative
+          $result.type = Type.UNKNOWN;
         } else {
-            error($conditional, "wrong types used");
-            $result.hasKnownValue = false;
-            $result.code = "(" + $result.code + $conditional.getText() + resultB.code + ")";
-        }        
+          error($conditional, "incomparable types used in condition");
+          $result.code = "false";
+          $result.hasKnownValue = false;
+          $result.type = Type.UNKNOWN;
+        }
       }
     )*
   ;
@@ -510,9 +533,9 @@ factor returns [ExprResult result]
     {
       $result = new ExprResult();
       $result.type = Type.CHAR;
-      $result.stringValue = String.valueOf($CHAR.getText().charAt(0));
+      $result.stringValue = String.valueOf($CHAR.getText().charAt(1));
       $result.hasKnownValue = true;
-      $result.code = ""+$result.stringValue;
+      $result.code = $CHAR.getText();
     }
   | STRING
     {
@@ -562,49 +585,93 @@ factor returns [ExprResult result]
     }
   ;
 
-ifstmt : KW_IF 
-  {
-    if (!definingFunction) {
-      SymbolTable ifScope = new SymbolTable();
-      symbolStack.push(ifScope);
+ifstmt
+  : KW_IF
+    {
+      emit("    if (");
     }
-  }
-  '(' expr ')' s 
-  {
-    if (!definingFunction) {
-      symbolStack.pop();
+    '(' condition ')'
+    {
+      // emit condition and space before block
+      emit($condition.result.code + ")");
     }
-  }
-  (elsestmt)?
+    LBRACE
+    {
+      emit(" {\n");
+      if (!definingFunction) {
+        SymbolTable ifScope = new SymbolTable();
+        symbolStack.push(ifScope);
+      } else {
+        functionDefDepth++;
+      }
+    }
+    (s)*
+    RBRACE
+    {
+      emit("    }\n");
+      if (!definingFunction) {
+        symbolStack.pop();
+      } else {
+        functionDefDepth--;
+      }
+    }
+    (elsestmt)?
   ;
 
-elsestmt : KW_ELSE_IF 
-  {
-    if (!definingFunction) {
-      SymbolTable elseIfScope = new SymbolTable();
-      symbolStack.push(elseIfScope);
+elsestmt
+  : KW_ELSE_IF
+    {
+      emit("    else if (");
     }
-  }
-  '(' expr ')' s 
-  {
-    if (!definingFunction) {
-      symbolStack.pop();
+    '(' condition ')'
+    {
+      emit($condition.result.code + ")");
     }
-  }
-  (elsestmt)?
-  | KW_ELSE 
-  {
-    if (!definingFunction) {
-      SymbolTable elseScope = new SymbolTable();
-      symbolStack.push(elseScope);
+    LBRACE
+    {
+      emit(" {\n");
+      if (!definingFunction) {
+        SymbolTable elseIfScope = new SymbolTable();
+        symbolStack.push(elseIfScope);
+      } else {
+        functionDefDepth++;
+      }
     }
-  }
-  s
-  {
-    if (!definingFunction) {
-      symbolStack.pop();
+    (s)*
+    RBRACE
+    {
+      emit("    }\n");
+      if (!definingFunction) {
+        symbolStack.pop();
+      } else {
+        functionDefDepth--;
+      }
     }
-  }
+    (elsestmt)?
+  | KW_ELSE
+    {
+      emit("    else ");
+    }
+    LBRACE
+    {
+      emit("{\n");
+      if (!definingFunction) {
+        SymbolTable elseScope = new SymbolTable();
+        symbolStack.push(elseScope);
+      } else {
+        functionDefDepth++;
+      }
+    }
+    (s)*
+    RBRACE
+    {
+      emit("    }\n");
+      if (!definingFunction) {
+        symbolStack.pop();
+      } else {
+        functionDefDepth--;
+      }
+    }
   ;
 
 //middle part should be a conditional.
@@ -636,6 +703,7 @@ elsestmt : KW_ELSE_IF
       // now do assign
 
       emit(">:((");
+      forAssign = true;
     }
     a=as
     ';'
@@ -646,7 +714,28 @@ elsestmt : KW_ELSE_IF
     ')'
 
     {
-      emit();
+      forAssign = false;
+      emit(")");
+    }
+    LBRACE
+    {
+      emit(" {\n");
+      if (!definingFunction) {
+        SymbolTable ifScope = new SymbolTable();
+        symbolStack.push(ifScope);
+      } else {
+        functionDefDepth++;
+      }
+    }
+    (s)*
+    RBRACE
+    {
+      emit("    }\n");
+      if (!definingFunction) {
+        symbolStack.pop();
+      } else {
+        functionDefDepth--;
+      }
     }
 
     ;

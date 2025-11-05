@@ -77,6 +77,18 @@ public class EmoticonBaseListener implements EmoticonListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterCondition(EmoticonParser.ConditionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitCondition(EmoticonParser.ConditionContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterExpr(EmoticonParser.ExprContext ctx) { }
 	/**
 	 * {@inheritDoc}
@@ -240,6 +252,18 @@ public class EmoticonBaseListener implements EmoticonListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitOperators(EmoticonParser.OperatorsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterConditionals(EmoticonParser.ConditionalsContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitConditionals(EmoticonParser.ConditionalsContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

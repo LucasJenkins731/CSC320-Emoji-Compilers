@@ -1,0 +1,8 @@
+<3 Test character literals
+ch1 :=) 'X'
+ch2 :=) 'Z'
+ch3 :=) '9'
+
+:P(ch1)
+:P(ch2)
+:P(ch3)
