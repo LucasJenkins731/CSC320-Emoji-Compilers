@@ -3,6 +3,7 @@ import org.antlr.v4.runtime.tree.*;
 import java.io.*;
 
 public class TestDriver {
+    @SuppressWarnings("deprecation")
     public static void main(String[] args) throws Exception {
         String inputFile = null;
         if (args.length > 0) inputFile = args[0];
