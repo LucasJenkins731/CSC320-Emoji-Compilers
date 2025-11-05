@@ -193,6 +193,10 @@ ADD : ':+)';
 SUBTRACT : ':-)';
 MULTIPLY : ':*)';
 DIVIDE : ':/)';
+GREATERTHAN : ':>)'; // A is greater than B
+LESSTHAN : ':<)'; // A is less than B
+GREATERTHANOREQUALTO : ':>=)';
+LESSTHANOREQUALTO : ':<=)';
 LBRACKET : '[';
 RBRACKET : ']';
 INT : ('+'|'-')? ('0'|[1-9][0-9]*);
@@ -358,6 +362,42 @@ ps : KW_PRINT '(' expr ')'
       emit("    System.out.println(" + $expr.result.code + ");\n");
     }
 ;
+condition returns [ExprResult result]
+  @init {
+    $result = new ExprResult();
+    ExrResult resultA = $a.result;
+  }
+  : a=expr
+    {
+      $result = $a.result;
+    } 
+    ( conditional=(GREATERTHAN|LESSTHAN|GREATERTHANOREQUALTO|LESSTHANOREQUALTO)
+      b=expr
+      {
+        ExrResult resultB = $b.result;
+         if((resultA.type == Type.INT || resultA.type == Type.FLOAT)){
+          if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
+              $result.code = "(" + resultA.code + $conditional.getText() + resultB.code + ")";
+          }
+        } else if (resultA.type == Type.CHAR){
+          if(resultB.type == Type.CHAR){
+            if($conditional.getText().equals(":==)")){
+              $result.code = "(" + resultA.code + ":==)" + resultB.code + ")";
+            } else {
+              error($conditional, "incorrect conditional used");
+              $result.hasKnownValue = false;
+              $result.code = "(" + $result.code + $conditional.getText() + resultB.code + ")";
+            }
+          }
+        } else {
+            error($conditional, "wrong types used");
+            $result.hasKnownValue = false;
+            $result.code = "(" + $result.code + $conditional.getText() + resultB.code + ")";
+        }        
+      }
+    )*
+  ;
+
 
 expr returns [ExprResult result]
   @init {
@@ -563,20 +603,42 @@ elsestmt : KW_ELSE_IF
   }
   ;
 
-forstmt : KW_FOR '(' 
-  {
-    if (!definingFunction) {
+//middle part should be a conditional.
+// forstmt : KW_FOR '(' as ';' s ';' as ')' 
+//   {
+
+//       SymbolTable forScope = new SymbolTable();
+//       symbolStack.push(forScope);
+    
+//   }
+//   as ';' expr ';' as ')' s
+//   {
+
+//     emit("for (" )" );
+
+
+//     if (!definingFunction) {
+//       symbolStack.pop();
+//     }
+//   }
+//   ;
+
+  forstmt : KW_FOR '('
+    {
+      //create the block statement stuff
       SymbolTable forScope = new SymbolTable();
       symbolStack.push(forScope);
+
+      // now do assign
     }
-  }
-  as ';' expr ';' as ')' s
-  {
-    if (!definingFunction) {
-      symbolStack.pop();
-    }
-  }
-  ;
+    a=as
+    ';'
+    //should have a conditional here 
+    ';'
+    b=as
+    ')'
+
+    ;
 
 whilestmt : KW_WHILE 
   {
@@ -736,5 +798,7 @@ arrayAccess returns [ExprResult result]
 ;
 
 operators : ADD | SUBTRACT | MULTIPLY | DIVIDE;
+
+conditionals : GREATERTHAN | LESSTHAN | GREATERTHANOREQUALTO | LESSTHANOREQUALTO;
 
 comp : COMPARISON;
