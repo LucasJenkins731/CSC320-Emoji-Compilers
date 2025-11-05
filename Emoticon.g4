@@ -157,8 +157,12 @@ grammar Emoticon;
   }
 
   // Declare LHS if first-time assignment; otherwise plain assignment.
-  void generateAssign(boolean declare, String name, String rhsJavaCode) {
-    emit("    " + (declare ? "double " : " ") + name + " = " + rhsJavaCode + ";\n");
+  void generateAssign(boolean declare, String name, String rhsJavaCode, boolean forAssign) {
+    if(!forAssign){
+      emit("    " + (declare ? "double " : " ") + name + " = " + rhsJavaCode + ";\n");
+    } else {
+      emit("    " + (declare ? "double " : " ") + name + " = " + rhsJavaCode);
+    }
   }
 
   // Write the generated Java to file.
@@ -280,7 +284,7 @@ as
         
         // Generate Java code for assignment
         boolean isNewVariable = (var == null);
-        generateAssign(isNewVariable, id, $expr.result.code);
+        generateAssign(isNewVariable, id, $expr.result.code, false);
       }
       
     | INT
@@ -293,7 +297,7 @@ as
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
         
         // Generate Java code for assignment
-        generateAssign(true, newId.id, $INT.getText());
+        generateAssign(true, newId.id, $INT.getText(), false);
       }
     | STRING
       {
@@ -317,7 +321,7 @@ as
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
         
         // Generate Java code for assignment
-        emit("    char " + newId.id + " = " + $CHAR.getText() + ";\n");
+        emit("    Char " + newId.id + " = " + $CHAR.getText() + ";\n");
       }
     /*| FLOAT
       {
@@ -630,13 +634,20 @@ elsestmt : KW_ELSE_IF
       symbolStack.push(forScope);
 
       // now do assign
+
+      emit(">:((");
     }
     a=as
     ';'
-    //should have a conditional here 
+    b=condition
+    {emit(";" + $b.result.code + ";");} 
     ';'
-    b=as
+    c=as
     ')'
+
+    {
+      emit();
+    }
 
     ;
 

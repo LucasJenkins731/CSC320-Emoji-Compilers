@@ -252,8 +252,12 @@ public class EmoticonLexer extends Lexer {
 	  }
 
 	  // Declare LHS if first-time assignment; otherwise plain assignment.
-	  void generateAssign(boolean declare, String name, String rhsJavaCode) {
-	    emit("    " + (declare ? "double " : " ") + name + " = " + rhsJavaCode + ";\n");
+	  void generateAssign(boolean declare, String name, String rhsJavaCode, boolean forAssign) {
+	    if(!forAssign){
+	      emit("    " + (declare ? "double " : " ") + name + " = " + rhsJavaCode + ";\n");
+	    } else {
+	      emit("    " + (declare ? "double " : " ") + name + " = " + rhsJavaCode);
+	    }
 	  }
 
 	  // Write the generated Java to file.
