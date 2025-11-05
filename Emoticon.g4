@@ -365,35 +365,38 @@ ps : KW_PRINT '(' expr ')'
 condition returns [ExprResult result]
   @init {
     $result = new ExprResult();
-    ExrResult resultA = $a.result;
   }
   : a=expr
     {
+      // start with the lhs expr result
       $result = $a.result;
-    } 
+    }
     ( conditional=(GREATERTHAN|LESSTHAN|GREATERTHANOREQUALTO|LESSTHANOREQUALTO)
       b=expr
       {
-        ExrResult resultB = $b.result;
-         if((resultA.type == Type.INT || resultA.type == Type.FLOAT)){
-          if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
-              $result.code = "(" + resultA.code + $conditional.getText() + resultB.code + ")";
-          }
-        } else if (resultA.type == Type.CHAR){
-          if(resultB.type == Type.CHAR){
-            if($conditional.getText().equals(":==)")){
-              $result.code = "(" + resultA.code + ":==)" + resultB.code + ")";
-            } else {
-              error($conditional, "incorrect conditional used");
-              $result.hasKnownValue = false;
-              $result.code = "(" + $result.code + $conditional.getText() + resultB.code + ")";
-            }
-          }
+        // build a boolean expression string using the operand codes
+        String javaOp;
+        String tok = $conditional.getText();
+        if (":>)".equals(tok)) javaOp = ">";
+        else if (":<)".equals(tok)) javaOp = "<";
+        else if (":>=)".equals(tok)) javaOp = ">=";
+        else if (":<=)".equals(tok)) javaOp = "<=";
+        else javaOp = tok; // fallback
+
+        // ensure numeric comparisons for now
+        if ((($a.result.type == Type.INT || $a.result.type == Type.FLOAT)
+             && ($b.result.type == Type.INT || $b.result.type == Type.FLOAT))
+            || ($a.result.type == Type.STRING && $b.result.type == Type.STRING)
+            || ($a.result.type == Type.CHAR && $b.result.type == Type.CHAR)) {
+          $result.code = $a.result.code + " " + javaOp + " " + $b.result.code;
+          $result.hasKnownValue = false; // conservatively unknown
+          $result.type = Type.UNKNOWN;
         } else {
-            error($conditional, "wrong types used");
-            $result.hasKnownValue = false;
-            $result.code = "(" + $result.code + $conditional.getText() + resultB.code + ")";
-        }        
+          error($conditional, "incomparable types used in condition");
+          $result.code = "false";
+          $result.hasKnownValue = false;
+          $result.type = Type.UNKNOWN;
+        }
       }
     )*
   ;
@@ -558,49 +561,93 @@ factor returns [ExprResult result]
     }
   ;
 
-ifstmt : KW_IF 
-  {
-    if (!definingFunction) {
-      SymbolTable ifScope = new SymbolTable();
-      symbolStack.push(ifScope);
+ifstmt
+  : KW_IF
+    {
+      emit("    if (");
     }
-  }
-  '(' expr ')' s 
-  {
-    if (!definingFunction) {
-      symbolStack.pop();
+    '(' condition ')'
+    {
+      // emit condition and space before block
+      emit($condition.result.code + ")");
     }
-  }
-  (elsestmt)?
+    LBRACE
+    {
+      emit(" {\n");
+      if (!definingFunction) {
+        SymbolTable ifScope = new SymbolTable();
+        symbolStack.push(ifScope);
+      } else {
+        functionDefDepth++;
+      }
+    }
+    (s)*
+    RBRACE
+    {
+      emit("    }\n");
+      if (!definingFunction) {
+        symbolStack.pop();
+      } else {
+        functionDefDepth--;
+      }
+    }
+    (elsestmt)?
   ;
 
-elsestmt : KW_ELSE_IF 
-  {
-    if (!definingFunction) {
-      SymbolTable elseIfScope = new SymbolTable();
-      symbolStack.push(elseIfScope);
+elsestmt
+  : KW_ELSE_IF
+    {
+      emit("    else if (");
     }
-  }
-  '(' expr ')' s 
-  {
-    if (!definingFunction) {
-      symbolStack.pop();
+    '(' condition ')'
+    {
+      emit($condition.result.code + ")");
     }
-  }
-  (elsestmt)?
-  | KW_ELSE 
-  {
-    if (!definingFunction) {
-      SymbolTable elseScope = new SymbolTable();
-      symbolStack.push(elseScope);
+    LBRACE
+    {
+      emit(" {\n");
+      if (!definingFunction) {
+        SymbolTable elseIfScope = new SymbolTable();
+        symbolStack.push(elseIfScope);
+      } else {
+        functionDefDepth++;
+      }
     }
-  }
-  s
-  {
-    if (!definingFunction) {
-      symbolStack.pop();
+    (s)*
+    RBRACE
+    {
+      emit("    }\n");
+      if (!definingFunction) {
+        symbolStack.pop();
+      } else {
+        functionDefDepth--;
+      }
     }
-  }
+    (elsestmt)?
+  | KW_ELSE
+    {
+      emit("    else ");
+    }
+    LBRACE
+    {
+      emit("{\n");
+      if (!definingFunction) {
+        SymbolTable elseScope = new SymbolTable();
+        symbolStack.push(elseScope);
+      } else {
+        functionDefDepth++;
+      }
+    }
+    (s)*
+    RBRACE
+    {
+      emit("    }\n");
+      if (!definingFunction) {
+        symbolStack.pop();
+      } else {
+        functionDefDepth--;
+      }
+    }
   ;
 
 //middle part should be a conditional.
