@@ -822,7 +822,6 @@ public class EmoticonParser extends Parser {
 		enterRule(_localctx, 10, RULE_condition);
 
 		    ((ConditionContext)_localctx).result =  new ExprResult();
-		    ExprResult resultA = ((ConditionContext)_localctx).a.result;
 		  
 		int _la;
 		try {
@@ -854,21 +853,23 @@ public class EmoticonParser extends Parser {
 				setState(109);
 				((ConditionContext)_localctx).b = expr();
 
-				        ExprResult resultB = ((ConditionContext)_localctx).b.result;
-				         if((resultA.type == Type.INT || resultA.type == Type.FLOAT)){
-				          if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
-				              _localctx.result.code = "(" + resultA.code + ((ConditionContext)_localctx).conditional.getText() + resultB.code + ")";
-				          }
-				        } else if (resultA.type == Type.CHAR){
-				          if(resultB.type == Type.CHAR){
-				            if(((ConditionContext)_localctx).conditional.getText().equals(":==)")){
-				              _localctx.result.code = "(" + resultA.code + ":==)" + resultB.code + ")";
-				            } else {
-				              error(((ConditionContext)_localctx).conditional, "incorrect conditional used");
-				              _localctx.result.hasKnownValue = false;
-				              _localctx.result.code = "(" + _localctx.result.code + ((ConditionContext)_localctx).conditional.getText() + resultB.code + ")";
-				            }
-				          }
+				        // map emoticon tokens to Java operators
+				        String tok = ((ConditionContext)_localctx).conditional.getText();
+				        String javaOp;
+				        if (":>)".equals(tok)) javaOp = ">";
+				        else if (":<)".equals(tok)) javaOp = "<";
+				        else if (":>=)".equals(tok)) javaOp = ">=";
+				        else if (":<=)".equals(tok)) javaOp = "<=";
+				        else javaOp = tok;
+
+				        // ensure operands are comparable (allow numeric, char, string comparisons as needed)
+				        if (((((ConditionContext)_localctx).a.result.type == Type.INT || ((ConditionContext)_localctx).a.result.type == Type.FLOAT)
+				             && (((ConditionContext)_localctx).b.result.type == Type.INT || ((ConditionContext)_localctx).b.result.type == Type.FLOAT))
+				            || (((ConditionContext)_localctx).a.result.type == Type.CHAR && ((ConditionContext)_localctx).b.result.type == Type.CHAR)
+				            || (((ConditionContext)_localctx).a.result.type == Type.STRING && ((ConditionContext)_localctx).b.result.type == Type.STRING)) {
+				          _localctx.result.code = ((ConditionContext)_localctx).a.result.code + " " + javaOp + " " + ((ConditionContext)_localctx).b.result.code;
+				          _localctx.result.hasKnownValue = false; // conservative
+				          _localctx.result.type = Type.UNKNOWN;
 				        } else {
 				          error(((ConditionContext)_localctx).conditional, "incomparable types used in condition");
 				          _localctx.result.code = "false";

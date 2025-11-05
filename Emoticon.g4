@@ -380,7 +380,6 @@ ps : KW_PRINT '(' expr ')'
 condition returns [ExprResult result]
   @init {
     $result = new ExprResult();
-    ExprResult resultA = $a.result;
   }
   : a=expr
     {
@@ -390,21 +389,23 @@ condition returns [ExprResult result]
     ( conditional=(GREATERTHAN|LESSTHAN|GREATERTHANOREQUALTO|LESSTHANOREQUALTO)
       b=expr
       {
-        ExprResult resultB = $b.result;
-         if((resultA.type == Type.INT || resultA.type == Type.FLOAT)){
-          if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
-              $result.code = "(" + resultA.code + $conditional.getText() + resultB.code + ")";
-          }
-        } else if (resultA.type == Type.CHAR){
-          if(resultB.type == Type.CHAR){
-            if($conditional.getText().equals(":==)")){
-              $result.code = "(" + resultA.code + ":==)" + resultB.code + ")";
-            } else {
-              error($conditional, "incorrect conditional used");
-              $result.hasKnownValue = false;
-              $result.code = "(" + $result.code + $conditional.getText() + resultB.code + ")";
-            }
-          }
+        // map emoticon tokens to Java operators
+        String tok = $conditional.getText();
+        String javaOp;
+        if (":>)".equals(tok)) javaOp = ">";
+        else if (":<)".equals(tok)) javaOp = "<";
+        else if (":>=)".equals(tok)) javaOp = ">=";
+        else if (":<=)".equals(tok)) javaOp = "<=";
+        else javaOp = tok;
+
+        // ensure operands are comparable (allow numeric, char, string comparisons as needed)
+        if ((($a.result.type == Type.INT || $a.result.type == Type.FLOAT)
+             && ($b.result.type == Type.INT || $b.result.type == Type.FLOAT))
+            || ($a.result.type == Type.CHAR && $b.result.type == Type.CHAR)
+            || ($a.result.type == Type.STRING && $b.result.type == Type.STRING)) {
+          $result.code = $a.result.code + " " + javaOp + " " + $b.result.code;
+          $result.hasKnownValue = false; // conservative
+          $result.type = Type.UNKNOWN;
         } else {
           error($conditional, "incomparable types used in condition");
           $result.code = "false";
