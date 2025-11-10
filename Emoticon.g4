@@ -176,7 +176,7 @@ grammar Emoticon;
     if(!forAssign){
       emit("    " + (declare ? javaType + " " : " ") + name + " = " + rhsJavaCode + ";\n");
     } else {
-      emit("    " + (declare ? javaType + " " : " ") + name + " = " + rhsJavaCode);
+      emit((declare ? javaType + " " : " ") + name + " = " + rhsJavaCode);
     }
   }
 
@@ -702,7 +702,7 @@ elsestmt
 
       // now do assign
 
-      emit(">:((");
+      emit("    for (");
       forAssign = true;
     }
     a=as

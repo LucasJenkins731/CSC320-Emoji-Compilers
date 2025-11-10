@@ -14,5 +14,8 @@ public class EmoticonProgramTests {
     System.out.println(message);
     System.out.println(initial);
     System.out.println(count);
+    for (int x = 0;x <= 10; x = 1.0) {
+    System.out.println("Hi");
+    }
   }
 }

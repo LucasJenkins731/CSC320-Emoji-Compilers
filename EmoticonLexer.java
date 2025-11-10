@@ -271,7 +271,7 @@ public class EmoticonLexer extends Lexer {
 	    if(!forAssign){
 	      emit("    " + (declare ? javaType + " " : " ") + name + " = " + rhsJavaCode + ";\n");
 	    } else {
-	      emit("    " + (declare ? javaType + " " : " ") + name + " = " + rhsJavaCode);
+	      emit((declare ? javaType + " " : " ") + name + " = " + rhsJavaCode);
 	    }
 	  }
 

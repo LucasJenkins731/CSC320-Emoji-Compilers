@@ -280,7 +280,7 @@ public class EmoticonParser extends Parser {
 	    if(!forAssign){
 	      emit("    " + (declare ? javaType + " " : " ") + name + " = " + rhsJavaCode + ";\n");
 	    } else {
-	      emit("    " + (declare ? javaType + " " : " ") + name + " = " + rhsJavaCode);
+	      emit((declare ? javaType + " " : " ") + name + " = " + rhsJavaCode);
 	    }
 	  }
 
@@ -1683,7 +1683,7 @@ public class EmoticonParser extends Parser {
 
 			      // now do assign
 
-			      emit(">:((");
+			      emit("    for (");
 			      forAssign = true;
 			    
 			setState(212);
