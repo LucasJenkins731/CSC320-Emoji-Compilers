@@ -9,10 +9,7 @@ public class EmoticonProgramTests {
     char initial = 'J';
     int count = 100;
     System.out.println(name);
-    System.out.println(age);
-    System.out.println(grade);
-    System.out.println(message);
-    System.out.println(initial);
+    System.out.pri
     System.out.println(count);
     for (int x = 0;x <= 10; x = 1.0) {
     System.out.println("Hi");
