@@ -13,7 +13,8 @@ public class TestDriver {
             is = new FileInputStream(inputFile);
         }
         
-        ANTLRInputStream input = new ANTLRInputStream(is);
+        //ANTLRInputStream input = new ANTLRInputStream(is);
+        CharStream input = CharStreams.fromStream(is);
         EmoticonLexer lexer = new EmoticonLexer(input);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         EmoticonParser parser = new EmoticonParser(tokens);
