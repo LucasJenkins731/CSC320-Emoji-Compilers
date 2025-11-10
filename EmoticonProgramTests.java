@@ -2,17 +2,17 @@ import java.util.*;
 public class EmoticonProgramTests {
   public static void main(String[] args) throws Exception {
     Scanner in = new Scanner(System.in);
-    String name = "John Doe";
-    int age = 25;
-    char grade = 'A';
-    String message = "Hello World";
-    char initial = 'J';
-    int count = 100;
-    System.out.println(name);
-    System.out.println(age);
-    System.out.println(grade);
-    System.out.println(message);
-    System.out.println(initial);
-    System.out.println(count);
+    int x = 5;
+    int y = 6;
+    int z = 7;
+     x = 500;
+     y = 600;
+     z = 700;
+    System.out.println(z);
+    System.out.println(y);
+    System.out.println(x);
+    System.out.println(x);
+    System.out.println(y);
+    System.out.println(z);
   }
 }
