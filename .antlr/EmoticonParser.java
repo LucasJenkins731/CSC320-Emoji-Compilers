@@ -1,4 +1,4 @@
-// Generated from /Users/connorryan/Desktop/CSC320-Emoji-Compilers/Emoticon.g4 by ANTLR 4.13.1
+// Generated from c:/Users/pieco/Desktop/Emoticon language/Emoticon.g4 by ANTLR 4.13.1
  import java.util.*; import java.io.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; 
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
@@ -311,14 +311,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_program; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterProgram(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitProgram(this);
-		}
 	}
 
 	public final ProgramContext program() throws RecognitionException {
@@ -406,14 +398,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_s; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterS(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitS(this);
-		}
 	}
 
 	public final SContext s() throws RecognitionException {
@@ -520,14 +504,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_blockStatement; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterBlockStatement(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitBlockStatement(this);
-		}
 	}
 
 	public final BlockStatementContext blockStatement() throws RecognitionException {
@@ -607,14 +583,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_as; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterAs(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitAs(this);
-		}
 	}
 
 	public final AsContext as() throws RecognitionException {
@@ -782,14 +750,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_ps; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterPs(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitPs(this);
-		}
 	}
 
 	public final PsContext ps() throws RecognitionException {
@@ -863,14 +823,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_condition; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterCondition(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitCondition(this);
-		}
 	}
 
 	public final ConditionContext condition() throws RecognitionException {
@@ -977,14 +929,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_expr; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterExpr(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitExpr(this);
-		}
 	}
 
 	public final ExprContext expr() throws RecognitionException {
@@ -1026,11 +970,11 @@ public class EmoticonParser extends Parser {
 				        if((_localctx.result.type == Type.INT || _localctx.result.type == Type.FLOAT)){
 				          if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
 				            if(((ExprContext)_localctx).op.getText().equals(":+)")){
-				              _localctx.result.numericalValue += resultB.numericalValue;
+				              _localctx.result.code = ((ExprContext)_localctx).a.result.code + " " + "+" + " " + ((ExprContext)_localctx).b.result.code;
 				            } else {
-				              _localctx.result.numericalValue -= resultB.numericalValue;
+				              _localctx.result.code = ((ExprContext)_localctx).a.result.code + " " + "-" + " " + ((ExprContext)_localctx).b.result.code;
 				            }
-				            _localctx.result.code = ""+_localctx.result.numericalValue;
+				            //_localctx.result.code = ""+_localctx.result.numericalValue;
 				            if(_localctx.result.type == Type.FLOAT || resultB.type == Type.FLOAT){
 				              _localctx.result.type = Type.FLOAT;
 				            }
@@ -1095,14 +1039,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_term; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterTerm(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitTerm(this);
-		}
 	}
 
 	public final TermContext term() throws RecognitionException {
@@ -1148,11 +1084,11 @@ public class EmoticonParser extends Parser {
 				              _localctx.result.hasKnownValue = false;
 				              _localctx.result.code = "Error";
 				            } else if(((TermContext)_localctx).op.getText().equals(":*)")){
-				              _localctx.result.numericalValue *= resultB.numericalValue;
+				              _localctx.result.code = ((TermContext)_localctx).a.result.code + " " + "*" + " " + ((TermContext)_localctx).b.result.code;
 				            } else {
-				              _localctx.result.numericalValue /= resultB.numericalValue;
+				              _localctx.result.code = ((TermContext)_localctx).a.result.code + " " + "/" + " " + ((TermContext)_localctx).b.result.code;
 				            }
-				            _localctx.result.code = ""+_localctx.result.numericalValue;
+				            //_localctx.result.code = ""+_localctx.result.numericalValue;
 				            if(_localctx.result.type == Type.FLOAT || resultB.type == Type.FLOAT){
 				              _localctx.result.type = Type.FLOAT;
 				            } else {
@@ -1213,14 +1149,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_factor; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterFactor(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitFactor(this);
-		}
 	}
 
 	public final FactorContext factor() throws RecognitionException {
@@ -1369,14 +1297,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_ifstmt; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterIfstmt(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitIfstmt(this);
-		}
 	}
 
 	public final IfstmtContext ifstmt() throws RecognitionException {
@@ -1484,14 +1404,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_elsestmt; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterElsestmt(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitElsestmt(this);
-		}
 	}
 
 	public final ElsestmtContext elsestmt() throws RecognitionException {
@@ -1655,14 +1567,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_forstmt; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterForstmt(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitForstmt(this);
-		}
 	}
 
 	public final ForstmtContext forstmt() throws RecognitionException {
@@ -1766,14 +1670,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_whilestmt; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterWhilestmt(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitWhilestmt(this);
-		}
 	}
 
 	public final WhilestmtContext whilestmt() throws RecognitionException {
@@ -1835,14 +1731,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_functionstmt; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterFunctionstmt(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitFunctionstmt(this);
-		}
 	}
 
 	public final FunctionstmtContext functionstmt() throws RecognitionException {
@@ -1943,14 +1831,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_functioncall; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterFunctioncall(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitFunctioncall(this);
-		}
 	}
 
 	public final FunctioncallContext functioncall() throws RecognitionException {
@@ -2044,14 +1924,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_arraystmt; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterArraystmt(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitArraystmt(this);
-		}
 	}
 
 	public final ArraystmtContext arraystmt() throws RecognitionException {
@@ -2151,14 +2023,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_arrayInitializer; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterArrayInitializer(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitArrayInitializer(this);
-		}
 	}
 
 	public final ArrayInitializerContext arrayInitializer() throws RecognitionException {
@@ -2230,14 +2094,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_exprList; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterExprList(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitExprList(this);
-		}
 	}
 
 	public final ExprListContext exprList() throws RecognitionException {
@@ -2293,14 +2149,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_arrayAccess; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterArrayAccess(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitArrayAccess(this);
-		}
 	}
 
 	public final ArrayAccessContext arrayAccess() throws RecognitionException {
@@ -2365,14 +2213,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_operators; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterOperators(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitOperators(this);
-		}
 	}
 
 	public final OperatorsContext operators() throws RecognitionException {
@@ -2415,14 +2255,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_conditionals; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterConditionals(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitConditionals(this);
-		}
 	}
 
 	public final ConditionalsContext conditionals() throws RecognitionException {
@@ -2462,14 +2294,6 @@ public class EmoticonParser extends Parser {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_comp; }
-		@Override
-		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).enterComp(this);
-		}
-		@Override
-		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitComp(this);
-		}
 	}
 
 	public final CompContext comp() throws RecognitionException {

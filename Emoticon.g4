@@ -440,11 +440,11 @@ expr returns [ExprResult result]
         if(($result.type == Type.INT || $result.type == Type.FLOAT)){
           if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
             if($op.getText().equals(":+)")){
-              $result.numericalValue += resultB.numericalValue;
+              $result.code = $a.result.code + " " + "+" + " " + $b.result.code;
             } else {
-              $result.numericalValue -= resultB.numericalValue;
+              $result.code = $a.result.code + " " + "-" + " " + $b.result.code;
             }
-            $result.code = ""+$result.numericalValue;
+            //$result.code = ""+$result.numericalValue;
             if($result.type == Type.FLOAT || resultB.type == Type.FLOAT){
               $result.type = Type.FLOAT;
             }
@@ -487,11 +487,11 @@ term returns [ExprResult result]
               $result.hasKnownValue = false;
               $result.code = "Error";
             } else if($op.getText().equals(":*)")){
-              $result.numericalValue *= resultB.numericalValue;
+              $result.code = $a.result.code + " " + "*" + " " + $b.result.code;
             } else {
-              $result.numericalValue /= resultB.numericalValue;
+              $result.code = $a.result.code + " " + "/" + " " + $b.result.code;
             }
-            $result.code = ""+$result.numericalValue;
+            //$result.code = ""+$result.numericalValue;
             if($result.type == Type.FLOAT || resultB.type == Type.FLOAT){
               $result.type = Type.FLOAT;
             } else {

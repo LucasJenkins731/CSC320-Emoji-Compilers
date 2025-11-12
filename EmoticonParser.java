@@ -1026,11 +1026,11 @@ public class EmoticonParser extends Parser {
 				        if((_localctx.result.type == Type.INT || _localctx.result.type == Type.FLOAT)){
 				          if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
 				            if(((ExprContext)_localctx).op.getText().equals(":+)")){
-				              _localctx.result.numericalValue += resultB.numericalValue;
+				              _localctx.result.code = ((ExprContext)_localctx).a.result.code + " " + "+" + " " + ((ExprContext)_localctx).b.result.code;
 				            } else {
-				              _localctx.result.numericalValue -= resultB.numericalValue;
+				              _localctx.result.code = ((ExprContext)_localctx).a.result.code + " " + "-" + " " + ((ExprContext)_localctx).b.result.code;
 				            }
-				            _localctx.result.code = ""+_localctx.result.numericalValue;
+				            //_localctx.result.code = ""+_localctx.result.numericalValue;
 				            if(_localctx.result.type == Type.FLOAT || resultB.type == Type.FLOAT){
 				              _localctx.result.type = Type.FLOAT;
 				            }
@@ -1148,11 +1148,11 @@ public class EmoticonParser extends Parser {
 				              _localctx.result.hasKnownValue = false;
 				              _localctx.result.code = "Error";
 				            } else if(((TermContext)_localctx).op.getText().equals(":*)")){
-				              _localctx.result.numericalValue *= resultB.numericalValue;
+				              _localctx.result.code = ((TermContext)_localctx).a.result.code + " " + "*" + " " + ((TermContext)_localctx).b.result.code;
 				            } else {
-				              _localctx.result.numericalValue /= resultB.numericalValue;
+				              _localctx.result.code = ((TermContext)_localctx).a.result.code + " " + "/" + " " + ((TermContext)_localctx).b.result.code;
 				            }
-				            _localctx.result.code = ""+_localctx.result.numericalValue;
+				            //_localctx.result.code = ""+_localctx.result.numericalValue;
 				            if(_localctx.result.type == Type.FLOAT || resultB.type == Type.FLOAT){
 				              _localctx.result.type = Type.FLOAT;
 				            } else {
