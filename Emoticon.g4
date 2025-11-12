@@ -740,19 +740,42 @@ elsestmt
 
     ;
 
-whilestmt : KW_WHILE 
+whilestmt : KW_WHILE '('
   {
-    if (!definingFunction) {
-      SymbolTable whileScope = new SymbolTable();
-      symbolStack.push(whileScope);
-    }
+    //create the block statement stuff
+      SymbolTable forScope = new SymbolTable();
+      symbolStack.push(forScope);
+
+      // now do assign
+
+      emit("    while (");
   }
-  '(' expr ')' s
+  a=condition
+  {{emit($a.result.code);} }
+  ')'
   {
-    if (!definingFunction) {
-      symbolStack.pop();
+      emit(")");
     }
-  }
+  LBRACE
+    {
+      emit(" {\n");
+      if (!definingFunction) {
+        SymbolTable ifScope = new SymbolTable();
+        symbolStack.push(ifScope);
+      } else {
+        functionDefDepth++;
+      }
+    }
+    (s)*
+    RBRACE
+    {
+      emit("    }\n");
+      if (!definingFunction) {
+        symbolStack.pop();
+      } else {
+        functionDefDepth--;
+      }
+    }
   ;
 
 functionstmt : KW_FUNCTION name=IDENT '(' param=IDENT ')' 

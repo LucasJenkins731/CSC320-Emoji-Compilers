@@ -17,5 +17,9 @@ public class EmoticonProgramTests {
     for (int x = 0;x <= 10; x = x + 1) {
     System.out.println("Hi");
     }
+    while (count > 90) {
+    System.out.println("Hello!");
+     count = count - 1;
+    }
   }
 }
