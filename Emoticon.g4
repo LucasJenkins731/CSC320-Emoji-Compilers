@@ -42,7 +42,11 @@ grammar Emoticon;
   class FunctionDef {
     String name;
     String paramName;
+    Type paramType;
+    Type returnType;
     ParserRuleContext body;
+    String javaCode;
+    boolean hasReturn;
   }
   
   SymbolTable mainTable = new SymbolTable();
@@ -60,6 +64,7 @@ grammar Emoticon;
   
   boolean definingFunction = false;
   int functionDefDepth = 0;
+  FunctionDef currentFunction = null;
 
   boolean forAssign = false;// global check to semicolons in for stmt
 
@@ -149,6 +154,10 @@ grammar Emoticon;
   void openProgram() {
     emit("import java.util.*;\n");
     emit("public class EmoticonProgramTests {\n");
+  }
+
+  // Emit the main method start
+  void openMainMethod() {
     emit("  public static void main(String[] args) throws Exception {\n");
     emit("    Scanner in = new Scanner(System.in);\n");
   }
@@ -180,6 +189,39 @@ grammar Emoticon;
     }
   }
 
+  // Generate Java method definition for a function
+  void generateFunctionDefinition(FunctionDef func) {
+    // Check if the function body contains a return statement
+    String bodyCode = func.javaCode != null ? func.javaCode : "";
+    boolean hasExplicitReturn = bodyCode.contains("return ");
+    
+    String javaReturnType = (func.hasReturn || hasExplicitReturn) ? getJavaType(func.returnType) : "void";
+    emit("  public static " + javaReturnType + " " + func.name + "(");
+    
+    if (func.paramName != null) {
+      String javaParamType = getJavaType(func.paramType);
+      emit(javaParamType + " " + func.paramName);
+    }
+    
+    emit(") {\n");
+    emit(func.javaCode);
+    emit("  }\n\n");
+  }
+
+  // Generate function call code
+  String generateFunctionCall(String funcName, String argCode, Type argType) {
+    FunctionDef func = functions.get(funcName);
+    if (func == null) {
+      return "/* ERROR: function " + funcName + " not found */";
+    }
+    
+    if (func.paramName != null) {
+      return funcName + "(" + argCode + ")";
+    } else {
+      return funcName + "()";
+    }
+  }
+
   // Write the generated Java to file.
   void writeFile() {
     try (PrintWriter pw = new PrintWriter("EmoticonProgramTests.java", "UTF-8")) {
@@ -198,6 +240,7 @@ KW_ELSE : ':(';
 KW_ELSE_IF : ':|';
 KW_FOR : '>:(';
 KW_WHILE : 'D:<';
+KW_RETURN : 'return';
 KW_FUNCTION : '=^._.^=';
 KW_ARRAY : '(o_o)';
 LBRACE : '><(((,^>';
@@ -234,13 +277,28 @@ ASSIGNMENT : ':=)';
 // GRAMMAR
 
 program
-  : { openProgram(); }         // preamble
+  : { 
+      openProgram();
+      openMainMethod();
+    }         // preamble
     s* EOF
     {
       int numErrors = printDiagnostics();
       if (numErrors == 0) {
+        // Close main method first
+        emit("  }\n");
+        
+        // Generate function definitions
+        for (FunctionDef func : functions.values()) {
+          if (func.javaCode != null) {
+            generateFunctionDefinition(func);
+          }
+        }
+        
+        // Close class
+        emit("}\n");
+        
         // Successful, so write out the generated code
-        closeProgram();
         writeFile();
         System.err.println("Success!");
       } else {
@@ -250,7 +308,15 @@ program
     }
   ;
 
-s : functioncall | as | ps | expr | arraystmt | blockStatement | ifstmt | forstmt | whilestmt | functionstmt ;
+s : functioncallstmt | as | ps | expr | arraystmt | blockStatement | ifstmt | forstmt | whilestmt | functionstmt | returnstmt ;
+
+functioncallstmt : functioncall
+  {
+    if (!definingFunction) {
+      emit("    " + $functioncall.result.code + ";\n");
+    }
+  }
+  ;
 
 blockStatement : LBRACE
   {  
@@ -549,6 +615,10 @@ factor returns [ExprResult result]
     {
       $result = $arrayAccess.result;
     }
+  | functioncall
+    {
+      $result = $functioncall.result;
+    }
   | IDENT
     {
       String id = $IDENT.getText();
@@ -578,6 +648,10 @@ factor returns [ExprResult result]
         }
       }
       $result.code = id;
+    }
+  | functioncall
+    {
+      $result = $functioncall.result;
     }
   | '(' expr ')' 
     {
@@ -778,6 +852,26 @@ whilestmt : KW_WHILE '('
     }
   ;
 
+returnstmt : KW_RETURN expr
+  {
+    if (!definingFunction || currentFunction == null) {
+      error($KW_RETURN, "return statement outside function");
+    } else {
+      currentFunction.hasReturn = true;
+      currentFunction.returnType = $expr.result.type;
+      emit("    return " + $expr.result.code + ";\n");
+    }
+  }
+  | KW_RETURN
+  {
+    if (!definingFunction || currentFunction == null) {
+      error($KW_RETURN, "return statement outside function");
+    } else {
+      emit("    return;\n");
+    }
+  }
+  ;
+
 functionstmt : KW_FUNCTION name=IDENT '(' param=IDENT ')' 
   {
     definingFunction = true;
@@ -785,15 +879,41 @@ functionstmt : KW_FUNCTION name=IDENT '(' param=IDENT ')'
     FunctionDef func = new FunctionDef();
     func.name = $name.getText();
     func.paramName = $param.getText();
+    func.paramType = Type.FLOAT; // Default parameter type
+    func.returnType = Type.FLOAT; // Default return type
+    func.hasReturn = false;
+    currentFunction = func;
     functions.put(func.name, func);
     System.out.println("Defining function '" + func.name + "' with parameter '" + func.paramName + "'");
+    
+    // Create new scope for function
+    SymbolTable functionScope = new SymbolTable();
+    symbolStack.push(functionScope);
+    
+    // Add parameter to function scope
+    Identifier paramId = new Identifier();
+    paramId.id = func.paramName;
+    paramId.type = func.paramType;
+    paramId.hasBeenUsed = false;
+    functionScope.table.put(paramId.id, paramId);
+    
+    // Start capturing function body code
+    StringBuilder oldSb = sb;
+    sb = new StringBuilder();
   }
-  body=s
+  body=blockStatement
   {
+    // Capture the generated code for this function
+    FunctionDef funcDef = functions.get($name.getText());
+    funcDef.javaCode = sb.toString();
+    
+    // Restore original string builder
+    sb = oldSb;
+    
     definingFunction = false;
     functionDefDepth = 0;
-    FunctionDef funcDef = functions.get($name.getText());
-    funcDef.body = $body.ctx;
+    currentFunction = null;
+    symbolStack.pop(); // Remove function scope
     System.out.println("Function '" + funcDef.name + "' defined");
   }
   | KW_FUNCTION name=IDENT '('')' 
@@ -803,30 +923,63 @@ functionstmt : KW_FUNCTION name=IDENT '(' param=IDENT ')'
     FunctionDef func2 = new FunctionDef();
     func2.name = $name.getText();
     func2.paramName = null;
+    func2.returnType = Type.FLOAT; // Default return type
+    func2.hasReturn = false;
+    currentFunction = func2;
     functions.put(func2.name, func2);
     System.out.println("Defining function '" + func2.name + "'");
+    
+    // Create new scope for function
+    SymbolTable functionScope = new SymbolTable();
+    symbolStack.push(functionScope);
+    
+    // Start capturing function body code
+    StringBuilder oldSb = sb;
+    sb = new StringBuilder();
   }
-  body=s
+  body=blockStatement
   {
+    // Capture the generated code for this function
+    FunctionDef funcDef2 = functions.get($name.getText());
+    funcDef2.javaCode = sb.toString();
+    
+    // Restore original string builder
+    sb = oldSb;
+    
     definingFunction = false;
     functionDefDepth = 0;
-    FunctionDef funcDef2 = functions.get($name.getText());
-    funcDef2.body = $body.ctx;
+    currentFunction = null;
+    symbolStack.pop(); // Remove function scope
     System.out.println("Function '" + funcDef2.name + "' defined");
   }
   ;
 
-functioncall : IDENT '(' arg=expr ')'
+functioncall returns [ExprResult result]
+  @init {
+    $result = new ExprResult();
+  }
+  : IDENT '(' arg=expr ')'
   {
     String funcName = $IDENT.getText();
     if (!functions.containsKey(funcName)) {
       error($IDENT, "function '" + funcName + "' not defined");
+      $result.type = Type.UNKNOWN;
     } else {
       FunctionDef func = functions.get(funcName);
-      if($arg.result.type == Type.INT || $arg.result.type == Type.FLOAT){
-        System.out.println("Calling function '" + funcName + "' with argument " + $arg.result.numericalValue);
+      if (func.paramName == null) {
+        error($IDENT, "function '" + funcName + "' does not expect parameters");
+        $result.type = Type.UNKNOWN;
       } else {
-        System.out.println("Calling function '" + funcName + "' with argument " + $arg.result.stringValue);
+        if($arg.result.type == Type.INT || $arg.result.type == Type.FLOAT){
+          System.out.println("Calling function '" + funcName + "' with argument " + $arg.result.numericalValue);
+        } else {
+          System.out.println("Calling function '" + funcName + "' with argument " + $arg.result.stringValue);
+        }
+        
+        // Generate function call code
+        $result.type = func.returnType;
+        $result.code = generateFunctionCall(funcName, $arg.result.code, $arg.result.type);
+        $result.hasKnownValue = false; // Function calls don't have compile-time known values
       }
     }
   }
@@ -835,12 +988,19 @@ functioncall : IDENT '(' arg=expr ')'
     String funcName = $IDENT.getText();
     if (!functions.containsKey(funcName)) {
       error($IDENT, "function '" + funcName + "' not defined");
+      $result.type = Type.UNKNOWN;
     } else {
       FunctionDef func = functions.get(funcName);
       if (func.paramName != null) {
         error($IDENT, "function '" + funcName + "' expects a parameter");
+        $result.type = Type.UNKNOWN;
       } else {
         System.out.println("Calling function '" + funcName + "'");
+        
+        // Generate function call code
+        $result.type = func.returnType;
+        $result.code = generateFunctionCall(funcName, null, Type.UNKNOWN);
+        $result.hasKnownValue = false; // Function calls don't have compile-time known values
       }
     }
   }
