@@ -6,6 +6,10 @@ message :=) "Hello World"
 initial :=) 'J'
 count :=) 100
 
+hi :=) 45.34
+
+h :=) -0-0-
+
 :P(name)
 :P(age)
 :P(grade)

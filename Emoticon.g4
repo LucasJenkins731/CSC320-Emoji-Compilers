@@ -163,7 +163,7 @@ grammar Emoticon;
   String getJavaType(Type type) {
     switch (type) {
       case INT: return "int";
-      case FLOAT: return "double";
+      case FLOAT: return "float";
       case STRING: return "String";
       case CHAR: return "char";
       default: return "double"; // fallback
@@ -219,7 +219,7 @@ LESSTHANOREQUALTO : ':<=)';
 LBRACKET : '[';
 RBRACKET : ']';
 INT : ('+'|'-')? ('0'|[1-9][0-9]*);
-// FLOAT : ('+'|'-')?[0-9]*'.'[0-9]+;
+ FLOAT : ('+'|'-')?[0-9]*'.'[0-9]+;
 CHAR : '\'' ( '\\' . | ~('\\'|'\'')) '\'';
 STRING : ('\''|'"') .*? ('\''|'"');
 WS : [ \t\r\n]+ -> skip;
@@ -339,7 +339,7 @@ as
         // Generate Java code for assignment
         generateAssign(true, newId.id, $CHAR.getText(), Type.CHAR, forAssign);
       }
-    /*| FLOAT
+    | FLOAT
       {
         Identifier newId = new Identifier();
         newId.id = $IDENT.getText();
@@ -349,8 +349,8 @@ as
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
         
         // Generate Java code for assignment
-        generateAssign(true, newId.id, $FLOAT.getText(), Type.FLOAT);
-      }*/
+        generateAssign(true, newId.id, $FLOAT.getText() + "f", Type.FLOAT, forAssign);
+      }
     | KW_READ
       {
         String input = readInput.nextLine();
@@ -362,7 +362,7 @@ as
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
         
         // Generate Java code for assignment
-        generateAssign(true, newId.id, "in.nextLine()", newId.type, forAssign);
+        generateAssign(true, newId.id, "in.nextLine()", Type.STRING, forAssign);
       }
     | //ARRAY 
       {

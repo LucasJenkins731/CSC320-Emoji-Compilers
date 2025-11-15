@@ -8,6 +8,8 @@ public class EmoticonProgramTests {
     String message = "Hello World";
     char initial = 'J';
     int count = 100;
+    float hi = 45.34f;
+    String h = in.nextLine();
     System.out.println(name);
     System.out.println(age);
     System.out.println(grade);
