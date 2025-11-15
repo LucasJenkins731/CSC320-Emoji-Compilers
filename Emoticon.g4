@@ -67,6 +67,7 @@ grammar Emoticon;
   FunctionDef currentFunction = null;
 
   boolean forAssign = false;// global check to semicolons in for stmt
+  boolean redec = false;
 
   void error(Token t, String msg) {
     diagnostics.add("line " + t.getLine() + ":" + t.getCharPositionInLine() + " " + msg);
@@ -180,10 +181,10 @@ grammar Emoticon;
   }
 
   // Declare LHS if first-time assignment; otherwise plain assignment.
-  void generateAssign(boolean declare, String name, String rhsJavaCode, Type type, boolean forAssign) {
+  void generateAssign(boolean declare, String name, String rhsJavaCode, Type type) {
     String javaType = getJavaType(type);
     if(!forAssign){
-      emit("    " + (declare ? javaType + " " : " ") + name + " = " + rhsJavaCode + ";\n");
+      emit("    " + (declare ? javaType + " " : "") + name + " = " + rhsJavaCode + ";\n");
     } else {
       emit((declare ? javaType + " " : " ") + name + " = " + rhsJavaCode);
     }
@@ -366,7 +367,7 @@ as
         
         // Generate Java code for assignment
         boolean isNewVariable = (var == null);
-        generateAssign(isNewVariable, id, $expr.result.code, $expr.result.type, forAssign);
+        generateAssign(isNewVariable, id, $expr.result.code, $expr.result.type);
       }
       
     | INT
@@ -375,11 +376,14 @@ as
         newId.id = $IDENT.getText();
         newId.value = $INT.getText();
         newId.type = Type.INT;
-        addVariable(newId);
+        
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
         
+        Identifier var = lookupVariable(newId.id);
+        addVariable(newId);
+        boolean isNewVariable = (var == null);
         // Generate Java code for assignment
-        generateAssign(true, newId.id, $INT.getText(), Type.INT, forAssign);
+        generateAssign(isNewVariable, newId.id, $INT.getText(), Type.INT);
       }
     | STRING
       {
@@ -387,11 +391,14 @@ as
         newId.id = $IDENT.getText();
         newId.value = $STRING.getText();
         newId.type = Type.STRING;
-        addVariable(newId);
+        
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
         
+        Identifier var = lookupVariable(newId.id);
+        addVariable(newId);
+        boolean isNewVariable = (var == null);
         // Generate Java code for assignment
-        generateAssign(true, newId.id, $STRING.getText(), Type.STRING, forAssign);
+        generateAssign(isNewVariable, newId.id, $STRING.getText(), Type.STRING);
       }
     | CHAR
       {
@@ -399,11 +406,14 @@ as
         newId.id = $IDENT.getText();
         newId.value = $CHAR.getText();
         newId.type = Type.CHAR;
-        addVariable(newId);
+        
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
         
+        Identifier var = lookupVariable(newId.id);
+        addVariable(newId);
+        boolean isNewVariable = (var == null);
         // Generate Java code for assignment
-        generateAssign(true, newId.id, $CHAR.getText(), Type.CHAR, forAssign);
+        generateAssign(isNewVariable, newId.id, $CHAR.getText(), Type.CHAR);
       }
     | FLOAT
       {
@@ -411,27 +421,46 @@ as
         newId.id = $IDENT.getText();
         newId.value = $FLOAT.getText();
         newId.type = Type.FLOAT;
-        addVariable(newId);
+        
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
         
+        Identifier var = lookupVariable(newId.id);
+        addVariable(newId);
+        boolean isNewVariable = (var == null);
         // Generate Java code for assignment
-        generateAssign(true, newId.id, $FLOAT.getText() + "f", Type.FLOAT, forAssign);
+        generateAssign(isNewVariable, newId.id, $FLOAT.getText() + "f", Type.FLOAT);
       }
     | KW_READ
       {
+        //do it so that if var is not equal to null then do the assignment.
+        String id = $IDENT.getText();
+        Identifier var = lookupVariable(id);
+        System.out.println(var.value + "(" + "Type = " + var.type + ")");
+
+        if(var.type == Type.INT){
+          generateAssign(false, var.id, "in.nextInt()", Type.INT);
+        } else if(var.type == Type.FLOAT){
+          generateAssign(false, var.id, "in.nextFloat()", Type.FLOAT);
+        } else if(var.type == Type.CHAR){
+          generateAssign(false, var.id, "in.next().charAt(0)", Type.CHAR);
+        } else if(var.type == Type.STRING){
+          generateAssign(false, var.id, "in.nextLine()", Type.STRING);
+        } else {
+          generateAssign(false, var.id, "in.nextLine()", Type.STRING); // default to string type
+          System.out.println("ran into default type for reading input (incorrect type name used)");
+        }
+
+        /* 
         Identifier newId = new Identifier();
         newId.id = $IDENT.getText();
         System.out.println("Please specify the type of input variable " + newId.id + " EX: integer, float, String, char");
-        String input = readInput.nextLine();
-        
+        String input = readInput.nextLine();    
         
         newId.value = input;
         newId.type = typeCheck(input);
         addVariable(newId);
         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
 
-        
-        
         if(input.equals("integer")){
           generateAssign(true, newId.id, "in.nextInt()", Type.INT, forAssign);
         } else if(input.equals("float")){
@@ -444,6 +473,7 @@ as
           generateAssign(true, newId.id, "in.nextLine()", Type.STRING, forAssign); // default to string type
           System.out.println("ran into default type for reading input (incorrect type name used)");
         }
+        */
       }
     | //ARRAY 
       {

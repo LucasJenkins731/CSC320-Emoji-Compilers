@@ -173,6 +173,7 @@ public class EmoticonParser extends Parser {
 	  FunctionDef currentFunction = null;
 
 	  boolean forAssign = false;// global check to semicolons in for stmt
+	  boolean redec = false;
 
 	  void error(Token t, String msg) {
 	    diagnostics.add("line " + t.getLine() + ":" + t.getCharPositionInLine() + " " + msg);
@@ -286,10 +287,10 @@ public class EmoticonParser extends Parser {
 	  }
 
 	  // Declare LHS if first-time assignment; otherwise plain assignment.
-	  void generateAssign(boolean declare, String name, String rhsJavaCode, Type type, boolean forAssign) {
+	  void generateAssign(boolean declare, String name, String rhsJavaCode, Type type) {
 	    String javaType = getJavaType(type);
 	    if(!forAssign){
-	      emit("    " + (declare ? javaType + " " : " ") + name + " = " + rhsJavaCode + ";\n");
+	      emit("    " + (declare ? javaType + " " : "") + name + " = " + rhsJavaCode + ";\n");
 	    } else {
 	      emit((declare ? javaType + " " : " ") + name + " = " + rhsJavaCode);
 	    }
@@ -790,7 +791,7 @@ public class EmoticonParser extends Parser {
 					        
 					        // Generate Java code for assignment
 					        boolean isNewVariable = (var == null);
-					        generateAssign(isNewVariable, id, ((AsContext)_localctx).expr.result.code, ((AsContext)_localctx).expr.result.type, forAssign);
+					        generateAssign(isNewVariable, id, ((AsContext)_localctx).expr.result.code, ((AsContext)_localctx).expr.result.type);
 					      
 					}
 					break;
@@ -803,11 +804,14 @@ public class EmoticonParser extends Parser {
 					        newId.id = ((AsContext)_localctx).IDENT.getText();
 					        newId.value = ((AsContext)_localctx).INT.getText();
 					        newId.type = Type.INT;
-					        addVariable(newId);
+					        
 					        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
 					        
+					        Identifier var = lookupVariable(newId.id);
+					        addVariable(newId);
+					        boolean isNewVariable = (var == null);
 					        // Generate Java code for assignment
-					        generateAssign(true, newId.id, ((AsContext)_localctx).INT.getText(), Type.INT, forAssign);
+					        generateAssign(isNewVariable, newId.id, ((AsContext)_localctx).INT.getText(), Type.INT);
 					      
 					}
 					break;
@@ -820,11 +824,14 @@ public class EmoticonParser extends Parser {
 					        newId.id = ((AsContext)_localctx).IDENT.getText();
 					        newId.value = ((AsContext)_localctx).STRING.getText();
 					        newId.type = Type.STRING;
-					        addVariable(newId);
+					        
 					        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
 					        
+					        Identifier var = lookupVariable(newId.id);
+					        addVariable(newId);
+					        boolean isNewVariable = (var == null);
 					        // Generate Java code for assignment
-					        generateAssign(true, newId.id, ((AsContext)_localctx).STRING.getText(), Type.STRING, forAssign);
+					        generateAssign(isNewVariable, newId.id, ((AsContext)_localctx).STRING.getText(), Type.STRING);
 					      
 					}
 					break;
@@ -837,11 +844,14 @@ public class EmoticonParser extends Parser {
 					        newId.id = ((AsContext)_localctx).IDENT.getText();
 					        newId.value = ((AsContext)_localctx).CHAR.getText();
 					        newId.type = Type.CHAR;
-					        addVariable(newId);
+					        
 					        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
 					        
+					        Identifier var = lookupVariable(newId.id);
+					        addVariable(newId);
+					        boolean isNewVariable = (var == null);
 					        // Generate Java code for assignment
-					        generateAssign(true, newId.id, ((AsContext)_localctx).CHAR.getText(), Type.CHAR, forAssign);
+					        generateAssign(isNewVariable, newId.id, ((AsContext)_localctx).CHAR.getText(), Type.CHAR);
 					      
 					}
 					break;
@@ -854,11 +864,14 @@ public class EmoticonParser extends Parser {
 					        newId.id = ((AsContext)_localctx).IDENT.getText();
 					        newId.value = ((AsContext)_localctx).FLOAT.getText();
 					        newId.type = Type.FLOAT;
-					        addVariable(newId);
+					        
 					        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
 					        
+					        Identifier var = lookupVariable(newId.id);
+					        addVariable(newId);
+					        boolean isNewVariable = (var == null);
 					        // Generate Java code for assignment
-					        generateAssign(true, newId.id, ((AsContext)_localctx).FLOAT.getText() + "f", Type.FLOAT, forAssign);
+					        generateAssign(isNewVariable, newId.id, ((AsContext)_localctx).FLOAT.getText() + "f", Type.FLOAT);
 					      
 					}
 					break;
@@ -867,19 +880,35 @@ public class EmoticonParser extends Parser {
 					setState(103);
 					match(KW_READ);
 
+					        //do it so that if var is not equal to null then do the assignment.
+					        String id = ((AsContext)_localctx).IDENT.getText();
+					        Identifier var = lookupVariable(id);
+					        System.out.println(var.value + "(" + "Type = " + var.type + ")");
+
+					        if(var.type == Type.INT){
+					          generateAssign(false, var.id, "in.nextInt()", Type.INT);
+					        } else if(var.type == Type.FLOAT){
+					          generateAssign(false, var.id, "in.nextFloat()", Type.FLOAT);
+					        } else if(var.type == Type.CHAR){
+					          generateAssign(false, var.id, "in.next().charAt(0)", Type.CHAR);
+					        } else if(var.type == Type.STRING){
+					          generateAssign(false, var.id, "in.nextLine()", Type.STRING);
+					        } else {
+					          generateAssign(false, var.id, "in.nextLine()", Type.STRING); // default to string type
+					          System.out.println("ran into default type for reading input (incorrect type name used)");
+					        }
+
+					        /* 
 					        Identifier newId = new Identifier();
 					        newId.id = ((AsContext)_localctx).IDENT.getText();
 					        System.out.println("Please specify the type of input variable " + newId.id + " EX: integer, float, String, char");
-					        String input = readInput.nextLine();
-					        
+					        String input = readInput.nextLine();    
 					        
 					        newId.value = input;
 					        newId.type = typeCheck(input);
 					        addVariable(newId);
 					        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
 
-					        
-					        
 					        if(input.equals("integer")){
 					          generateAssign(true, newId.id, "in.nextInt()", Type.INT, forAssign);
 					        } else if(input.equals("float")){
@@ -892,6 +921,7 @@ public class EmoticonParser extends Parser {
 					          generateAssign(true, newId.id, "in.nextLine()", Type.STRING, forAssign); // default to string type
 					          System.out.println("ran into default type for reading input (incorrect type name used)");
 					        }
+					        */
 					      
 					}
 					break;

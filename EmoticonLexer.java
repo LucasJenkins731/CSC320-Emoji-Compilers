@@ -164,6 +164,7 @@ public class EmoticonLexer extends Lexer {
 	  FunctionDef currentFunction = null;
 
 	  boolean forAssign = false;// global check to semicolons in for stmt
+	  boolean redec = false;
 
 	  void error(Token t, String msg) {
 	    diagnostics.add("line " + t.getLine() + ":" + t.getCharPositionInLine() + " " + msg);
@@ -277,10 +278,10 @@ public class EmoticonLexer extends Lexer {
 	  }
 
 	  // Declare LHS if first-time assignment; otherwise plain assignment.
-	  void generateAssign(boolean declare, String name, String rhsJavaCode, Type type, boolean forAssign) {
+	  void generateAssign(boolean declare, String name, String rhsJavaCode, Type type) {
 	    String javaType = getJavaType(type);
 	    if(!forAssign){
-	      emit("    " + (declare ? javaType + " " : " ") + name + " = " + rhsJavaCode + ";\n");
+	      emit("    " + (declare ? javaType + " " : "") + name + " = " + rhsJavaCode + ";\n");
 	    } else {
 	      emit((declare ? javaType + " " : " ") + name + " = " + rhsJavaCode);
 	    }
