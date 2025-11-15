@@ -1072,7 +1072,7 @@ arraystmt : KW_ARRAY IDENT ':=)' LBRACKET size=INT RBRACKET (':=)' arrayInitiali
         addVariable(arrayId);
         
         // Generate Java code for array declaration
-        emit("    double[] " + arrayName + " = new double[" + arraySize + "];\n");
+        emit("    float[] " + arrayName + " = new float[" + arraySize + "];\n");
 
         // If initializer is present:
         if ($arrayInitializer.ctx != null) {
