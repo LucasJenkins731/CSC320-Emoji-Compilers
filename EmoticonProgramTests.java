@@ -2,11 +2,15 @@ import java.util.*;
 public class EmoticonProgramTests {
   public static void main(String[] args) throws Exception {
     Scanner in = new Scanner(System.in);
-    int x = 10;
-    float y = 20.0f;
-    String z = "This will declare as a double";
-    System.out.println(x);
-    System.out.println(y);
-    System.out.println(z);
+    String name = "";
+    name = in.nextLine();
+    float radius = 0.0f;
+    radius = in.nextFloat();
+    float pi = 3.14f;
+    float circumference = 2 * pi * radius;
+    float area = pi * radius * radius;
+    System.out.println(name);
+    System.out.println(circumference);
+    System.out.println(area);
   }
 }
