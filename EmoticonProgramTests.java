@@ -24,17 +24,4 @@ public class EmoticonProgramTests {
      count = count - 1;
     }
   }
-  public static double add(double x) {
-    double result = x + 10;
-    return result;
-  }
-
-  public static int getConstant() {
-    return 42;
-  }
-
-  public static double multiply(double x) {
-    return x * 2;
-  }
-
 }
