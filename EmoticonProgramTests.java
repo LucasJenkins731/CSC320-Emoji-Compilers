@@ -9,7 +9,7 @@ public class EmoticonProgramTests {
     char initial = 'J';
     int count = 100;
     float hi = 45.34f;
-    String h = in.nextLine();
+    char h = in.next().charAt(0);
     System.out.println(name);
     System.out.println(age);
     System.out.println(grade);

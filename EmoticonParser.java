@@ -867,16 +867,31 @@ public class EmoticonParser extends Parser {
 					setState(103);
 					match(KW_READ);
 
-					        String input = readInput.nextLine();
 					        Identifier newId = new Identifier();
 					        newId.id = ((AsContext)_localctx).IDENT.getText();
+					        System.out.println("Please specify the type of input variable " + newId.id + " EX: integer, float, String, char");
+					        String input = readInput.nextLine();
+					        
+					        
 					        newId.value = input;
 					        newId.type = typeCheck(input);
 					        addVariable(newId);
 					        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+
 					        
-					        // Generate Java code for assignment
-					        generateAssign(true, newId.id, "in.nextLine()", Type.STRING, forAssign);
+					        
+					        if(input.equals("integer")){
+					          generateAssign(true, newId.id, "in.nextInt()", Type.INT, forAssign);
+					        } else if(input.equals("float")){
+					          generateAssign(true, newId.id, "in.nextFloat()", Type.FLOAT, forAssign);
+					        } else if(input.equals("char")){
+					          generateAssign(true, newId.id, "in.next().charAt(0)", Type.CHAR, forAssign);
+					        } else if(input.equals("String")){
+					          generateAssign(true, newId.id, "in.nextLine()", Type.STRING, forAssign);
+					        } else {
+					          generateAssign(true, newId.id, "in.nextLine()", Type.STRING, forAssign); // default to string type
+					          System.out.println("ran into default type for reading input (incorrect type name used)");
+					        }
 					      
 					}
 					break;
