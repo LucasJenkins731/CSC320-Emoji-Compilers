@@ -28,6 +28,16 @@ public interface EmoticonListener extends ParseTreeListener {
 	 */
 	void exitS(EmoticonParser.SContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link EmoticonParser#functioncallstmt}.
+	 * @param ctx the parse tree
+	 */
+	void enterFunctioncallstmt(EmoticonParser.FunctioncallstmtContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link EmoticonParser#functioncallstmt}.
+	 * @param ctx the parse tree
+	 */
+	void exitFunctioncallstmt(EmoticonParser.FunctioncallstmtContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link EmoticonParser#blockStatement}.
 	 * @param ctx the parse tree
 	 */
@@ -137,6 +147,16 @@ public interface EmoticonListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitWhilestmt(EmoticonParser.WhilestmtContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link EmoticonParser#returnstmt}.
+	 * @param ctx the parse tree
+	 */
+	void enterReturnstmt(EmoticonParser.ReturnstmtContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link EmoticonParser#returnstmt}.
+	 * @param ctx the parse tree
+	 */
+	void exitReturnstmt(EmoticonParser.ReturnstmtContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link EmoticonParser#functionstmt}.
 	 * @param ctx the parse tree

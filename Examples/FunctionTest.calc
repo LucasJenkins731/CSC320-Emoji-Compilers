@@ -1,0 +1,32 @@
+<3 Test functions with return statements and expressions
+
+<3 Function that adds two values and returns the result
+=^._.^= add(x) ><(((,^>
+  result :=) x :+) 10
+  return result
+<^,)))><
+
+<3 Function that multiplies by 2
+=^._.^= multiply(x) ><(((,^>
+  return x :*) 2
+<^,)))><
+
+<3 Function with no parameters
+=^._.^= getConstant() ><(((,^>
+  return 42
+<^,)))><
+
+<3 Test the functions
+a :=) 5
+b :=) add(a)
+c :=) multiply(b)
+d :=) getConstant()
+
+:P(a)
+:P(b)
+:P(c)
+:P(d)
+
+<3 Use function call in expression
+result :=) add(10) :+) multiply(5)
+:P(result)
