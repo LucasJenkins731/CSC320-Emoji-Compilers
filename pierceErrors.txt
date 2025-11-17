@@ -1,13 +1,1 @@
-C:\Users\pieco\Desktop\Emoticon language (sprint3)
-λ javac -cp C:\Users\pieco\Desktop\antlr\antlr-4.13.2-complete.jar *.java
-Note: TestDriver.java uses or overrides a deprecated API.
-Note: Recompile with -Xlint:deprecation for details.
-
-C:\Users\pieco\Desktop\Emoticon language (sprint3)
-λ java -cp C:\Users\pieco\Desktop\antlr\antlr-4.13.2-complete.jar TestDriver.java Examples\typeTest.calc
-TestDriver.java:15: warning: [deprecation] ANTLRInputStream in org.antlr.v4.runtime has been deprecated
-        ANTLRInputStream input = new ANTLRInputStream(is);
-        ^
-TestDriver.java:15: warning: [deprecation] ANTLRInputStream in org.antlr.v4.runtime has been deprecated
-        ANTLRInputStream input = new ANTLRInputStream(is);
-                                     ^
+java -jar <rars file path> nc <program name>
