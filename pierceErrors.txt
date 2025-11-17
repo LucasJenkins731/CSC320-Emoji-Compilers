@@ -1,1 +1,8 @@
 java -jar <rars file path> nc <program name>
+
+use multiple string builders for the different parts. this allows you to print out the text and data parts separately
+and works with reading in the functions later. 
+
+should have one for data and one for text.
+
+making all the functions global (globl) is typically convention and might not be needed. Or it might be needed idk.
