@@ -1,4 +1,4 @@
-// Generated from /Users/connorryan/Desktop/CSC320-Emoji-Compilers/Emoticon.g4 by ANTLR 4.13.1
+// Generated from c:/Users/pieco/Desktop/Emoticon language/Emoticon.g4 by ANTLR 4.13.1
  import java.util.*; import java.io.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; 
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -36,6 +36,18 @@ public class EmoticonBaseListener implements EmoticonListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitS(EmoticonParser.SContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterFunctioncallstmt(EmoticonParser.FunctioncallstmtContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitFunctioncallstmt(EmoticonParser.FunctioncallstmtContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *
@@ -168,6 +180,18 @@ public class EmoticonBaseListener implements EmoticonListener {
 	 * <p>The default implementation does nothing.</p>
 	 */
 	@Override public void exitWhilestmt(EmoticonParser.WhilestmtContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void enterReturnstmt(EmoticonParser.ReturnstmtContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitReturnstmt(EmoticonParser.ReturnstmtContext ctx) { }
 	/**
 	 * {@inheritDoc}
 	 *

@@ -52,6 +52,14 @@ grammar Emoticon;
   SymbolTable mainTable = new SymbolTable();
   Stack<SymbolTable> symbolStack = new Stack<>();
   Map<String, FunctionDef> functions = new HashMap<>();
+
+  // ASSEMBLY
+    /* Name of the file to store the assembly code */
+  final String ASSEMBLY_FILE = "code.s";
+
+  final String CONST_PREFIX = "VAL";
+  final String ID_PREFIX = "IDX";
+
   
   // Diagnostics
   List<String> diagnostics = new ArrayList<>();
@@ -82,6 +90,35 @@ grammar Emoticon;
     }    
     checkUnusedVariables();
     return diagnostics.size();
+  }
+
+  // ASSEMBLY
+    /** Code generation material */
+  // Storage of code for the text segment and the data segment
+  StringBuilder text_sb = new StringBuilder();
+  StringBuilder data_sb = new StringBuilder();
+  int data_count = 0;
+
+  // ASSEMBLY
+  // Duncan had this in his code dont know what it really does tho
+  // unless it just makes a double variable.
+  // Add a double value explicitly to the data segment.
+  // Note this does NOT optimize for duplicates which would be useful
+  // That would require tracking and later placing them!
+  String addDoubleValue(double x) {
+    String label = CONST_PREFIX+data_count;
+    data_count++;
+    data_emit(label + ":    .double " + x);
+    return label;
+  }
+
+  //ASSEMBLY
+  //Don't know what this does but it might be useful.
+  void addSymbolsToData(SymbolTable table) {
+      table.table.forEach((id, symbol) -> { if (symbol.hasBeenUsed) { 
+        String label = ID_PREFIX + id;
+        data_emit(label + ":    .double 0.0");
+      }});
   }
   
   void checkUnusedVariables() {
@@ -147,86 +184,194 @@ grammar Emoticon;
   }
 
   /** Code generation material */
-  StringBuilder sb = new StringBuilder(); // Stores the generated program!
+  //OLD
+  //StringBuilder sb = new StringBuilder(); // Stores the generated program!
 
-  void emit(String s) { sb.append(s); }   // Short-hand for adding to the program
+  //OLD
+  //void emit(String s) { sb.append(s); }   // Short-hand for adding to the program
 
+
+  //ASSEMBLY
+  // Short-hand for adding to the program (and some helpers)
+  void emit(StringBuilder sb, String s, boolean newLine) { 
+    sb.append(s);
+    if (newLine) { sb.append("\n"); }
+  }
+  void emit(StringBuilder sb, String s) { emit(sb, s, true); }
+  void data_emit(String s) { emit(data_sb, s); }
+  void text_emit(String s) { emit(text_sb, s); }
+
+  //OLD
   // Emit the preamble material for our program
+  // void openProgram() {
+  //   emit("import java.util.*;\n");
+  //   emit("public class EmoticonProgramTests {\n");
+  // }
+
+    // ASSEMBLY
+    // Emit the preamble material for our program
   void openProgram() {
-    emit("import java.util.*;\n");
-    emit("public class EmoticonProgramTests {\n");
+    data_emit("# =================================");
+    data_emit("# Auto-generated code. Do not edit.");
+    data_emit("# =================================");
+    data_emit("    .data");
+
+    text_emit("    .text");
+    text_emit("main: ");
   }
 
+  // OLD
   // Emit the main method start
-  void openMainMethod() {
-    emit("  public static void main(String[] args) throws Exception {\n");
-    emit("    Scanner in = new Scanner(System.in);\n");
-  }
+  // void openMainMethod() {
+  //   emit("  public static void main(String[] args) throws Exception {\n");
+  //   emit("    Scanner in = new Scanner(System.in);\n");
+  // }
 
+  // OLD
+  // Emit the postamble material for our program
+  // void closeProgram() {
+  //   emit("  }\n");
+  //   emit("}\n");
+  // }
+
+  // ASSEMBLY
   // Emit the postamble material for our program
   void closeProgram() {
-    emit("  }\n");
-    emit("}\n");
+    // Add a graceful end call
+    text_emit("end:");
+    text_emit("    li    a0, 0");
+    text_emit("    li    a7, 93");
+    text_emit("    ecall");
+  }
+
+  // ASSEMBLY
+    // Generate the code to load an double explicitly into a register
+  StringBuilder generateDoubleConstant(String register, double value) {
+    StringBuilder code = new StringBuilder();
+    String label = addDoubleValue(value);
+    emit(code, "    la " + "t0," + label); 
+    emit(code, "    fld " + register + ",(t0)");
+    return code;
+  }
+
+  // ASSEMBLY
+  StringBuilder generateLoadId(String register, String id) {
+    StringBuilder code = new StringBuilder();
+    String label = ID_PREFIX + id;
+    emit(code, "    la " + "t0," + label); 
+    emit(code, "    fld " + register + ",(t0)");
+    return code;
+  }
+
+  // ASSEMBLY
+  // Assign value in register to given name (in .data segment)
+  //   We only have ONE data type - double.
+  //   If multiple types then want a separate function for each type!
+  void generateAssign(String name, StringBuilder rhsJavaCode, String register) {
+    // tempRegister is either t0 or t1 (if t0 is taken)
+    String tempRegister = register.equals("t0") ? "t1" : "t0";
+
+    emit(rhsJavaCode, "    la " + tempRegister + "," + ID_PREFIX+name);
+    emit(rhsJavaCode, "    fsd " + register + ",(" + tempRegister + ")");
+  }
+
+  // ASSEMBLY
+  // Generate code to read double and store result in register specified
+  void generateReadDouble(StringBuilder code, String register) {
+    emit(code, "    li    a7, 7");  // a7=7 is for reading doubles
+    emit(code, "    ecall");        // invoke the system call
+    if (!register.equals("fa0")) {
+      // Transfer the results over to register from fa0.
+      //    e.g. fmv.d fa1, fa0   fa1 = fa0
+      emit(code, "    fmv.d " + register + ",fa0");
+    }
+  }
+
+  // ASSEMBLY
+  // Generate code to print the int stored in register
+  void generatePrintDouble(StringBuilder code, String register) {
+    if (!register.equals("fa0")) {
+      // Need to transfer the value in register to fa0
+      //    e.g. fmv.d fa0, fa1   fa0 = fa1
+      emit(code, "    fmv.d fa0," + register);
+    }
+    emit(code, "    li    a7, 3");  // a7=3 is for printing doubles
+    emit(code, "    ecall");        // invoke the system call
+    emit(code, "    li    a0, 10"); // ASCII 10 is \n (newline)
+    emit(code, "    li    a7, 11"); // a7=11 is for printing a character
+    emit(code, "    ecall");        // invoke the system call
+  }
+
+  // ASSEMBLY
+  // Write the generated Java to file.
+  void writeFile() {
+    try (PrintWriter pw = new PrintWriter(ASSEMBLY_FILE, "UTF-8")) {
+      pw.print(data_sb.toString());
+      pw.print(text_sb.toString());
+    } catch (Exception e) {
+      System.err.println("error: failed to write to " + ASSEMBLY_FILE + ": " + e.getMessage());
+    }
   }
 
   // Helper method to convert Type enum to Java type string
-  String getJavaType(Type type) {
-    switch (type) {
-      case INT: return "int";
-      case FLOAT: return "float";
-      case STRING: return "String";
-      case CHAR: return "char";
-      default: return "double"; // fallback
-    }
-  }
+  // String getJavaType(Type type) {
+  //   switch (type) {
+  //     case INT: return "int";
+  //     case FLOAT: return "float";
+  //     case STRING: return "String";
+  //     case CHAR: return "char";
+  //     default: return "double"; // fallback
+  //   }
+  // }
 
   // Declare LHS if first-time assignment; otherwise plain assignment.
-  void generateAssign(boolean declare, String name, String rhsJavaCode, Type type) {
-    String javaType = getJavaType(type);
-    if(!forAssign){
-      emit("    " + (declare ? javaType + " " : "") + name + " = " + rhsJavaCode + ";\n");
-    } else {
-      emit((declare ? javaType + " " : " ") + name + " = " + rhsJavaCode);
-    }
-  }
+  // void generateAssign(boolean declare, String name, String rhsJavaCode, Type type) {
+  //   String javaType = getJavaType(type);
+  //   if(!forAssign){
+  //     emit("    " + (declare ? javaType + " " : "") + name + " = " + rhsJavaCode + ";\n");
+  //   } else {
+  //     emit((declare ? javaType + " " : " ") + name + " = " + rhsJavaCode);
+  //   }
+  // }
 
   // Generate Java method definition for a function
-  void generateFunctionDefinition(FunctionDef func) {
-    // Check if the function body contains a return statement
-    String bodyCode = func.javaCode != null ? func.javaCode : "";
-    boolean hasExplicitReturn = bodyCode.contains("return ");
+  // void generateFunctionDefinition(FunctionDef func) {
+  //   // Check if the function body contains a return statement
+  //   String bodyCode = func.javaCode != null ? func.javaCode : "";
+  //   boolean hasExplicitReturn = bodyCode.contains("return ");
     
-    String javaReturnType = (func.hasReturn || hasExplicitReturn) ? getJavaType(func.returnType) : "void";
-    emit("  public static " + javaReturnType + " " + func.name + "(");
+  //   String javaReturnType = (func.hasReturn || hasExplicitReturn) ? getJavaType(func.returnType) : "void";
+  //   emit("  public static " + javaReturnType + " " + func.name + "(");
     
-    if (func.paramName != null) {
-      String javaParamType = getJavaType(func.paramType);
-      emit(javaParamType + " " + func.paramName);
-    }
+  //   if (func.paramName != null) {
+  //     String javaParamType = getJavaType(func.paramType);
+  //     emit(javaParamType + " " + func.paramName);
+  //   }
     
-    emit(") {\n");
-    emit(func.javaCode);
-    emit("  }\n\n");
-  }
+  //   emit(") {\n");
+  //   emit(func.javaCode);
+  //   emit("  }\n\n");
+  // }
 
   // Generate function call code
-  String generateFunctionCall(String funcName, String argCode, Type argType) {
-    FunctionDef func = functions.get(funcName);
-    if (func == null) {
-      return "/* ERROR: function " + funcName + " not found */";
-    }
+  // String generateFunctionCall(String funcName, String argCode, Type argType) {
+  //   FunctionDef func = functions.get(funcName);
+  //   if (func == null) {
+  //     return "/* ERROR: function " + funcName + " not found */";
+  //   }
     
-    if (func.paramName != null) {
-      return funcName + "(" + argCode + ")";
-    } else {
-      return funcName + "()";
-    }
-  }
+  //   if (func.paramName != null) {
+  //     return funcName + "(" + argCode + ")";
+  //   } else {
+  //     return funcName + "()";
+  //   }
+  // }
 
   // Write the generated Java to file.
   void writeFile() {
     try (PrintWriter pw = new PrintWriter("EmoticonProgramTests.java", "UTF-8")) {
-      pw.print(sb.toString());
+      pw.print(data_sb.toString());
+      pw.print(text_sb.toString());
     } catch (Exception e) {
       System.err.println("error: failed to write EmoticonProgramTests.java: " + e.getMessage());
     }

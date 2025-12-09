@@ -1,4 +1,4 @@
-// Generated from /Users/connorryan/Desktop/CSC320-Emoji-Compilers/Emoticon.g4 by ANTLR 4.13.1
+// Generated from c:/Users/pieco/Desktop/Emoticon language/Emoticon.g4 by ANTLR 4.13.1
  import java.util.*; import java.io.*; import org.antlr.v4.runtime.*; import org.antlr.v4.runtime.tree.*; 
 import org.antlr.v4.runtime.tree.ParseTreeListener;
 
@@ -27,6 +27,16 @@ public interface EmoticonListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitS(EmoticonParser.SContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link EmoticonParser#functioncallstmt}.
+	 * @param ctx the parse tree
+	 */
+	void enterFunctioncallstmt(EmoticonParser.FunctioncallstmtContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link EmoticonParser#functioncallstmt}.
+	 * @param ctx the parse tree
+	 */
+	void exitFunctioncallstmt(EmoticonParser.FunctioncallstmtContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link EmoticonParser#blockStatement}.
 	 * @param ctx the parse tree
@@ -137,6 +147,16 @@ public interface EmoticonListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitWhilestmt(EmoticonParser.WhilestmtContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link EmoticonParser#returnstmt}.
+	 * @param ctx the parse tree
+	 */
+	void enterReturnstmt(EmoticonParser.ReturnstmtContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link EmoticonParser#returnstmt}.
+	 * @param ctx the parse tree
+	 */
+	void exitReturnstmt(EmoticonParser.ReturnstmtContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link EmoticonParser#functionstmt}.
 	 * @param ctx the parse tree

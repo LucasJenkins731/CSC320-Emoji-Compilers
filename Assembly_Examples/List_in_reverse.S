@@ -27,10 +27,10 @@ arr: .space 50   # 50 bytes to store the items (PROBLEM!!!!)
 N: .word 0       # The number of items
 
     .text
-    .globl main
-    .globl end
-    .globl print_space
-    .globl print_newline
+ #   .globl main
+#    .globl end
+ #   .globl print_space
+ #   .globl print_newline
 
 main:
     # How many numbers will there be?
