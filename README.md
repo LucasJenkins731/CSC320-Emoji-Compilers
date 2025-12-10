@@ -33,4 +33,8 @@ antlr4 Emoticon.g4
 
 javac -cp “/filepath/antlr-4.13.2-complete.jar:." *.java
 
+for windows: javac -cp “\filepath\antlr-4.13.2-complete.jar;." *.java
+
 java -cp “/filepath/antlr-4.13.2-complete.jar:." TestDriver Examples/GoodExample3.calc
+
+for windows: java -cp “\filepath\antlr-4.13.2-complete.jar;." TestDriver Examples/GoodExample3.calc

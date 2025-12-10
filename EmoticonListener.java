@@ -28,16 +28,6 @@ public interface EmoticonListener extends ParseTreeListener {
 	 */
 	void exitS(EmoticonParser.SContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link EmoticonParser#functioncallstmt}.
-	 * @param ctx the parse tree
-	 */
-	void enterFunctioncallstmt(EmoticonParser.FunctioncallstmtContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link EmoticonParser#functioncallstmt}.
-	 * @param ctx the parse tree
-	 */
-	void exitFunctioncallstmt(EmoticonParser.FunctioncallstmtContext ctx);
-	/**
 	 * Enter a parse tree produced by {@link EmoticonParser#blockStatement}.
 	 * @param ctx the parse tree
 	 */
@@ -58,6 +48,16 @@ public interface EmoticonListener extends ParseTreeListener {
 	 */
 	void exitAs(EmoticonParser.AsContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link EmoticonParser#rhs}.
+	 * @param ctx the parse tree
+	 */
+	void enterRhs(EmoticonParser.RhsContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link EmoticonParser#rhs}.
+	 * @param ctx the parse tree
+	 */
+	void exitRhs(EmoticonParser.RhsContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link EmoticonParser#ps}.
 	 * @param ctx the parse tree
 	 */
@@ -67,16 +67,6 @@ public interface EmoticonListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitPs(EmoticonParser.PsContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link EmoticonParser#condition}.
-	 * @param ctx the parse tree
-	 */
-	void enterCondition(EmoticonParser.ConditionContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link EmoticonParser#condition}.
-	 * @param ctx the parse tree
-	 */
-	void exitCondition(EmoticonParser.ConditionContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link EmoticonParser#expr}.
 	 * @param ctx the parse tree
@@ -107,116 +97,6 @@ public interface EmoticonListener extends ParseTreeListener {
 	 * @param ctx the parse tree
 	 */
 	void exitFactor(EmoticonParser.FactorContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link EmoticonParser#ifstmt}.
-	 * @param ctx the parse tree
-	 */
-	void enterIfstmt(EmoticonParser.IfstmtContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link EmoticonParser#ifstmt}.
-	 * @param ctx the parse tree
-	 */
-	void exitIfstmt(EmoticonParser.IfstmtContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link EmoticonParser#elsestmt}.
-	 * @param ctx the parse tree
-	 */
-	void enterElsestmt(EmoticonParser.ElsestmtContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link EmoticonParser#elsestmt}.
-	 * @param ctx the parse tree
-	 */
-	void exitElsestmt(EmoticonParser.ElsestmtContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link EmoticonParser#forstmt}.
-	 * @param ctx the parse tree
-	 */
-	void enterForstmt(EmoticonParser.ForstmtContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link EmoticonParser#forstmt}.
-	 * @param ctx the parse tree
-	 */
-	void exitForstmt(EmoticonParser.ForstmtContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link EmoticonParser#whilestmt}.
-	 * @param ctx the parse tree
-	 */
-	void enterWhilestmt(EmoticonParser.WhilestmtContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link EmoticonParser#whilestmt}.
-	 * @param ctx the parse tree
-	 */
-	void exitWhilestmt(EmoticonParser.WhilestmtContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link EmoticonParser#returnstmt}.
-	 * @param ctx the parse tree
-	 */
-	void enterReturnstmt(EmoticonParser.ReturnstmtContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link EmoticonParser#returnstmt}.
-	 * @param ctx the parse tree
-	 */
-	void exitReturnstmt(EmoticonParser.ReturnstmtContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link EmoticonParser#functionstmt}.
-	 * @param ctx the parse tree
-	 */
-	void enterFunctionstmt(EmoticonParser.FunctionstmtContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link EmoticonParser#functionstmt}.
-	 * @param ctx the parse tree
-	 */
-	void exitFunctionstmt(EmoticonParser.FunctionstmtContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link EmoticonParser#functioncall}.
-	 * @param ctx the parse tree
-	 */
-	void enterFunctioncall(EmoticonParser.FunctioncallContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link EmoticonParser#functioncall}.
-	 * @param ctx the parse tree
-	 */
-	void exitFunctioncall(EmoticonParser.FunctioncallContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link EmoticonParser#arraystmt}.
-	 * @param ctx the parse tree
-	 */
-	void enterArraystmt(EmoticonParser.ArraystmtContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link EmoticonParser#arraystmt}.
-	 * @param ctx the parse tree
-	 */
-	void exitArraystmt(EmoticonParser.ArraystmtContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link EmoticonParser#arrayInitializer}.
-	 * @param ctx the parse tree
-	 */
-	void enterArrayInitializer(EmoticonParser.ArrayInitializerContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link EmoticonParser#arrayInitializer}.
-	 * @param ctx the parse tree
-	 */
-	void exitArrayInitializer(EmoticonParser.ArrayInitializerContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link EmoticonParser#exprList}.
-	 * @param ctx the parse tree
-	 */
-	void enterExprList(EmoticonParser.ExprListContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link EmoticonParser#exprList}.
-	 * @param ctx the parse tree
-	 */
-	void exitExprList(EmoticonParser.ExprListContext ctx);
-	/**
-	 * Enter a parse tree produced by {@link EmoticonParser#arrayAccess}.
-	 * @param ctx the parse tree
-	 */
-	void enterArrayAccess(EmoticonParser.ArrayAccessContext ctx);
-	/**
-	 * Exit a parse tree produced by {@link EmoticonParser#arrayAccess}.
-	 * @param ctx the parse tree
-	 */
-	void exitArrayAccess(EmoticonParser.ArrayAccessContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link EmoticonParser#operators}.
 	 * @param ctx the parse tree

@@ -2,8 +2,6 @@
 
 # Stack allocation for variables when we have functions working.
 
-
-
 main:
 
     # This is what the prologue should look like when we are creating a function

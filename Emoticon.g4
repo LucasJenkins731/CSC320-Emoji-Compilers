@@ -55,9 +55,12 @@ grammar Emoticon;
 
   // ASSEMBLY
     /* Name of the file to store the assembly code */
-  final String ASSEMBLY_FILE = "code.s";
+  final String ASSEMBLY_FILE = "EmoticonAssembly.s";
 
+  //used for variable names. done as VALx in code
+  //where x is a number incremented  based on data count (see further).
   final String CONST_PREFIX = "VAL";
+
   final String ID_PREFIX = "IDX";
 
   
@@ -98,13 +101,17 @@ grammar Emoticon;
   StringBuilder text_sb = new StringBuilder();
   StringBuilder data_sb = new StringBuilder();
   int data_count = 0;
+  StringBuilder asm = new StringBuilder();
+
 
   // ASSEMBLY
+  // this can be helpful for other variables
   // Duncan had this in his code dont know what it really does tho
   // unless it just makes a double variable.
   // Add a double value explicitly to the data segment.
   // Note this does NOT optimize for duplicates which would be useful
   // That would require tracking and later placing them!
+  //PROBABLY DONT WANT THIS IT COMPLICATES THINGS.
   String addDoubleValue(double x) {
     String label = CONST_PREFIX+data_count;
     data_count++;
@@ -114,11 +121,16 @@ grammar Emoticon;
 
   //ASSEMBLY
   //Don't know what this does but it might be useful.
+  private int numsym = 0;
   void addSymbolsToData(SymbolTable table) {
-      table.table.forEach((id, symbol) -> { if (symbol.hasBeenUsed) { 
+    numsym = 0;
+      table.table.forEach((id, identifier) -> { if (identifier.hasBeenUsed) { 
+        numsym++;
+        System.out.println(numsym + " symbols :D");
         String label = ID_PREFIX + id;
         data_emit(label + ":    .double 0.0");
       }});
+      if(numsym == 0) System.out.println("no symbols :(");
   }
   
   void checkUnusedVariables() {
@@ -238,6 +250,7 @@ grammar Emoticon;
   // Emit the postamble material for our program
   void closeProgram() {
     // Add a graceful end call
+    addSymbolsToData(mainTable);
     text_emit("end:");
     text_emit("    li    a0, 0");
     text_emit("    li    a7, 93");
@@ -368,14 +381,14 @@ grammar Emoticon;
   // }
 
   // Write the generated Java to file.
-  void writeFile() {
-    try (PrintWriter pw = new PrintWriter("EmoticonProgramTests.java", "UTF-8")) {
-      pw.print(data_sb.toString());
-      pw.print(text_sb.toString());
-    } catch (Exception e) {
-      System.err.println("error: failed to write EmoticonProgramTests.java: " + e.getMessage());
-    }
-  }
+  // void writeFile() {
+  //   try (PrintWriter pw = new PrintWriter("EmoticonProgramTests.java", "UTF-8")) {
+  //     pw.print(data_sb.toString());
+  //     pw.print(text_sb.toString());
+  //   } catch (Exception e) {
+  //     System.err.println("error: failed to write EmoticonProgramTests.java: " + e.getMessage());
+  //   }
+  // }
 }
 
 // Keywords
@@ -425,518 +438,636 @@ ASSIGNMENT : ':=)';
 program
   : { 
       openProgram();
-      openMainMethod();
     }         // preamble
-    s* EOF
+    (s {
+      text_sb.append($s.code);
+    })* EOF
     {
       int numErrors = printDiagnostics();
       if (numErrors == 0) {
-        // Close main method first
-        emit("  }\n");
-        
-        // Generate function definitions
-        for (FunctionDef func : functions.values()) {
-          if (func.javaCode != null) {
-            generateFunctionDefinition(func);
-          }
-        }
-        
-        // Close class
-        emit("}\n");
-        
         // Successful, so write out the generated code
-        writeFile();
+        closeProgram();
+        writeFile();     
         System.err.println("Success!");
-      } else {
-        System.err.println(numErrors + " errors detected. Code not generated.");
-        System.exit(1);  // Error code
-      }
+        
+        // // Generate function definitions
+        // for (FunctionDef func : functions.values()) {
+        //   if (func.javaCode != null) {
+        //     generateFunctionDefinition(func);
+        //   }
+        asm.append(data_sb.toString());
+        asm.append(text_sb.toString());
+
+        } else {
+          System.err.println(numErrors + " errors detected. Code not generated.");
+          System.exit(1);  // Error code
+        }
     }
   ;
 
-s : functioncallstmt | as | ps | expr | arraystmt | blockStatement | ifstmt | forstmt | whilestmt | functionstmt | returnstmt ;
+//s : functioncallstmt | as | ps | expr | arraystmt | blockStatement | ifstmt | forstmt | whilestmt | functionstmt | returnstmt;
 
-functioncallstmt : functioncall
-  {
-    if (!definingFunction) {
-      emit("    " + $functioncall.result.code + ";\n");
-    }
-  }
+s returns [StringBuilder code]
+ : as {$code = $as.code;}
+ | ps {$code = $ps.code;}
+ | blockStatement {$code = new StringBuilder();}
+ ;
+
+// functioncallstmt : functioncall
+//   {
+//     if (!definingFunction) {
+//       emit("    " + $functioncall.result.code + ";\n");
+//     }
+//   }
+//   ;
+
+// blockStatement : LBRACE
+//   {  
+//     if (!definingFunction) {
+//       SymbolTable currentSymbolTable = new SymbolTable();
+//       symbolStack.push(currentSymbolTable);
+//     } else {
+//       functionDefDepth++;
+//     }
+//   } 
+//   (s)* RBRACE 
+//   { 
+//     if (!definingFunction) {
+//       symbolStack.pop();
+//     } else {
+//       functionDefDepth--;
+//     }
+//   } 
+//   ;
+
+blockStatement
+  : LBRACE s* RBRACE
   ;
 
-blockStatement : LBRACE
-  {  
-    if (!definingFunction) {
-      SymbolTable currentSymbolTable = new SymbolTable();
-      symbolStack.push(currentSymbolTable);
-    } else {
-      functionDefDepth++;
-    }
-  } 
-  (s)* RBRACE 
-  { 
-    if (!definingFunction) {
-      symbolStack.pop();
-    } else {
-      functionDefDepth--;
-    }
-  } 
-  ;
-
-as
-  : arrayAccess ':=)' expr
-    {
-      String arrayCode = $arrayAccess.result.code;
-      if ($arrayAccess.result.type != Type.UNKNOWN) {
-        emit("    " + arrayCode + " = " + $expr.result.code + ";\n");
-      }
-    }
-  | IDENT ':=)' 
-    (
-      expr
-      {
-        String id = $IDENT.getText();
-        Identifier var = lookupVariable(id);
-        Identifier newId = new Identifier();
-        newId.id = id;
-        if($expr.result.type == Type.INT || $expr.result.type == Type.FLOAT){
-          newId.value = $expr.result.numericalValue;
-        } else {
-          newId.value = $expr.result.stringValue;
-        }
-        newId.type = $expr.result.type;
-        System.out.println(id + " = " + String.valueOf(newId.value) + " (" + "Type = " + newId.type + ")");
-        newId.hasKnown = $expr.result.hasKnownValue;
-        newId.hasBeenUsed = false;
-        addVariable(newId);
-        
-        // Generate Java code for assignment
-        boolean isNewVariable = (var == null);
-        generateAssign(isNewVariable, id, $expr.result.code, $expr.result.type);
-      }
-      
-    | INT
-      {
-        Identifier newId = new Identifier();
-        newId.id = $IDENT.getText();
-        newId.value = $INT.getText();
-        newId.type = Type.INT;
-        
-        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
-        
-        Identifier var = lookupVariable(newId.id);
-        addVariable(newId);
-        boolean isNewVariable = (var == null);
-        // Generate Java code for assignment
-        generateAssign(isNewVariable, newId.id, $INT.getText(), Type.INT);
-      }
-    | STRING
-      {
-        Identifier newId = new Identifier();
-        newId.id = $IDENT.getText();
-        newId.value = $STRING.getText();
-        newId.type = Type.STRING;
-        
-        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
-        
-        Identifier var = lookupVariable(newId.id);
-        addVariable(newId);
-        boolean isNewVariable = (var == null);
-        // Generate Java code for assignment
-        generateAssign(isNewVariable, newId.id, $STRING.getText(), Type.STRING);
-      }
-    | CHAR
-      {
-        Identifier newId = new Identifier();
-        newId.id = $IDENT.getText();
-        newId.value = $CHAR.getText();
-        newId.type = Type.CHAR;
-        
-        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
-        
-        Identifier var = lookupVariable(newId.id);
-        addVariable(newId);
-        boolean isNewVariable = (var == null);
-        // Generate Java code for assignment
-        generateAssign(isNewVariable, newId.id, $CHAR.getText(), Type.CHAR);
-      }
-    | FLOAT
-      {
-        Identifier newId = new Identifier();
-        newId.id = $IDENT.getText();
-        newId.value = $FLOAT.getText();
-        newId.type = Type.FLOAT;
-        
-        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
-        
-        Identifier var = lookupVariable(newId.id);
-        addVariable(newId);
-        boolean isNewVariable = (var == null);
-        // Generate Java code for assignment
-        generateAssign(isNewVariable, newId.id, $FLOAT.getText() + "f", Type.FLOAT);
-      }
-    | KW_READ
-      {
-        //do it so that if var is not equal to null then do the assignment.
-        String id = $IDENT.getText();
-        Identifier var = lookupVariable(id);
-        System.out.println(var.value + "(" + "Type = " + var.type + ")");
-
-        if(var.type == Type.INT){
-          generateAssign(false, var.id, "in.nextInt()", Type.INT);
-        } else if(var.type == Type.FLOAT){
-          generateAssign(false, var.id, "in.nextFloat()", Type.FLOAT);
-        } else if(var.type == Type.CHAR){
-          generateAssign(false, var.id, "in.next().charAt(0)", Type.CHAR);
-        } else if(var.type == Type.STRING){
-          generateAssign(false, var.id, "in.nextLine()", Type.STRING);
-        } else {
-          generateAssign(false, var.id, "in.nextLine()", Type.STRING); // default to string type
-          System.out.println("ran into default type for reading input (incorrect type name used)");
-        }
-
-        /* 
-        Identifier newId = new Identifier();
-        newId.id = $IDENT.getText();
-        System.out.println("Please specify the type of input variable " + newId.id + " EX: integer, float, String, char");
-        String input = readInput.nextLine();    
-        
-        newId.value = input;
-        newId.type = typeCheck(input);
-        addVariable(newId);
-        System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
-
-        if(input.equals("integer")){
-          generateAssign(true, newId.id, "in.nextInt()", Type.INT, forAssign);
-        } else if(input.equals("float")){
-          generateAssign(true, newId.id, "in.nextFloat()", Type.FLOAT, forAssign);
-        } else if(input.equals("char")){
-          generateAssign(true, newId.id, "in.next().charAt(0)", Type.CHAR, forAssign);
-        } else if(input.equals("String")){
-          generateAssign(true, newId.id, "in.nextLine()", Type.STRING, forAssign);
-        } else {
-          generateAssign(true, newId.id, "in.nextLine()", Type.STRING, forAssign); // default to string type
-          System.out.println("ran into default type for reading input (incorrect type name used)");
-        }
-        */
-      }
-    | //ARRAY 
-      {
-        // add array functionality
-      }
-    )
-  ;
-
-ps : KW_PRINT '(' expr ')' 
-    {
-      if($expr.result.hasKnownValue){
-        if($expr.result.type == Type.INT || $expr.result.type == Type.FLOAT){
-          System.out.println($expr.result.numericalValue);
-        } else {
-          System.out.println($expr.result.stringValue);
-        }
-      }
-      
-      // Generate Java code for print statement
-      emit("    System.out.println(" + $expr.result.code + ");\n");
-    }
-;
-condition returns [ExprResult result]
-  @init {
-    $result = new ExprResult();
-  }
-  : a=expr
-    {
-      // start with the lhs expr result
-      $result = $a.result;
-    }
-    ( conditional=(GREATERTHAN|LESSTHAN|GREATERTHANOREQUALTO|LESSTHANOREQUALTO)
-      b=expr
-      {
-        // map emoticon tokens to Java operators
-        String tok = $conditional.getText();
-        String javaOp;
-        if (":>)".equals(tok)) javaOp = ">";
-        else if (":<)".equals(tok)) javaOp = "<";
-        else if (":>=)".equals(tok)) javaOp = ">=";
-        else if (":<=)".equals(tok)) javaOp = "<=";
-        else if (":==)".equals(tok)) javaOp = "==";
-        else javaOp = tok;
-
-        // ensure operands are comparable (allow numeric, char, string comparisons as needed)
-        if ((($a.result.type == Type.INT || $a.result.type == Type.FLOAT)
-             && ($b.result.type == Type.INT || $b.result.type == Type.FLOAT))
-            || ($a.result.type == Type.CHAR && $b.result.type == Type.CHAR)
-            || ($a.result.type == Type.STRING && $b.result.type == Type.STRING)) {
-          $result.code = $a.result.code + " " + javaOp + " " + $b.result.code;
-          $result.hasKnownValue = false; // conservative
-          $result.type = Type.UNKNOWN;
-        } else {
-          error($conditional, "incomparable types used in condition");
-          $result.code = "false";
-          $result.hasKnownValue = false;
-          $result.type = Type.UNKNOWN;
-        }
-      }
-    )*
-  ;
-
-
-expr returns [ExprResult result]
-  @init {
-    $result = new ExprResult();
-  }
-  : a=term
-    {
-      $result = $a.result;
-    }
-    ( op=(ADD|SUBTRACT) b=term
-      {
-        ExprResult resultB = $b.result;
-        if(($result.type == Type.INT || $result.type == Type.FLOAT)){
-          if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
-            if($op.getText().equals(":+)")){
-              $result.code = $a.result.code + " " + "+" + " " + $b.result.code;
-            } else {
-              $result.code = $a.result.code + " " + "-" + " " + $b.result.code;
-            }
-            //$result.code = ""+$result.numericalValue;
-            if($result.type == Type.FLOAT || resultB.type == Type.FLOAT){
-              $result.type = Type.FLOAT;
-            }
-          } else {
-            error($op, "cannot do arithmetic on non-numerical types");
-            $result.hasKnownValue = false;
-            $result.code = "(" + $result.code + $op.getText() + resultB.code + ")";
-          }
-        } else if($result.type == Type.STRING || $result.type == Type.CHAR){
-          if($op.getText().equals(":+)")){
-            $result.stringValue = $result.stringValue + resultB.stringValue;
-          } else {
-            error($op, "cannot subtract strings");
-            $result.hasKnownValue = false;
-            $result.code = "(" + $result.code + $op.getText() + resultB.code + ")";
-          }
-        } else {
-          error($op, "unknown type");
-          $result.hasKnownValue = false;
-        }
-      }
-    )*
-  ;
-
-term returns [ExprResult result]
-  @init {
-    $result = new ExprResult();
-  }
-  : a=factor
-    {
-      $result = $a.result;
-    }
-    ( op=(MULTIPLY|DIVIDE) b=factor
-      {
-        ExprResult resultB = $b.result;
-        if($result.type == Type.INT || $result.type == Type.FLOAT){
-          if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
-            if(resultB.numericalValue == 0 && $op.getText().equals(":/)")){
-              error($op, "division by zero");
-              $result.hasKnownValue = false;
-              $result.code = "Error";
-            } else if($op.getText().equals(":*)")){
-              $result.code = $a.result.code + " " + "*" + " " + $b.result.code;
-            } else {
-              $result.code = $a.result.code + " " + "/" + " " + $b.result.code;
-            }
-            //$result.code = ""+$result.numericalValue;
-            if($result.type == Type.FLOAT || resultB.type == Type.FLOAT){
-              $result.type = Type.FLOAT;
-            } else {
-              $result.type = Type.INT;
-            }
-          } else {
-            error($op, "cannot do arithmetic on non-numeric types");
-            $result.hasKnownValue = false;
-            $result.code = "(" + $result.code + $op.getText() + resultB.code + ")";
-          }
-        } else {
-          error($op, "cannot do arithmetic on non-numeric types");
-          $result.hasKnownValue = false;
-          $result.code = "(" + $result.code + $op.getText() + resultB.code + ")";
-        }
-      }
-    )*
-  ;
-    
-
-factor returns [ExprResult result] 
-  : INT
-    {
-      $result = new ExprResult();
-      $result.type = Type.INT;
-      $result.numericalValue = Integer.parseInt($INT.getText());
-      $result.hasKnownValue = true;
-      $result.code = Integer.toString((int)$result.numericalValue);
-    }
-  /*| FLOAT
-    {
-      $result = new ExprResult();
-      $result.type = Type.FLOAT;
-      $result.numericalValue = Float.parseFloat($FLOAT.getText());
-      $result.hasKnownValue = true;
-      $result.code = ""+$result.numericalValue;
-    }*/
-  | CHAR
-    {
-      $result = new ExprResult();
-      $result.type = Type.CHAR;
-      $result.stringValue = String.valueOf($CHAR.getText().charAt(1));
-      $result.hasKnownValue = true;
-      $result.code = $CHAR.getText();
-    }
-  | STRING
-    {
-      $result = new ExprResult();
-      $result.type = Type.STRING;
-      $result.stringValue = $STRING.getText();
-      $result.hasKnownValue = true;
-      $result.code = ""+$result.stringValue;
-    }
-  | arrayAccess
-    {
-      $result = $arrayAccess.result;
-    }
-  | functioncall
-    {
-      $result = $functioncall.result;
-    }
-  | IDENT
+as returns [StringBuilder code]
+  : {String register = "fa0";}
+    IDENT
     {
       String id = $IDENT.getText();
       Identifier var = lookupVariable(id);
-      $result = new ExprResult();
-
+      //System.out.println(var);
+    }
+    ':=)' rhs[register]
+    {
       if(var == null){
-        error($IDENT, "variable is not yet defined");
+        Identifier newId = new Identifier();
+        mainTable.table.put(newId.id, newId);
+      }
+      generateAssign(id, $rhs.code, register);
+      $code = $rhs.code;
+    }
+;
+
+
+
+rhs[String register] returns [StringBuilder code]
+  : expr[$register] {$code = $expr.code;}
+  | KW_READ {
+    $code = new StringBuilder();
+    generateReadDouble($code, $register);
+  }
+;
+
+// as
+//   : arrayAccess ':=)' expr
+//     {
+//       String arrayCode = $arrayAccess.result.code;
+//       if ($arrayAccess.result.type != Type.UNKNOWN) {
+//         emit("    " + arrayCode + " = " + $expr.result.code + ";\n");
+//       }
+//     }
+//   | IDENT ':=)' 
+//     (
+//       expr
+//       {
+//         String id = $IDENT.getText();
+//         Identifier var = lookupVariable(id);
+//         Identifier newId = new Identifier();
+//         newId.id = id;
+//         if($expr.result.type == Type.INT || $expr.result.type == Type.FLOAT){
+//           newId.value = $expr.result.numericalValue;
+//         } else {
+//           newId.value = $expr.result.stringValue;
+//         }
+//         newId.type = $expr.result.type;
+//         System.out.println(id + " = " + String.valueOf(newId.value) + " (" + "Type = " + newId.type + ")");
+//         newId.hasKnown = $expr.result.hasKnownValue;
+//         newId.hasBeenUsed = false;
+//         addVariable(newId);
+        
+//         // Generate Java code for assignment
+//         boolean isNewVariable = (var == null);
+//         generateAssign(isNewVariable, id, $expr.result.code, $expr.result.type);
+//       }
+      
+//     | INT
+//       {
+//         Identifier newId = new Identifier();
+//         newId.id = $IDENT.getText();
+//         newId.value = $INT.getText();
+//         newId.type = Type.INT;
+        
+//         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+        
+//         Identifier var = lookupVariable(newId.id);
+//         addVariable(newId);
+//         boolean isNewVariable = (var == null);
+//         // Generate Java code for assignment
+//         generateAssign(isNewVariable, newId.id, $INT.getText(), Type.INT);
+//       }
+//     | STRING
+//       {
+//         Identifier newId = new Identifier();
+//         newId.id = $IDENT.getText();
+//         newId.value = $STRING.getText();
+//         newId.type = Type.STRING;
+        
+//         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+        
+//         Identifier var = lookupVariable(newId.id);
+//         addVariable(newId);
+//         boolean isNewVariable = (var == null);
+//         // Generate Java code for assignment
+//         generateAssign(isNewVariable, newId.id, $STRING.getText(), Type.STRING);
+//       }
+//     | CHAR
+//       {
+//         Identifier newId = new Identifier();
+//         newId.id = $IDENT.getText();
+//         newId.value = $CHAR.getText();
+//         newId.type = Type.CHAR;
+        
+//         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+        
+//         Identifier var = lookupVariable(newId.id);
+//         addVariable(newId);
+//         boolean isNewVariable = (var == null);
+//         // Generate Java code for assignment
+//         generateAssign(isNewVariable, newId.id, $CHAR.getText(), Type.CHAR);
+//       }
+//     | FLOAT
+//       {
+//         Identifier newId = new Identifier();
+//         newId.id = $IDENT.getText();
+//         newId.value = $FLOAT.getText();
+//         newId.type = Type.FLOAT;
+        
+//         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+        
+//         Identifier var = lookupVariable(newId.id);
+//         addVariable(newId);
+//         boolean isNewVariable = (var == null);
+//         // Generate Java code for assignment
+//         generateAssign(isNewVariable, newId.id, $FLOAT.getText() + "f", Type.FLOAT);
+//       }
+//     | KW_READ
+//       {
+//         //do it so that if var is not equal to null then do the assignment.
+//         String id = $IDENT.getText();
+//         Identifier var = lookupVariable(id);
+//         System.out.println(var.value + "(" + "Type = " + var.type + ")");
+
+//         if(var.type == Type.INT){
+//           generateAssign(false, var.id, "in.nextInt()", Type.INT);
+//         } else if(var.type == Type.FLOAT){
+//           generateAssign(false, var.id, "in.nextFloat()", Type.FLOAT);
+//         } else if(var.type == Type.CHAR){
+//           generateAssign(false, var.id, "in.next().charAt(0)", Type.CHAR);
+//         } else if(var.type == Type.STRING){
+//           generateAssign(false, var.id, "in.nextLine()", Type.STRING);
+//         } else {
+//           generateAssign(false, var.id, "in.nextLine()", Type.STRING); // default to string type
+//           System.out.println("ran into default type for reading input (incorrect type name used)");
+//         }
+
+//         /* 
+//         Identifier newId = new Identifier();
+//         newId.id = $IDENT.getText();
+//         System.out.println("Please specify the type of input variable " + newId.id + " EX: integer, float, String, char");
+//         String input = readInput.nextLine();    
+        
+//         newId.value = input;
+//         newId.type = typeCheck(input);
+//         addVariable(newId);
+//         System.out.println(newId.value + "(" + "Type = " + newId.type + ")");
+
+//         if(input.equals("integer")){
+//           generateAssign(true, newId.id, "in.nextInt()", Type.INT, forAssign);
+//         } else if(input.equals("float")){
+//           generateAssign(true, newId.id, "in.nextFloat()", Type.FLOAT, forAssign);
+//         } else if(input.equals("char")){
+//           generateAssign(true, newId.id, "in.next().charAt(0)", Type.CHAR, forAssign);
+//         } else if(input.equals("String")){
+//           generateAssign(true, newId.id, "in.nextLine()", Type.STRING, forAssign);
+//         } else {
+//           generateAssign(true, newId.id, "in.nextLine()", Type.STRING, forAssign); // default to string type
+//           System.out.println("ran into default type for reading input (incorrect type name used)");
+//         }
+//         */
+//       }
+//     | //ARRAY 
+//       {
+//         // add array functionality
+//       }
+//     )
+//   ;
+
+// ps : KW_PRINT '(' expr ')' 
+//     {
+//       if($expr.result.hasKnownValue){
+//         if($expr.result.type == Type.INT || $expr.result.type == Type.FLOAT){
+//           System.out.println($expr.result.numericalValue);
+//         } else {
+//           System.out.println($expr.result.stringValue);
+//         }
+//       }
+      
+//       // Generate Java code for print statement
+//       emit("    System.out.println(" + $expr.result.code + ");\n");
+//     }
+// ;
+
+ps returns [StringBuilder code]
+  : {String register = "fa0";}
+    KW_PRINT '(' expr[register] ')'
+    {
+      $code = $expr.code;
+      generatePrintDouble($code, register);
+    }
+;
+
+// condition returns [ExprResult result]
+//   @init {
+//     $result = new ExprResult();
+//   }
+//   : a=expr
+//     {
+//       // start with the lhs expr result
+//       $result = $a.result;
+//     }
+//     ( conditional=(GREATERTHAN|LESSTHAN|GREATERTHANOREQUALTO|LESSTHANOREQUALTO)
+//       b=expr
+//       {
+//         // map emoticon tokens to Java operators
+//         String tok = $conditional.getText();
+//         String javaOp;
+//         if (":>)".equals(tok)) javaOp = ">";
+//         else if (":<)".equals(tok)) javaOp = "<";
+//         else if (":>=)".equals(tok)) javaOp = ">=";
+//         else if (":<=)".equals(tok)) javaOp = "<=";
+//         else if (":==)".equals(tok)) javaOp = "==";
+//         else javaOp = tok;
+
+//         // ensure operands are comparable (allow numeric, char, string comparisons as needed)
+//         if ((($a.result.type == Type.INT || $a.result.type == Type.FLOAT)
+//              && ($b.result.type == Type.INT || $b.result.type == Type.FLOAT))
+//             || ($a.result.type == Type.CHAR && $b.result.type == Type.CHAR)
+//             || ($a.result.type == Type.STRING && $b.result.type == Type.STRING)) {
+//           $result.code = $a.result.code + " " + javaOp + " " + $b.result.code;
+//           $result.hasKnownValue = false; // conservative
+//           $result.type = Type.UNKNOWN;
+//         } else {
+//           error($conditional, "incomparable types used in condition");
+//           $result.code = "false";
+//           $result.hasKnownValue = false;
+//           $result.type = Type.UNKNOWN;
+//         }
+//       }
+//     )*
+//   ;
+
+
+// expr returns [ExprResult result]
+//   @init {
+//     $result = new ExprResult();
+//   }
+//   : a=term
+//     {
+//       $result = $a.result;
+//     }
+//     ( op=(ADD|SUBTRACT) b=term
+//       {
+//         ExprResult resultB = $b.result;
+//         if(($result.type == Type.INT || $result.type == Type.FLOAT)){
+//           if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
+//             if(op.getText().equals(":+)")){
+//               $result.code = $a.result.code + " " + "+" + " " + $b.result.code;
+//             } else {
+//               $result.code = $a.result.code + " " + "-" + " " + $b.result.code;
+//             }
+//             //$result.code = ""+$result.numericalValue;
+//             if($result.type == Type.FLOAT || resultB.type == Type.FLOAT){
+//               $result.type = Type.FLOAT;
+//             }
+//           } else {
+//             error($op, "cannot do arithmetic on non-numerical types");
+//             $result.hasKnownValue = false;
+//             $result.code = "(" + $result.code + $op.getText() + resultB.code + ")";
+//           }
+//         } else if($result.type == Type.STRING || $result.type == Type.CHAR){
+//           if($op.getText().equals(":+)")){
+//             $result.stringValue = $result.stringValue + resultB.stringValue;
+//           } else {
+//             error($op, "cannot subtract strings");
+//             $result.hasKnownValue = false;
+//             $result.code = "(" + $result.code + $op.getText() + resultB.code + ")";
+//           }
+//         } else {
+//           error($op, "unknown type");
+//           $result.hasKnownValue = false;
+//         }
+//       }
+//     )*
+//   ;
+
+expr[String register] returns [StringBuilder code]
+: a=term[$register]
+  {
+    $code = $a.code;
+    String nextRegister = ($register.equals("ft0")) ? "ft1" : "ft0";
+  }
+  (op=(ADD | SUBTRACT) b=term[nextRegister]
+  {
+    if($op.getText().equals(":+)")){
+      $code.append($b.code);
+      emit($code, "    fadd.d " + $register + "," + $register + "," + nextRegister);
+    } else {
+        // Add the two values
+        $code.append($b.code);
+        emit($code, "    fsub.d " + $register + "," + $register + "," + nextRegister);
+      }
+  }
+  )*
+;
+
+// term returns [ExprResult result]
+//   @init {
+//     $result = new ExprResult();
+//   }
+//   : a=factor
+//     {
+//       $result = $a.result;
+//     }
+//     ( op=(MULTIPLY|DIVIDE) b=factor
+//       {
+//         ExprResult resultB = $b.result;
+//         if($result.type == Type.INT || $result.type == Type.FLOAT){
+//           if(resultB.type == Type.INT || resultB.type == Type.FLOAT){
+//             if(resultB.numericalValue == 0 && $op.getText().equals(":/)")){
+//               error($op, "division by zero");
+//               $result.hasKnownValue = false;
+//               $result.code = "Error";
+//             } else if($op.getText().equals(":*)")){
+//               $result.code = $a.result.code + " " + "*" + " " + $b.result.code;
+//             } else {
+//               $result.code = $a.result.code + " " + "/" + " " + $b.result.code;
+//             }
+//             //$result.code = ""+$result.numericalValue;
+//             if($result.type == Type.FLOAT || resultB.type == Type.FLOAT){
+//               $result.type = Type.FLOAT;
+//             } else {
+//               $result.type = Type.INT;
+//             }
+//           } else {
+//             error($op, "cannot do arithmetic on non-numeric types");
+//             $result.hasKnownValue = false;
+//             $result.code = "(" + $result.code + $op.getText() + resultB.code + ")";
+//           }
+//         } else {
+//           error($op, "cannot do arithmetic on non-numeric types");
+//           $result.hasKnownValue = false;
+//           $result.code = "(" + $result.code + $op.getText() + resultB.code + ")";
+//         }
+//       }
+//     )*
+//   ;
+
+term [String register] returns [StringBuilder code]
+  : a = factor [$register]
+    {
+      $code = $a.code;
+      String nextRegister = ($register.equals("ft0")) ? "ft1" : "ft0";
+    }
+    (op = (MULTIPLY | DIVIDE) b = factor [nextRegister]
+    {
+      if($op.getText().equals(":*)")){
+        $code.append($b.code);
+        emit($code, "    fmul.d " + $register + "," + $register + "," + nextRegister);
+      } else {
+        $code.append($b.code);
+        emit($code, "    fdiv.d " + $register + "," + $register + "," + nextRegister);
+      }
+    }
+    )*
+;
+
+// factor returns [ExprResult result] 
+//   : INT
+//     {
+//       $result = new ExprResult();
+//       $result.type = Type.INT;
+//       $result.numericalValue = Integer.parseInt($INT.getText());
+//       $result.hasKnownValue = true;
+//       $result.code = Integer.toString((int)$result.numericalValue);
+//     }
+//   /*| FLOAT
+//     {
+//       $result = new ExprResult();
+//       $result.type = Type.FLOAT;
+//       $result.numericalValue = Float.parseFloat($FLOAT.getText());
+//       $result.hasKnownValue = true;
+//       $result.code = ""+$result.numericalValue;
+//     }*/
+//   | CHAR
+//     {
+//       $result = new ExprResult();
+//       $result.type = Type.CHAR;
+//       $result.stringValue = String.valueOf($CHAR.getText().charAt(1));
+//       $result.hasKnownValue = true;
+//       $result.code = $CHAR.getText();
+//     }
+//   | STRING
+//     {
+//       $result = new ExprResult();
+//       $result.type = Type.STRING;
+//       $result.stringValue = $STRING.getText();
+//       $result.hasKnownValue = true;
+//       $result.code = ""+$result.stringValue;
+//     }
+//   | arrayAccess
+//     {
+//       $result = $arrayAccess.result;
+//     }
+//   | functioncall
+//     {
+//       $result = $functioncall.result;
+//     }
+//   | IDENT
+//     {
+//       String id = $IDENT.getText();
+//       Identifier var = lookupVariable(id);
+//       $result = new ExprResult();
+
+//       if(var == null){
+//         error($IDENT, "variable is not yet defined");
+//       } else {
+//         var.hasBeenUsed = true;
+//         $result.type = var.type;
+//         $result.hasKnownValue = var.hasKnown;
+//         if(var.type == Type.INT || var.type == Type.FLOAT){
+//           if(var.value instanceof Integer){
+//             $result.numericalValue = (Integer)var.value;
+//           } else if(var.value instanceof Float){
+//             $result.numericalValue = (Float)var.value;
+//           } else if(var.value instanceof String){
+//             try {
+//               $result.numericalValue = Float.parseFloat((String)var.value);
+//             } catch(NumberFormatException e) {
+//               $result.numericalValue = 0;
+//             }
+//           }
+//         } else {
+//           $result.stringValue = (String)var.value;
+//         }
+//       }
+//       $result.code = id;
+//     }
+//   | functioncall
+//     {
+//       $result = $functioncall.result;
+//     }
+//   | '(' expr ')' 
+//     {
+//       $result = $expr.result;
+//     }
+//   ;
+
+
+factor[String register] returns [StringBuilder code]
+  : INT
+    {
+      int value = Integer.parseInt($INT.getText());
+      $code = generateDoubleConstant($register, (double) value);
+    }
+  | FLOAT
+    {
+      double value = Double.parseDouble($FLOAT.getText());
+      $code = generateDoubleConstant($register, value);
+    }
+  | IDENT
+    {
+      //find if id has been used before
+      String id = $IDENT.getText();
+      Identifier var = lookupVariable(id);
+      // var used before assignment
+      if(var == null) {
+        error($IDENT, "use of variable '" + id + "' before assignment");
       } else {
         var.hasBeenUsed = true;
-        $result.type = var.type;
-        $result.hasKnownValue = var.hasKnown;
-        if(var.type == Type.INT || var.type == Type.FLOAT){
-          if(var.value instanceof Integer){
-            $result.numericalValue = (Integer)var.value;
-          } else if(var.value instanceof Float){
-            $result.numericalValue = (Float)var.value;
-          } else if(var.value instanceof String){
-            try {
-              $result.numericalValue = Float.parseFloat((String)var.value);
-            } catch(NumberFormatException e) {
-              $result.numericalValue = 0;
-            }
-          }
-        } else {
-          $result.stringValue = (String)var.value;
-        }
       }
-      $result.code = id;
+      //gen code
+      $code = generateLoadId($register, id);
     }
-  | functioncall
+  | '(' expr[$register] ')'
     {
-      $result = $functioncall.result;
-    }
-  | '(' expr ')' 
-    {
-      $result = $expr.result;
+      $code = $expr.code;
     }
   ;
 
-ifstmt
-  : KW_IF
-    {
-      emit("    if (");
-    }
-    '(' condition ')'
-    {
-      // emit condition and space before block
-      emit($condition.result.code + ")");
-    }
-    LBRACE
-    {
-      emit(" {\n");
-      if (!definingFunction) {
-        SymbolTable ifScope = new SymbolTable();
-        symbolStack.push(ifScope);
-      } else {
-        functionDefDepth++;
-      }
-    }
-    (s)*
-    RBRACE
-    {
-      emit("    }\n");
-      if (!definingFunction) {
-        symbolStack.pop();
-      } else {
-        functionDefDepth--;
-      }
-    }
-    (elsestmt)?
-  ;
+// ifstmt
+//   : KW_IF
+//     {
+//       emit("    if (");
+//     }
+//     '(' condition ')'
+//     {
+//       // emit condition and space before block
+//       emit($condition.result.code + ")");
+//     }
+//     LBRACE
+//     {
+//       emit(" {\n");
+//       if (!definingFunction) {
+//         SymbolTable ifScope = new SymbolTable();
+//         symbolStack.push(ifScope);
+//       } else {
+//         functionDefDepth++;
+//       }
+//     }
+//     (s)*
+//     RBRACE
+//     {
+//       emit("    }\n");
+//       if (!definingFunction) {
+//         symbolStack.pop();
+//       } else {
+//         functionDefDepth--;
+//       }
+//     }
+//     (elsestmt)?
+//   ;
 
-elsestmt
-  : KW_ELSE_IF
-    {
-      emit("    else if (");
-    }
-    '(' condition ')'
-    {
-      emit($condition.result.code + ")");
-    }
-    LBRACE
-    {
-      emit(" {\n");
-      if (!definingFunction) {
-        SymbolTable elseIfScope = new SymbolTable();
-        symbolStack.push(elseIfScope);
-      } else {
-        functionDefDepth++;
-      }
-    }
-    (s)*
-    RBRACE
-    {
-      emit("    }\n");
-      if (!definingFunction) {
-        symbolStack.pop();
-      } else {
-        functionDefDepth--;
-      }
-    }
-    (elsestmt)?
-  | KW_ELSE
-    {
-      emit("    else ");
-    }
-    LBRACE
-    {
-      emit("{\n");
-      if (!definingFunction) {
-        SymbolTable elseScope = new SymbolTable();
-        symbolStack.push(elseScope);
-      } else {
-        functionDefDepth++;
-      }
-    }
-    (s)*
-    RBRACE
-    {
-      emit("    }\n");
-      if (!definingFunction) {
-        symbolStack.pop();
-      } else {
-        functionDefDepth--;
-      }
-    }
-  ;
+
+// elsestmt
+//   : KW_ELSE_IF
+//     {
+//       emit("    else if (");
+//     }
+//     '(' condition ')'
+//     {
+//       emit($condition.result.code + ")");
+//     }
+//     LBRACE
+//     {
+//       emit(" {\n");
+//       if (!definingFunction) {
+//         SymbolTable elseIfScope = new SymbolTable();
+//         symbolStack.push(elseIfScope);
+//       } else {
+//         functionDefDepth++;
+//       }
+//     }
+//     (s)*
+//     RBRACE
+//     {
+//       emit("    }\n");
+//       if (!definingFunction) {
+//         symbolStack.pop();
+//       } else {
+//         functionDefDepth--;
+//       }
+//     }
+//     (elsestmt)?
+//   | KW_ELSE
+//     {
+//       emit("    else ");
+//     }
+//     LBRACE
+//     {
+//       emit("{\n");
+//       if (!definingFunction) {
+//         SymbolTable elseScope = new SymbolTable();
+//         symbolStack.push(elseScope);
+//       } else {
+//         functionDefDepth++;
+//       }
+//     }
+//     (s)*
+//     RBRACE
+//     {
+//       emit("    }\n");
+//       if (!definingFunction) {
+//         symbolStack.pop();
+//       } else {
+//         functionDefDepth--;
+//       }
+//     }
+//   ;
 
 //middle part should be a conditional.
 // forstmt : KW_FOR '(' as ';' s ';' as ')' 
@@ -958,317 +1089,317 @@ elsestmt
 //   }
 //   ;
 
-  forstmt : KW_FOR '('
-    {
-      //create the block statement stuff
-      SymbolTable forScope = new SymbolTable();
-      symbolStack.push(forScope);
+//   forstmt : KW_FOR '('
+//     {
+//       //create the block statement stuff
+//       SymbolTable forScope = new SymbolTable();
+//       symbolStack.push(forScope);
 
-      // now do assign
+//       // now do assign
 
-      emit("    for (");
-      forAssign = true;
-    }
-    a=as
-    ';'
-    b=condition
-    {emit(";" + $b.result.code + ";");} 
-    ';'
-    c=as
-    ')'
+//       emit("    for (");
+//       forAssign = true;
+//     }
+//     a=as
+//     ';'
+//     b=condition
+//     {emit(";" + $b.result.code + ";");} 
+//     ';'
+//     c=as
+//     ')'
 
-    {
-      forAssign = false;
-      emit(")");
-    }
-    LBRACE
-    {
-      emit(" {\n");
-      if (!definingFunction) {
-        SymbolTable ifScope = new SymbolTable();
-        symbolStack.push(ifScope);
-      } else {
-        functionDefDepth++;
-      }
-    }
-    (s)*
-    RBRACE
-    {
-      emit("    }\n");
-      if (!definingFunction) {
-        symbolStack.pop();
-      } else {
-        functionDefDepth--;
-      }
-    }
+//     {
+//       forAssign = false;
+//       emit(")");
+//     }
+//     LBRACE
+//     {
+//       emit(" {\n");
+//       if (!definingFunction) {
+//         SymbolTable ifScope = new SymbolTable();
+//         symbolStack.push(ifScope);
+//       } else {
+//         functionDefDepth++;
+//       }
+//     }
+//     (s)*
+//     RBRACE
+//     {
+//       emit("    }\n");
+//       if (!definingFunction) {
+//         symbolStack.pop();
+//       } else {
+//         functionDefDepth--;
+//       }
+//     }
 
-    ;
+//     ;
 
-whilestmt : KW_WHILE '('
-  {
-    //create the block statement stuff
-      SymbolTable forScope = new SymbolTable();
-      symbolStack.push(forScope);
+// whilestmt : KW_WHILE '('
+//   {
+//     //create the block statement stuff
+//       SymbolTable forScope = new SymbolTable();
+//       symbolStack.push(forScope);
 
-      // now do assign
+//       // now do assign
 
-      emit("    while (");
-  }
-  a=condition
-  {{emit($a.result.code);} }
-  ')'
-  {
-      emit(")");
-    }
-  LBRACE
-    {
-      emit(" {\n");
-      if (!definingFunction) {
-        SymbolTable ifScope = new SymbolTable();
-        symbolStack.push(ifScope);
-      } else {
-        functionDefDepth++;
-      }
-    }
-    (s)*
-    RBRACE
-    {
-      emit("    }\n");
-      if (!definingFunction) {
-        symbolStack.pop();
-      } else {
-        functionDefDepth--;
-      }
-    }
-  ;
+//       emit("    while (");
+//   }
+//   a=condition
+//   {{emit($a.result.code);} }
+//   ')'
+//   {
+//       emit(")");
+//     }
+//   LBRACE
+//     {
+//       emit(" {\n");
+//       if (!definingFunction) {
+//         SymbolTable ifScope = new SymbolTable();
+//         symbolStack.push(ifScope);
+//       } else {
+//         functionDefDepth++;
+//       }
+//     }
+//     (s)*
+//     RBRACE
+//     {
+//       emit("    }\n");
+//       if (!definingFunction) {
+//         symbolStack.pop();
+//       } else {
+//         functionDefDepth--;
+//       }
+//     }
+//   ;
 
-returnstmt : KW_RETURN expr
-  {
-    if (!definingFunction || currentFunction == null) {
-      error($KW_RETURN, "return statement outside function");
-    } else {
-      currentFunction.hasReturn = true;
-      currentFunction.returnType = $expr.result.type;
-      emit("    return " + $expr.result.code + ";\n");
-    }
-  }
-  | KW_RETURN
-  {
-    if (!definingFunction || currentFunction == null) {
-      error($KW_RETURN, "return statement outside function");
-    } else {
-      emit("    return;\n");
-    }
-  }
-  ;
+// returnstmt : KW_RETURN expr
+//   {
+//     if (!definingFunction || currentFunction == null) {
+//       error($KW_RETURN, "return statement outside function");
+//     } else {
+//       currentFunction.hasReturn = true;
+//       currentFunction.returnType = $expr.result.type;
+//       emit("    return " + $expr.result.code + ";\n");
+//     }
+//   }
+//   | KW_RETURN
+//   {
+//     if (!definingFunction || currentFunction == null) {
+//       error($KW_RETURN, "return statement outside function");
+//     } else {
+//       emit("    return;\n");
+//     }
+//   }
+//   ;
 
-functionstmt : KW_FUNCTION name=IDENT '(' param=IDENT ')' 
-  {
-    definingFunction = true;
-    functionDefDepth = 0;
-    FunctionDef func = new FunctionDef();
-    func.name = $name.getText();
-    func.paramName = $param.getText();
-    func.paramType = Type.FLOAT; // Default parameter type
-    func.returnType = Type.FLOAT; // Default return type
-    func.hasReturn = false;
-    currentFunction = func;
-    functions.put(func.name, func);
-    System.out.println("Defining function '" + func.name + "' with parameter '" + func.paramName + "'");
+// functionstmt : KW_FUNCTION name=IDENT '(' param=IDENT ')' 
+//   {
+//     definingFunction = true;
+//     functionDefDepth = 0;
+//     FunctionDef func = new FunctionDef();
+//     func.name = $name.getText();
+//     func.paramName = $param.getText();
+//     func.paramType = Type.FLOAT; // Default parameter type
+//     func.returnType = Type.FLOAT; // Default return type
+//     func.hasReturn = false;
+//     currentFunction = func;
+//     functions.put(func.name, func);
+//     System.out.println("Defining function '" + func.name + "' with parameter '" + func.paramName + "'");
     
-    // Create new scope for function
-    SymbolTable functionScope = new SymbolTable();
-    symbolStack.push(functionScope);
+//     // Create new scope for function
+//     SymbolTable functionScope = new SymbolTable();
+//     symbolStack.push(functionScope);
     
-    // Add parameter to function scope
-    Identifier paramId = new Identifier();
-    paramId.id = func.paramName;
-    paramId.type = func.paramType;
-    paramId.hasBeenUsed = false;
-    functionScope.table.put(paramId.id, paramId);
+//     // Add parameter to function scope
+//     Identifier paramId = new Identifier();
+//     paramId.id = func.paramName;
+//     paramId.type = func.paramType;
+//     paramId.hasBeenUsed = false;
+//     functionScope.table.put(paramId.id, paramId);
     
-    // Start capturing function body code
-    StringBuilder oldSb = sb;
-    sb = new StringBuilder();
-  }
-  body=blockStatement
-  {
-    // Capture the generated code for this function
-    FunctionDef funcDef = functions.get($name.getText());
-    funcDef.javaCode = sb.toString();
+//     // Start capturing function body code
+//     StringBuilder oldSb = sb;
+//     sb = new StringBuilder();
+//   }
+//   body=blockStatement
+//   {
+//     // Capture the generated code for this function
+//     FunctionDef funcDef = functions.get($name.getText());
+//     funcDef.javaCode = sb.toString();
     
-    // Restore original string builder
-    sb = oldSb;
+//     // Restore original string builder
+//     sb = oldSb;
     
-    definingFunction = false;
-    functionDefDepth = 0;
-    currentFunction = null;
-    symbolStack.pop(); // Remove function scope
-    System.out.println("Function '" + funcDef.name + "' defined");
-  }
-  | KW_FUNCTION name=IDENT '('')' 
-  {
-    definingFunction = true;
-    functionDefDepth = 0;
-    FunctionDef func2 = new FunctionDef();
-    func2.name = $name.getText();
-    func2.paramName = null;
-    func2.returnType = Type.FLOAT; // Default return type
-    func2.hasReturn = false;
-    currentFunction = func2;
-    functions.put(func2.name, func2);
-    System.out.println("Defining function '" + func2.name + "'");
+//     definingFunction = false;
+//     functionDefDepth = 0;
+//     currentFunction = null;
+//     symbolStack.pop(); // Remove function scope
+//     System.out.println("Function '" + funcDef.name + "' defined");
+//   }
+//   | KW_FUNCTION name=IDENT '('')' 
+//   {
+//     definingFunction = true;
+//     functionDefDepth = 0;
+//     FunctionDef func2 = new FunctionDef();
+//     func2.name = $name.getText();
+//     func2.paramName = null;
+//     func2.returnType = Type.FLOAT; // Default return type
+//     func2.hasReturn = false;
+//     currentFunction = func2;
+//     functions.put(func2.name, func2);
+//     System.out.println("Defining function '" + func2.name + "'");
     
-    // Create new scope for function
-    SymbolTable functionScope = new SymbolTable();
-    symbolStack.push(functionScope);
+//     // Create new scope for function
+//     SymbolTable functionScope = new SymbolTable();
+//     symbolStack.push(functionScope);
     
-    // Start capturing function body code
-    StringBuilder oldSb = sb;
-    sb = new StringBuilder();
-  }
-  body=blockStatement
-  {
-    // Capture the generated code for this function
-    FunctionDef funcDef2 = functions.get($name.getText());
-    funcDef2.javaCode = sb.toString();
+//     // Start capturing function body code
+//     StringBuilder oldSb = sb;
+//     sb = new StringBuilder();
+//   }
+//   body=blockStatement
+//   {
+//     // Capture the generated code for this function
+//     FunctionDef funcDef2 = functions.get($name.getText());
+//     funcDef2.javaCode = sb.toString();
     
-    // Restore original string builder
-    sb = oldSb;
+//     // Restore original string builder
+//     sb = oldSb;
     
-    definingFunction = false;
-    functionDefDepth = 0;
-    currentFunction = null;
-    symbolStack.pop(); // Remove function scope
-    System.out.println("Function '" + funcDef2.name + "' defined");
-  }
-  ;
+//     definingFunction = false;
+//     functionDefDepth = 0;
+//     currentFunction = null;
+//     symbolStack.pop(); // Remove function scope
+//     System.out.println("Function '" + funcDef2.name + "' defined");
+//   }
+//   ;
 
-functioncall returns [ExprResult result]
-  @init {
-    $result = new ExprResult();
-  }
-  : IDENT '(' arg=expr ')'
-  {
-    String funcName = $IDENT.getText();
-    if (!functions.containsKey(funcName)) {
-      error($IDENT, "function '" + funcName + "' not defined");
-      $result.type = Type.UNKNOWN;
-    } else {
-      FunctionDef func = functions.get(funcName);
-      if (func.paramName == null) {
-        error($IDENT, "function '" + funcName + "' does not expect parameters");
-        $result.type = Type.UNKNOWN;
-      } else {
-        if($arg.result.type == Type.INT || $arg.result.type == Type.FLOAT){
-          System.out.println("Calling function '" + funcName + "' with argument " + $arg.result.numericalValue);
-        } else {
-          System.out.println("Calling function '" + funcName + "' with argument " + $arg.result.stringValue);
-        }
+// functioncall returns [ExprResult result]
+//   @init {
+//     $result = new ExprResult();
+//   }
+//   : IDENT '(' arg=expr ')'
+//   {
+//     String funcName = $IDENT.getText();
+//     if (!functions.containsKey(funcName)) {
+//       error($IDENT, "function '" + funcName + "' not defined");
+//       $result.type = Type.UNKNOWN;
+//     } else {
+//       FunctionDef func = functions.get(funcName);
+//       if (func.paramName == null) {
+//         error($IDENT, "function '" + funcName + "' does not expect parameters");
+//         $result.type = Type.UNKNOWN;
+//       } else {
+//         if($arg.result.type == Type.INT || $arg.result.type == Type.FLOAT){
+//           System.out.println("Calling function '" + funcName + "' with argument " + $arg.result.numericalValue);
+//         } else {
+//           System.out.println("Calling function '" + funcName + "' with argument " + $arg.result.stringValue);
+//         }
         
-        // Generate function call code
-        $result.type = func.returnType;
-        $result.code = generateFunctionCall(funcName, $arg.result.code, $arg.result.type);
-        $result.hasKnownValue = false; // Function calls don't have compile-time known values
-      }
-    }
-  }
-  | IDENT '('')'
-  {
-    String funcName = $IDENT.getText();
-    if (!functions.containsKey(funcName)) {
-      error($IDENT, "function '" + funcName + "' not defined");
-      $result.type = Type.UNKNOWN;
-    } else {
-      FunctionDef func = functions.get(funcName);
-      if (func.paramName != null) {
-        error($IDENT, "function '" + funcName + "' expects a parameter");
-        $result.type = Type.UNKNOWN;
-      } else {
-        System.out.println("Calling function '" + funcName + "'");
+//         // Generate function call code
+//         $result.type = func.returnType;
+//         $result.code = generateFunctionCall(funcName, $arg.result.code, $arg.result.type);
+//         $result.hasKnownValue = false; // Function calls don't have compile-time known values
+//       }
+//     }
+//   }
+//   | IDENT '('')'
+//   {
+//     String funcName = $IDENT.getText();
+//     if (!functions.containsKey(funcName)) {
+//       error($IDENT, "function '" + funcName + "' not defined");
+//       $result.type = Type.UNKNOWN;
+//     } else {
+//       FunctionDef func = functions.get(funcName);
+//       if (func.paramName != null) {
+//         error($IDENT, "function '" + funcName + "' expects a parameter");
+//         $result.type = Type.UNKNOWN;
+//       } else {
+//         System.out.println("Calling function '" + funcName + "'");
         
-        // Generate function call code
-        $result.type = func.returnType;
-        $result.code = generateFunctionCall(funcName, null, Type.UNKNOWN);
-        $result.hasKnownValue = false; // Function calls don't have compile-time known values
-      }
-    }
-  }
-  ;
+//         // Generate function call code
+//         $result.type = func.returnType;
+//         $result.code = generateFunctionCall(funcName, null, Type.UNKNOWN);
+//         $result.hasKnownValue = false; // Function calls don't have compile-time known values
+//       }
+//     }
+//   }
+//   ;
 
-arraystmt : KW_ARRAY IDENT ':=)' LBRACKET size=INT RBRACKET (':=)' arrayInitializer)?
-{
-    String arrayName = $IDENT.getText();
-    int arraySize = Integer.parseInt($size.getText());
+// arraystmt : KW_ARRAY IDENT ':=)' LBRACKET size=INT RBRACKET (':=)' arrayInitializer)?
+// {
+//     String arrayName = $IDENT.getText();
+//     int arraySize = Integer.parseInt($size.getText());
     
-    // Check if already declared
-    if (existsInCurrentScope(arrayName)) {
-        error($IDENT, "Array '" + arrayName + "' already declared");
-    } else {
-        // Create array identifier
-        Identifier arrayId = new Identifier();
-        arrayId.id = arrayName;
-        arrayId.type = Type.ARRAY;
-        arrayId.isArray = true;
-        arrayId.arraySize = arraySize;
-        arrayId.arrayValues = new Object[arraySize];
-        arrayId.hasKnown = true;
+//     // Check if already declared
+//     if (existsInCurrentScope(arrayName)) {
+//         error($IDENT, "Array '" + arrayName + "' already declared");
+//     } else {
+//         // Create array identifier
+//         Identifier arrayId = new Identifier();
+//         arrayId.id = arrayName;
+//         arrayId.type = Type.ARRAY;
+//         arrayId.isArray = true;
+//         arrayId.arraySize = arraySize;
+//         arrayId.arrayValues = new Object[arraySize];
+//         arrayId.hasKnown = true;
         
-        addVariable(arrayId);
+//         addVariable(arrayId);
         
-        // Generate Java code for array declaration
-        emit("    float[] " + arrayName + " = new float[" + arraySize + "];\n");
+//         // Generate Java code for array declaration
+//         emit("    float[] " + arrayName + " = new float[" + arraySize + "];\n");
 
-        // If initializer is present:
-        if ($arrayInitializer.ctx != null) {
-            // Generate initialization code
-            for (int i = 0; i < $arrayInitializer.values.size(); i++) {
-                emit("    " + arrayName + "[" + i + "] = " + 
-                     $arrayInitializer.values.get(i) + ";\n");
-            }
-        }
-    }
-}
-;
+//         // If initializer is present:
+//         if ($arrayInitializer.ctx != null) {
+//             // Generate initialization code
+//             for (int i = 0; i < $arrayInitializer.values.size(); i++) {
+//                 emit("    " + arrayName + "[" + i + "] = " + 
+//                      $arrayInitializer.values.get(i) + ";\n");
+//             }
+//         }
+//     }
+// }
+// ;
 
-//arrayInitializer : '[' exprList? ']' ;
+// //arrayInitializer : '[' exprList? ']' ;
 
-arrayInitializer returns [List<String> values]
-@init { $values = new ArrayList<>(); }
-: LBRACKET (first=expr { $values.add($first.result.code); } 
-      (COMMA rest=expr { $values.add($rest.result.code); })*)? RBRACKET
-;
+// arrayInitializer returns [List<String> values]
+// @init { $values = new ArrayList<>(); }
+// : LBRACKET (first=expr { $values.add($first.result.code); } 
+//       (COMMA rest=expr { $values.add($rest.result.code); })*)? RBRACKET
+// ;
 
-exprList : expr (COMMA expr)* ;
+// exprList : expr (COMMA expr)* ;
 
-arrayAccess returns [ExprResult result]
-@init { $result = new ExprResult(); }
-: IDENT LBRACKET index=expr RBRACKET
-{
-    String arrayName = $IDENT.getText();
-    Identifier arrayVar = lookupVariable(arrayName);
+// arrayAccess returns [ExprResult result]
+// @init { $result = new ExprResult(); }
+// : IDENT LBRACKET index=expr RBRACKET
+// {
+//     String arrayName = $IDENT.getText();
+//     Identifier arrayVar = lookupVariable(arrayName);
     
-    if (arrayVar == null) {
-        error($IDENT, "Undefined array '" + arrayName + "'");
-        $result.type = Type.UNKNOWN;
-    } else if (!arrayVar.isArray) {
-        error($IDENT, "'" + arrayName + "' is not an array");
-        $result.type = Type.UNKNOWN;
-    } else {
-        arrayVar.hasBeenUsed = true;
-        $result.type = Type.FLOAT; // Assuming numeric arrays for now
-        $result.code = arrayName + "[" + $index.result.code + "]";
+//     if (arrayVar == null) {
+//         error($IDENT, "Undefined array '" + arrayName + "'");
+//         $result.type = Type.UNKNOWN;
+//     } else if (!arrayVar.isArray) {
+//         error($IDENT, "'" + arrayName + "' is not an array");
+//         $result.type = Type.UNKNOWN;
+//     } else {
+//         arrayVar.hasBeenUsed = true;
+//         $result.type = Type.FLOAT; // Assuming numeric arrays for now
+//         $result.code = arrayName + "[" + $index.result.code + "]";
         
-        // Optional: bounds checking at compile time if index is constant
-        if ($index.result.hasKnownValue && $index.result.type == Type.INT) {
-            int indexValue = (int)$index.result.numericalValue;
-            if (indexValue < 0 || indexValue >= arrayVar.arraySize) {
-                error($start, "Array index " + indexValue + " out of bounds [0, " + (arrayVar.arraySize-1) + "]");
-            }
-        }
-    }
-}
-;
+//         // Optional: bounds checking at compile time if index is constant
+//         if ($index.result.hasKnownValue && $index.result.type == Type.INT) {
+//             int indexValue = (int)$index.result.numericalValue;
+//             if (indexValue < 0 || indexValue >= arrayVar.arraySize) {
+//                 error($start, "Array index " + indexValue + " out of bounds [0, " + (arrayVar.arraySize-1) + "]");
+//             }
+//         }
+//     }
+// }
+// ;
 
 operators : ADD | SUBTRACT | MULTIPLY | DIVIDE;
 
