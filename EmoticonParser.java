@@ -220,16 +220,16 @@ public class EmoticonParser extends Parser {
 	  }
 
 	  //ASSEMBLY
-	  //Don't know what this does but it might be useful.
+	  // Add all variables to data segment (they need storage space if assigned)
 	  private int numsym = 0;
 	  void addSymbolsToData(SymbolTable table) {
 	    numsym = 0;
-	      table.table.forEach((id, identifier) -> { if (identifier.hasBeenUsed) { 
+	      table.table.forEach((id, identifier) -> { 
 	        numsym++;
 	        System.out.println(numsym + " symbols :D");
 	        String label = ID_PREFIX + id;
 	        data_emit(label + ":    .double 0.0");
-	      }});
+	      });
 	      if(numsym == 0) System.out.println("no symbols :(");
 	  }
 	  
@@ -321,18 +321,17 @@ public class EmoticonParser extends Parser {
 	  // }
 
 	    // ASSEMBLY
-	    // Emit the preamble material for our program
+	  // Emit the preamble material for our program
 	  void openProgram() {
 	    data_emit("# =================================");
 	    data_emit("# Auto-generated code. Do not edit.");
 	    data_emit("# =================================");
 	    data_emit("    .data");
-
+	    data_emit("input_buffer: .space 100");  // Buffer for string input
+	    
 	    text_emit("    .text");
 	    text_emit("main: ");
-	  }
-
-	  // OLD
+	  }  // OLD
 	  // Emit the main method start
 	  // void openMainMethod() {
 	  //   emit("  public static void main(String[] args) throws Exception {\n");
@@ -413,6 +412,49 @@ public class EmoticonParser extends Parser {
 	    emit(code, "    li    a0, 10"); // ASCII 10 is \n (newline)
 	    emit(code, "    li    a7, 11"); // a7=11 is for printing a character
 	    emit(code, "    ecall");        // invoke the system call
+	  }
+
+	  // ASSEMBLY
+	  // Add string constant to data segment
+	  String addStringConstant(String str) {
+	    String label = "STR" + data_count;
+	    data_count++;
+	    // Remove quotes and handle escape sequences
+	    String cleanStr = str.substring(1, str.length()-1);
+	    cleanStr = cleanStr.replace("\\n", "\n").replace("\\\\", "\\").replace("\\'", "'").replace("\\\"", "\"");
+	    data_emit(label + ":    .asciz \"" + cleanStr + "\"");
+	    return label;
+	  }
+
+	  // ASSEMBLY
+	  // Generate code to read a string (up to 100 chars) and store address in register
+	  void generateReadString(StringBuilder code, String register) {
+	    emit(code, "    la    a0, input_buffer");  // Load buffer address
+	    emit(code, "    li    a1, 100");          // Max chars to read
+	    emit(code, "    li    a7, 8");            // a7=8 is for reading strings
+	    emit(code, "    ecall");                  // invoke the system call
+	    if (!register.equals("a0")) {
+	      emit(code, "    mv    " + register + ", a0");  // Move result to target register
+	    }
+	  }
+
+	  // ASSEMBLY
+	  // Generate code to print a string whose address is in register
+	  void generatePrintString(StringBuilder code, String register) {
+	    if (!register.equals("a0")) {
+	      emit(code, "    mv    a0, " + register);  // Move string address to a0
+	    }
+	    emit(code, "    li    a7, 4");            // a7=4 is for printing strings
+	    emit(code, "    ecall");                  // invoke the system call
+	  }
+
+	  // ASSEMBLY
+	  // Generate code to print a string constant
+	  void generatePrintStringConstant(StringBuilder code, String stringLiteral) {
+	    String label = addStringConstant(stringLiteral);
+	    emit(code, "    la    a0, " + label);     // Load string address
+	    emit(code, "    li    a7, 4");            // a7=4 is for printing strings
+	    emit(code, "    ecall");                  // invoke the system call
 	  }
 
 	  // ASSEMBLY
@@ -517,6 +559,11 @@ public class EmoticonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitProgram(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof EmoticonVisitor ) return ((EmoticonVisitor<? extends T>)visitor).visitProgram(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final ProgramContext program() throws RecognitionException {
@@ -608,6 +655,11 @@ public class EmoticonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitS(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof EmoticonVisitor ) return ((EmoticonVisitor<? extends T>)visitor).visitS(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final SContext s() throws RecognitionException {
@@ -678,6 +730,11 @@ public class EmoticonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitBlockStatement(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof EmoticonVisitor ) return ((EmoticonVisitor<? extends T>)visitor).visitBlockStatement(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final BlockStatementContext blockStatement() throws RecognitionException {
@@ -740,6 +797,11 @@ public class EmoticonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitAs(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof EmoticonVisitor ) return ((EmoticonVisitor<? extends T>)visitor).visitAs(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final AsContext as() throws RecognitionException {
@@ -763,7 +825,10 @@ public class EmoticonParser extends Parser {
 
 			      if(var == null){
 			        Identifier newId = new Identifier();
-			        mainTable.table.put(newId.id, newId);
+			        newId.id = id;
+			        newId.type = Type.FLOAT; // Default to float for assembly
+			        newId.hasBeenUsed = false;
+			        addVariable(newId);
 			      }
 			      generateAssign(id, ((AsContext)_localctx).rhs.code, register);
 			      ((AsContext)_localctx).code =  ((AsContext)_localctx).rhs.code;
@@ -786,10 +851,12 @@ public class EmoticonParser extends Parser {
 		public String register;
 		public StringBuilder code;
 		public ExprContext expr;
+		public Token STRING;
 		public ExprContext expr() {
 			return getRuleContext(ExprContext.class,0);
 		}
 		public TerminalNode KW_READ() { return getToken(EmoticonParser.KW_READ, 0); }
+		public TerminalNode STRING() { return getToken(EmoticonParser.STRING, 0); }
 		public RhsContext(ParserRuleContext parent, int invokingState) { super(parent, invokingState); }
 		public RhsContext(ParserRuleContext parent, int invokingState, String register) {
 			super(parent, invokingState);
@@ -804,13 +871,18 @@ public class EmoticonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitRhs(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof EmoticonVisitor ) return ((EmoticonVisitor<? extends T>)visitor).visitRhs(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final RhsContext rhs(String register) throws RecognitionException {
 		RhsContext _localctx = new RhsContext(_ctx, getState(), register);
 		enterRule(_localctx, 8, RULE_rhs);
 		try {
-			setState(68);
+			setState(70);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case IDENT:
@@ -835,6 +907,18 @@ public class EmoticonParser extends Parser {
 				  
 				}
 				break;
+			case STRING:
+				enterOuterAlt(_localctx, 3);
+				{
+				setState(68);
+				((RhsContext)_localctx).STRING = match(STRING);
+
+				    ((RhsContext)_localctx).code =  new StringBuilder();
+				    String label = addStringConstant(((RhsContext)_localctx).STRING.getText());
+				    emit(_localctx.code, "    la    " + _localctx.register + ", " + label);
+				  
+				}
+				break;
 			default:
 				throw new NoViableAltException(this);
 			}
@@ -854,12 +938,15 @@ public class EmoticonParser extends Parser {
 	public static class PsContext extends ParserRuleContext {
 		public StringBuilder code;
 		public ExprContext expr;
+		public Token STRING;
 		public TerminalNode KW_PRINT() { return getToken(EmoticonParser.KW_PRINT, 0); }
 		public TerminalNode LPAREN() { return getToken(EmoticonParser.LPAREN, 0); }
+		public TerminalNode RPAREN() { return getToken(EmoticonParser.RPAREN, 0); }
 		public ExprContext expr() {
 			return getRuleContext(ExprContext.class,0);
 		}
-		public TerminalNode RPAREN() { return getToken(EmoticonParser.RPAREN, 0); }
+		public TerminalNode STRING() { return getToken(EmoticonParser.STRING, 0); }
+		public TerminalNode COMMA() { return getToken(EmoticonParser.COMMA, 0); }
 		public PsContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
@@ -872,27 +959,85 @@ public class EmoticonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitPs(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof EmoticonVisitor ) return ((EmoticonVisitor<? extends T>)visitor).visitPs(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final PsContext ps() throws RecognitionException {
 		PsContext _localctx = new PsContext(_ctx, getState());
 		enterRule(_localctx, 10, RULE_ps);
 		try {
-			enterOuterAlt(_localctx, 1);
-			{
-			String register = "fa0";
-			setState(71);
-			match(KW_PRINT);
-			setState(72);
-			match(LPAREN);
-			setState(73);
-			((PsContext)_localctx).expr = expr(register);
-			setState(74);
-			match(RPAREN);
+			setState(92);
+			_errHandler.sync(this);
+			switch ( getInterpreter().adaptivePredict(_input,5,_ctx) ) {
+			case 1:
+				enterOuterAlt(_localctx, 1);
+				{
+				String register = "fa0";
+				setState(73);
+				match(KW_PRINT);
+				setState(74);
+				match(LPAREN);
+				setState(80);
+				_errHandler.sync(this);
+				switch (_input.LA(1)) {
+				case IDENT:
+				case INT:
+				case FLOAT:
+				case LPAREN:
+					{
+					setState(75);
+					((PsContext)_localctx).expr = expr(register);
 
-			      ((PsContext)_localctx).code =  ((PsContext)_localctx).expr.code;
-			      generatePrintDouble(_localctx.code, register);
-			    
+					        ((PsContext)_localctx).code =  ((PsContext)_localctx).expr.code;
+					        generatePrintDouble(_localctx.code, register);
+					      
+					}
+					break;
+				case STRING:
+					{
+					setState(78);
+					((PsContext)_localctx).STRING = match(STRING);
+
+					        ((PsContext)_localctx).code =  new StringBuilder();
+					        generatePrintStringConstant(_localctx.code, ((PsContext)_localctx).STRING.getText());
+					      
+					}
+					break;
+				default:
+					throw new NoViableAltException(this);
+				}
+				setState(82);
+				match(RPAREN);
+				}
+				break;
+			case 2:
+				enterOuterAlt(_localctx, 2);
+				{
+				String register = "fa0";
+				setState(84);
+				match(KW_PRINT);
+				setState(85);
+				match(LPAREN);
+				setState(86);
+				((PsContext)_localctx).STRING = match(STRING);
+				setState(87);
+				match(COMMA);
+				setState(88);
+				((PsContext)_localctx).expr = expr(register);
+				setState(89);
+				match(RPAREN);
+
+				      ((PsContext)_localctx).code =  new StringBuilder();
+				      generatePrintStringConstant(_localctx.code, ((PsContext)_localctx).STRING.getText());
+				      _localctx.code.append(((PsContext)_localctx).expr.code);
+				      generatePrintDouble(_localctx.code, register);
+				    
+				}
+				break;
 			}
 		}
 		catch (RecognitionException re) {
@@ -941,6 +1086,11 @@ public class EmoticonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitExpr(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof EmoticonVisitor ) return ((EmoticonVisitor<? extends T>)visitor).visitExpr(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final ExprContext expr(String register) throws RecognitionException {
@@ -950,19 +1100,19 @@ public class EmoticonParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(77);
+			setState(94);
 			((ExprContext)_localctx).a = term(_localctx.register);
 
 			    ((ExprContext)_localctx).code =  ((ExprContext)_localctx).a.code;
 			    String nextRegister = (_localctx.register.equals("ft0")) ? "ft1" : "ft0";
 			  
-			setState(85);
+			setState(102);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==ADD || _la==SUBTRACT) {
 				{
 				{
-				setState(79);
+				setState(96);
 				((ExprContext)_localctx).op = _input.LT(1);
 				_la = _input.LA(1);
 				if ( !(_la==ADD || _la==SUBTRACT) ) {
@@ -973,7 +1123,7 @@ public class EmoticonParser extends Parser {
 					_errHandler.reportMatch(this);
 					consume();
 				}
-				setState(80);
+				setState(97);
 				((ExprContext)_localctx).b = term(nextRegister);
 
 				    if(((ExprContext)_localctx).op.getText().equals(":+)")){
@@ -987,7 +1137,7 @@ public class EmoticonParser extends Parser {
 				  
 				}
 				}
-				setState(87);
+				setState(104);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -1039,6 +1189,11 @@ public class EmoticonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitTerm(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof EmoticonVisitor ) return ((EmoticonVisitor<? extends T>)visitor).visitTerm(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final TermContext term(String register) throws RecognitionException {
@@ -1048,19 +1203,19 @@ public class EmoticonParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(88);
+			setState(105);
 			((TermContext)_localctx).a = factor(_localctx.register);
 
 			      ((TermContext)_localctx).code =  ((TermContext)_localctx).a.code;
 			      String nextRegister = (_localctx.register.equals("ft0")) ? "ft1" : "ft0";
 			    
-			setState(96);
+			setState(113);
 			_errHandler.sync(this);
 			_la = _input.LA(1);
 			while (_la==MULTIPLY || _la==DIVIDE) {
 				{
 				{
-				setState(90);
+				setState(107);
 				((TermContext)_localctx).op = _input.LT(1);
 				_la = _input.LA(1);
 				if ( !(_la==MULTIPLY || _la==DIVIDE) ) {
@@ -1071,7 +1226,7 @@ public class EmoticonParser extends Parser {
 					_errHandler.reportMatch(this);
 					consume();
 				}
-				setState(91);
+				setState(108);
 				((TermContext)_localctx).b = factor(nextRegister);
 
 				      if(((TermContext)_localctx).op.getText().equals(":*)")){
@@ -1084,7 +1239,7 @@ public class EmoticonParser extends Parser {
 				    
 				}
 				}
-				setState(98);
+				setState(115);
 				_errHandler.sync(this);
 				_la = _input.LA(1);
 			}
@@ -1131,19 +1286,24 @@ public class EmoticonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitFactor(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof EmoticonVisitor ) return ((EmoticonVisitor<? extends T>)visitor).visitFactor(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final FactorContext factor(String register) throws RecognitionException {
 		FactorContext _localctx = new FactorContext(_ctx, getState(), register);
 		enterRule(_localctx, 16, RULE_factor);
 		try {
-			setState(110);
+			setState(127);
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case INT:
 				enterOuterAlt(_localctx, 1);
 				{
-				setState(99);
+				setState(116);
 				((FactorContext)_localctx).INT = match(INT);
 
 				      int value = Integer.parseInt(((FactorContext)_localctx).INT.getText());
@@ -1154,7 +1314,7 @@ public class EmoticonParser extends Parser {
 			case FLOAT:
 				enterOuterAlt(_localctx, 2);
 				{
-				setState(101);
+				setState(118);
 				((FactorContext)_localctx).FLOAT = match(FLOAT);
 
 				      double value = Double.parseDouble(((FactorContext)_localctx).FLOAT.getText());
@@ -1165,7 +1325,7 @@ public class EmoticonParser extends Parser {
 			case IDENT:
 				enterOuterAlt(_localctx, 3);
 				{
-				setState(103);
+				setState(120);
 				((FactorContext)_localctx).IDENT = match(IDENT);
 
 				      //find if id has been used before
@@ -1185,11 +1345,11 @@ public class EmoticonParser extends Parser {
 			case LPAREN:
 				enterOuterAlt(_localctx, 4);
 				{
-				setState(105);
+				setState(122);
 				match(LPAREN);
-				setState(106);
+				setState(123);
 				((FactorContext)_localctx).expr = expr(_localctx.register);
-				setState(107);
+				setState(124);
 				match(RPAREN);
 
 				      ((FactorContext)_localctx).code =  ((FactorContext)_localctx).expr.code;
@@ -1229,6 +1389,11 @@ public class EmoticonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitOperators(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof EmoticonVisitor ) return ((EmoticonVisitor<? extends T>)visitor).visitOperators(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final OperatorsContext operators() throws RecognitionException {
@@ -1238,7 +1403,7 @@ public class EmoticonParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(112);
+			setState(129);
 			_la = _input.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 1966080L) != 0)) ) {
 			_errHandler.recoverInline(this);
@@ -1279,6 +1444,11 @@ public class EmoticonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitConditionals(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof EmoticonVisitor ) return ((EmoticonVisitor<? extends T>)visitor).visitConditionals(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final ConditionalsContext conditionals() throws RecognitionException {
@@ -1288,7 +1458,7 @@ public class EmoticonParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(114);
+			setState(131);
 			_la = _input.LA(1);
 			if ( !((((_la) & ~0x3f) == 0 && ((1L << _la) & 31457280L) != 0)) ) {
 			_errHandler.recoverInline(this);
@@ -1326,6 +1496,11 @@ public class EmoticonParser extends Parser {
 		public void exitRule(ParseTreeListener listener) {
 			if ( listener instanceof EmoticonListener ) ((EmoticonListener)listener).exitComp(this);
 		}
+		@Override
+		public <T> T accept(ParseTreeVisitor<? extends T> visitor) {
+			if ( visitor instanceof EmoticonVisitor ) return ((EmoticonVisitor<? extends T>)visitor).visitComp(this);
+			else return visitor.visitChildren(this);
+		}
 	}
 
 	public final CompContext comp() throws RecognitionException {
@@ -1334,7 +1509,7 @@ public class EmoticonParser extends Parser {
 		try {
 			enterOuterAlt(_localctx, 1);
 			{
-			setState(116);
+			setState(133);
 			match(COMPARISON);
 			}
 		}
@@ -1350,73 +1525,85 @@ public class EmoticonParser extends Parser {
 	}
 
 	public static final String _serializedATN =
-		"\u0004\u0001&w\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002\u0002"+
-		"\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004\u0002\u0005"+
-		"\u0007\u0005\u0002\u0006\u0007\u0006\u0002\u0007\u0007\u0007\u0002\b\u0007"+
-		"\b\u0002\t\u0007\t\u0002\n\u0007\n\u0002\u000b\u0007\u000b\u0001\u0000"+
-		"\u0001\u0000\u0001\u0000\u0001\u0000\u0005\u0000\u001d\b\u0000\n\u0000"+
-		"\f\u0000 \t\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0001\u0001"+
+		"\u0004\u0001&\u0088\u0002\u0000\u0007\u0000\u0002\u0001\u0007\u0001\u0002"+
+		"\u0002\u0007\u0002\u0002\u0003\u0007\u0003\u0002\u0004\u0007\u0004\u0002"+
+		"\u0005\u0007\u0005\u0002\u0006\u0007\u0006\u0002\u0007\u0007\u0007\u0002"+
+		"\b\u0007\b\u0002\t\u0007\t\u0002\n\u0007\n\u0002\u000b\u0007\u000b\u0001"+
+		"\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0005\u0000\u001d\b\u0000\n"+
+		"\u0000\f\u0000 \t\u0000\u0001\u0000\u0001\u0000\u0001\u0000\u0001\u0001"+
 		"\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001\u0001"+
-		"\u0001\u0001\u0001\u0003\u0001.\b\u0001\u0001\u0002\u0001\u0002\u0005"+
-		"\u00022\b\u0002\n\u0002\f\u00025\t\u0002\u0001\u0002\u0001\u0002\u0001"+
-		"\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001"+
-		"\u0003\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0003"+
-		"\u0004E\b\u0004\u0001\u0005\u0001\u0005\u0001\u0005\u0001\u0005\u0001"+
-		"\u0005\u0001\u0005\u0001\u0005\u0001\u0006\u0001\u0006\u0001\u0006\u0001"+
-		"\u0006\u0001\u0006\u0001\u0006\u0005\u0006T\b\u0006\n\u0006\f\u0006W\t"+
-		"\u0006\u0001\u0007\u0001\u0007\u0001\u0007\u0001\u0007\u0001\u0007\u0001"+
-		"\u0007\u0005\u0007_\b\u0007\n\u0007\f\u0007b\t\u0007\u0001\b\u0001\b\u0001"+
-		"\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0003"+
-		"\bo\b\b\u0001\t\u0001\t\u0001\n\u0001\n\u0001\u000b\u0001\u000b\u0001"+
+		"\u0001\u0001\u0001\u0001\u0003\u0001.\b\u0001\u0001\u0002\u0001\u0002"+
+		"\u0005\u00022\b\u0002\n\u0002\f\u00025\t\u0002\u0001\u0002\u0001\u0002"+
+		"\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003\u0001\u0003"+
+		"\u0001\u0003\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004\u0001\u0004"+
+		"\u0001\u0004\u0001\u0004\u0003\u0004G\b\u0004\u0001\u0005\u0001\u0005"+
+		"\u0001\u0005\u0001\u0005\u0001\u0005\u0001\u0005\u0001\u0005\u0001\u0005"+
+		"\u0003\u0005Q\b\u0005\u0001\u0005\u0001\u0005\u0001\u0005\u0001\u0005"+
+		"\u0001\u0005\u0001\u0005\u0001\u0005\u0001\u0005\u0001\u0005\u0001\u0005"+
+		"\u0003\u0005]\b\u0005\u0001\u0006\u0001\u0006\u0001\u0006\u0001\u0006"+
+		"\u0001\u0006\u0001\u0006\u0005\u0006e\b\u0006\n\u0006\f\u0006h\t\u0006"+
+		"\u0001\u0007\u0001\u0007\u0001\u0007\u0001\u0007\u0001\u0007\u0001\u0007"+
+		"\u0005\u0007p\b\u0007\n\u0007\f\u0007s\t\u0007\u0001\b\u0001\b\u0001\b"+
+		"\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0001\b\u0003"+
+		"\b\u0080\b\b\u0001\t\u0001\t\u0001\n\u0001\n\u0001\u000b\u0001\u000b\u0001"+
 		"\u000b\u0000\u0000\f\u0000\u0002\u0004\u0006\b\n\f\u000e\u0010\u0012\u0014"+
 		"\u0016\u0000\u0004\u0001\u0000\u0011\u0012\u0001\u0000\u0013\u0014\u0001"+
-		"\u0000\u0011\u0014\u0001\u0000\u0015\u0018t\u0000\u0018\u0001\u0000\u0000"+
-		"\u0000\u0002-\u0001\u0000\u0000\u0000\u0004/\u0001\u0000\u0000\u0000\u0006"+
-		"8\u0001\u0000\u0000\u0000\bD\u0001\u0000\u0000\u0000\nF\u0001\u0000\u0000"+
-		"\u0000\fM\u0001\u0000\u0000\u0000\u000eX\u0001\u0000\u0000\u0000\u0010"+
-		"n\u0001\u0000\u0000\u0000\u0012p\u0001\u0000\u0000\u0000\u0014r\u0001"+
-		"\u0000\u0000\u0000\u0016t\u0001\u0000\u0000\u0000\u0018\u001e\u0006\u0000"+
-		"\uffff\uffff\u0000\u0019\u001a\u0003\u0002\u0001\u0000\u001a\u001b\u0006"+
-		"\u0000\uffff\uffff\u0000\u001b\u001d\u0001\u0000\u0000\u0000\u001c\u0019"+
-		"\u0001\u0000\u0000\u0000\u001d \u0001\u0000\u0000\u0000\u001e\u001c\u0001"+
-		"\u0000\u0000\u0000\u001e\u001f\u0001\u0000\u0000\u0000\u001f!\u0001\u0000"+
-		"\u0000\u0000 \u001e\u0001\u0000\u0000\u0000!\"\u0005\u0000\u0000\u0001"+
-		"\"#\u0006\u0000\uffff\uffff\u0000#\u0001\u0001\u0000\u0000\u0000$%\u0003"+
-		"\u0006\u0003\u0000%&\u0006\u0001\uffff\uffff\u0000&.\u0001\u0000\u0000"+
-		"\u0000\'(\u0003\n\u0005\u0000()\u0006\u0001\uffff\uffff\u0000).\u0001"+
-		"\u0000\u0000\u0000*+\u0003\u0004\u0002\u0000+,\u0006\u0001\uffff\uffff"+
-		"\u0000,.\u0001\u0000\u0000\u0000-$\u0001\u0000\u0000\u0000-\'\u0001\u0000"+
-		"\u0000\u0000-*\u0001\u0000\u0000\u0000.\u0003\u0001\u0000\u0000\u0000"+
-		"/3\u0005\u000b\u0000\u000002\u0003\u0002\u0001\u000010\u0001\u0000\u0000"+
-		"\u000025\u0001\u0000\u0000\u000031\u0001\u0000\u0000\u000034\u0001\u0000"+
-		"\u0000\u000046\u0001\u0000\u0000\u000053\u0001\u0000\u0000\u000067\u0005"+
-		"\f\u0000\u00007\u0005\u0001\u0000\u0000\u000089\u0006\u0003\uffff\uffff"+
-		"\u00009:\u0005\u0010\u0000\u0000:;\u0006\u0003\uffff\uffff\u0000;<\u0005"+
-		"&\u0000\u0000<=\u0003\b\u0004\u0000=>\u0006\u0003\uffff\uffff\u0000>\u0007"+
-		"\u0001\u0000\u0000\u0000?@\u0003\f\u0006\u0000@A\u0006\u0004\uffff\uffff"+
-		"\u0000AE\u0001\u0000\u0000\u0000BC\u0005\u0001\u0000\u0000CE\u0006\u0004"+
-		"\uffff\uffff\u0000D?\u0001\u0000\u0000\u0000DB\u0001\u0000\u0000\u0000"+
-		"E\t\u0001\u0000\u0000\u0000FG\u0006\u0005\uffff\uffff\u0000GH\u0005\u0002"+
-		"\u0000\u0000HI\u0005 \u0000\u0000IJ\u0003\f\u0006\u0000JK\u0005!\u0000"+
-		"\u0000KL\u0006\u0005\uffff\uffff\u0000L\u000b\u0001\u0000\u0000\u0000"+
-		"MN\u0003\u000e\u0007\u0000NU\u0006\u0006\uffff\uffff\u0000OP\u0007\u0000"+
-		"\u0000\u0000PQ\u0003\u000e\u0007\u0000QR\u0006\u0006\uffff\uffff\u0000"+
-		"RT\u0001\u0000\u0000\u0000SO\u0001\u0000\u0000\u0000TW\u0001\u0000\u0000"+
-		"\u0000US\u0001\u0000\u0000\u0000UV\u0001\u0000\u0000\u0000V\r\u0001\u0000"+
-		"\u0000\u0000WU\u0001\u0000\u0000\u0000XY\u0003\u0010\b\u0000Y`\u0006\u0007"+
-		"\uffff\uffff\u0000Z[\u0007\u0001\u0000\u0000[\\\u0003\u0010\b\u0000\\"+
-		"]\u0006\u0007\uffff\uffff\u0000]_\u0001\u0000\u0000\u0000^Z\u0001\u0000"+
-		"\u0000\u0000_b\u0001\u0000\u0000\u0000`^\u0001\u0000\u0000\u0000`a\u0001"+
-		"\u0000\u0000\u0000a\u000f\u0001\u0000\u0000\u0000b`\u0001\u0000\u0000"+
-		"\u0000cd\u0005\u001b\u0000\u0000do\u0006\b\uffff\uffff\u0000ef\u0005\u001c"+
-		"\u0000\u0000fo\u0006\b\uffff\uffff\u0000gh\u0005\u0010\u0000\u0000ho\u0006"+
-		"\b\uffff\uffff\u0000ij\u0005 \u0000\u0000jk\u0003\f\u0006\u0000kl\u0005"+
-		"!\u0000\u0000lm\u0006\b\uffff\uffff\u0000mo\u0001\u0000\u0000\u0000nc"+
-		"\u0001\u0000\u0000\u0000ne\u0001\u0000\u0000\u0000ng\u0001\u0000\u0000"+
-		"\u0000ni\u0001\u0000\u0000\u0000o\u0011\u0001\u0000\u0000\u0000pq\u0007"+
-		"\u0002\u0000\u0000q\u0013\u0001\u0000\u0000\u0000rs\u0007\u0003\u0000"+
-		"\u0000s\u0015\u0001\u0000\u0000\u0000tu\u0005%\u0000\u0000u\u0017\u0001"+
-		"\u0000\u0000\u0000\u0007\u001e-3DU`n";
+		"\u0000\u0011\u0014\u0001\u0000\u0015\u0018\u0088\u0000\u0018\u0001\u0000"+
+		"\u0000\u0000\u0002-\u0001\u0000\u0000\u0000\u0004/\u0001\u0000\u0000\u0000"+
+		"\u00068\u0001\u0000\u0000\u0000\bF\u0001\u0000\u0000\u0000\n\\\u0001\u0000"+
+		"\u0000\u0000\f^\u0001\u0000\u0000\u0000\u000ei\u0001\u0000\u0000\u0000"+
+		"\u0010\u007f\u0001\u0000\u0000\u0000\u0012\u0081\u0001\u0000\u0000\u0000"+
+		"\u0014\u0083\u0001\u0000\u0000\u0000\u0016\u0085\u0001\u0000\u0000\u0000"+
+		"\u0018\u001e\u0006\u0000\uffff\uffff\u0000\u0019\u001a\u0003\u0002\u0001"+
+		"\u0000\u001a\u001b\u0006\u0000\uffff\uffff\u0000\u001b\u001d\u0001\u0000"+
+		"\u0000\u0000\u001c\u0019\u0001\u0000\u0000\u0000\u001d \u0001\u0000\u0000"+
+		"\u0000\u001e\u001c\u0001\u0000\u0000\u0000\u001e\u001f\u0001\u0000\u0000"+
+		"\u0000\u001f!\u0001\u0000\u0000\u0000 \u001e\u0001\u0000\u0000\u0000!"+
+		"\"\u0005\u0000\u0000\u0001\"#\u0006\u0000\uffff\uffff\u0000#\u0001\u0001"+
+		"\u0000\u0000\u0000$%\u0003\u0006\u0003\u0000%&\u0006\u0001\uffff\uffff"+
+		"\u0000&.\u0001\u0000\u0000\u0000\'(\u0003\n\u0005\u0000()\u0006\u0001"+
+		"\uffff\uffff\u0000).\u0001\u0000\u0000\u0000*+\u0003\u0004\u0002\u0000"+
+		"+,\u0006\u0001\uffff\uffff\u0000,.\u0001\u0000\u0000\u0000-$\u0001\u0000"+
+		"\u0000\u0000-\'\u0001\u0000\u0000\u0000-*\u0001\u0000\u0000\u0000.\u0003"+
+		"\u0001\u0000\u0000\u0000/3\u0005\u000b\u0000\u000002\u0003\u0002\u0001"+
+		"\u000010\u0001\u0000\u0000\u000025\u0001\u0000\u0000\u000031\u0001\u0000"+
+		"\u0000\u000034\u0001\u0000\u0000\u000046\u0001\u0000\u0000\u000053\u0001"+
+		"\u0000\u0000\u000067\u0005\f\u0000\u00007\u0005\u0001\u0000\u0000\u0000"+
+		"89\u0006\u0003\uffff\uffff\u00009:\u0005\u0010\u0000\u0000:;\u0006\u0003"+
+		"\uffff\uffff\u0000;<\u0005&\u0000\u0000<=\u0003\b\u0004\u0000=>\u0006"+
+		"\u0003\uffff\uffff\u0000>\u0007\u0001\u0000\u0000\u0000?@\u0003\f\u0006"+
+		"\u0000@A\u0006\u0004\uffff\uffff\u0000AG\u0001\u0000\u0000\u0000BC\u0005"+
+		"\u0001\u0000\u0000CG\u0006\u0004\uffff\uffff\u0000DE\u0005\u001e\u0000"+
+		"\u0000EG\u0006\u0004\uffff\uffff\u0000F?\u0001\u0000\u0000\u0000FB\u0001"+
+		"\u0000\u0000\u0000FD\u0001\u0000\u0000\u0000G\t\u0001\u0000\u0000\u0000"+
+		"HI\u0006\u0005\uffff\uffff\u0000IJ\u0005\u0002\u0000\u0000JP\u0005 \u0000"+
+		"\u0000KL\u0003\f\u0006\u0000LM\u0006\u0005\uffff\uffff\u0000MQ\u0001\u0000"+
+		"\u0000\u0000NO\u0005\u001e\u0000\u0000OQ\u0006\u0005\uffff\uffff\u0000"+
+		"PK\u0001\u0000\u0000\u0000PN\u0001\u0000\u0000\u0000QR\u0001\u0000\u0000"+
+		"\u0000R]\u0005!\u0000\u0000ST\u0006\u0005\uffff\uffff\u0000TU\u0005\u0002"+
+		"\u0000\u0000UV\u0005 \u0000\u0000VW\u0005\u001e\u0000\u0000WX\u0005\""+
+		"\u0000\u0000XY\u0003\f\u0006\u0000YZ\u0005!\u0000\u0000Z[\u0006\u0005"+
+		"\uffff\uffff\u0000[]\u0001\u0000\u0000\u0000\\H\u0001\u0000\u0000\u0000"+
+		"\\S\u0001\u0000\u0000\u0000]\u000b\u0001\u0000\u0000\u0000^_\u0003\u000e"+
+		"\u0007\u0000_f\u0006\u0006\uffff\uffff\u0000`a\u0007\u0000\u0000\u0000"+
+		"ab\u0003\u000e\u0007\u0000bc\u0006\u0006\uffff\uffff\u0000ce\u0001\u0000"+
+		"\u0000\u0000d`\u0001\u0000\u0000\u0000eh\u0001\u0000\u0000\u0000fd\u0001"+
+		"\u0000\u0000\u0000fg\u0001\u0000\u0000\u0000g\r\u0001\u0000\u0000\u0000"+
+		"hf\u0001\u0000\u0000\u0000ij\u0003\u0010\b\u0000jq\u0006\u0007\uffff\uffff"+
+		"\u0000kl\u0007\u0001\u0000\u0000lm\u0003\u0010\b\u0000mn\u0006\u0007\uffff"+
+		"\uffff\u0000np\u0001\u0000\u0000\u0000ok\u0001\u0000\u0000\u0000ps\u0001"+
+		"\u0000\u0000\u0000qo\u0001\u0000\u0000\u0000qr\u0001\u0000\u0000\u0000"+
+		"r\u000f\u0001\u0000\u0000\u0000sq\u0001\u0000\u0000\u0000tu\u0005\u001b"+
+		"\u0000\u0000u\u0080\u0006\b\uffff\uffff\u0000vw\u0005\u001c\u0000\u0000"+
+		"w\u0080\u0006\b\uffff\uffff\u0000xy\u0005\u0010\u0000\u0000y\u0080\u0006"+
+		"\b\uffff\uffff\u0000z{\u0005 \u0000\u0000{|\u0003\f\u0006\u0000|}\u0005"+
+		"!\u0000\u0000}~\u0006\b\uffff\uffff\u0000~\u0080\u0001\u0000\u0000\u0000"+
+		"\u007ft\u0001\u0000\u0000\u0000\u007fv\u0001\u0000\u0000\u0000\u007fx"+
+		"\u0001\u0000\u0000\u0000\u007fz\u0001\u0000\u0000\u0000\u0080\u0011\u0001"+
+		"\u0000\u0000\u0000\u0081\u0082\u0007\u0002\u0000\u0000\u0082\u0013\u0001"+
+		"\u0000\u0000\u0000\u0083\u0084\u0007\u0003\u0000\u0000\u0084\u0015\u0001"+
+		"\u0000\u0000\u0000\u0085\u0086\u0005%\u0000\u0000\u0086\u0017\u0001\u0000"+
+		"\u0000\u0000\t\u001e-3FP\\fq\u007f";
 	public static final ATN _ATN =
 		new ATNDeserializer().deserialize(_serializedATN.toCharArray());
 	static {

@@ -1,0 +1,21 @@
+<3 Problem 1: Budget Planner - PythonScripts 3
+
+<3 Read financial inputs  
+income :=) -0-0-
+rent :=) -0-0-
+food :=) -0-0-
+fun :=) -0-0-
+
+<3 Calculate total expenses = rent + food + fun
+temp1 :=) rent :+) food
+total :=) temp1 :+) fun
+
+<3 Calculate savings = income - total
+savings :=) income :-) total
+
+<3 Print results
+:P("Hello, User")
+:P("total =")
+:P(total)
+:P("savings =")
+:P(savings)

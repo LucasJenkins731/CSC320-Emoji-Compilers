@@ -120,16 +120,16 @@ grammar Emoticon;
   }
 
   //ASSEMBLY
-  //Don't know what this does but it might be useful.
+  // Add all variables to data segment (they need storage space if assigned)
   private int numsym = 0;
   void addSymbolsToData(SymbolTable table) {
     numsym = 0;
-      table.table.forEach((id, identifier) -> { if (identifier.hasBeenUsed) { 
+      table.table.forEach((id, identifier) -> { 
         numsym++;
         System.out.println(numsym + " symbols :D");
         String label = ID_PREFIX + id;
         data_emit(label + ":    .double 0.0");
-      }});
+      });
       if(numsym == 0) System.out.println("no symbols :(");
   }
   
@@ -221,18 +221,17 @@ grammar Emoticon;
   // }
 
     // ASSEMBLY
-    // Emit the preamble material for our program
+  // Emit the preamble material for our program
   void openProgram() {
     data_emit("# =================================");
     data_emit("# Auto-generated code. Do not edit.");
     data_emit("# =================================");
     data_emit("    .data");
-
+    data_emit("input_buffer: .space 100");  // Buffer for string input
+    
     text_emit("    .text");
     text_emit("main: ");
-  }
-
-  // OLD
+  }  // OLD
   // Emit the main method start
   // void openMainMethod() {
   //   emit("  public static void main(String[] args) throws Exception {\n");
@@ -313,6 +312,49 @@ grammar Emoticon;
     emit(code, "    li    a0, 10"); // ASCII 10 is \n (newline)
     emit(code, "    li    a7, 11"); // a7=11 is for printing a character
     emit(code, "    ecall");        // invoke the system call
+  }
+
+  // ASSEMBLY
+  // Add string constant to data segment
+  String addStringConstant(String str) {
+    String label = "STR" + data_count;
+    data_count++;
+    // Remove quotes and handle escape sequences
+    String cleanStr = str.substring(1, str.length()-1);
+    cleanStr = cleanStr.replace("\\n", "\n").replace("\\\\", "\\").replace("\\'", "'").replace("\\\"", "\"");
+    data_emit(label + ":    .asciz \"" + cleanStr + "\"");
+    return label;
+  }
+
+  // ASSEMBLY
+  // Generate code to read a string (up to 100 chars) and store address in register
+  void generateReadString(StringBuilder code, String register) {
+    emit(code, "    la    a0, input_buffer");  // Load buffer address
+    emit(code, "    li    a1, 100");          // Max chars to read
+    emit(code, "    li    a7, 8");            // a7=8 is for reading strings
+    emit(code, "    ecall");                  // invoke the system call
+    if (!register.equals("a0")) {
+      emit(code, "    mv    " + register + ", a0");  // Move result to target register
+    }
+  }
+
+  // ASSEMBLY
+  // Generate code to print a string whose address is in register
+  void generatePrintString(StringBuilder code, String register) {
+    if (!register.equals("a0")) {
+      emit(code, "    mv    a0, " + register);  // Move string address to a0
+    }
+    emit(code, "    li    a7, 4");            // a7=4 is for printing strings
+    emit(code, "    ecall");                  // invoke the system call
+  }
+
+  // ASSEMBLY
+  // Generate code to print a string constant
+  void generatePrintStringConstant(StringBuilder code, String stringLiteral) {
+    String label = addStringConstant(stringLiteral);
+    emit(code, "    la    a0, " + label);     // Load string address
+    emit(code, "    li    a7, 4");            // a7=4 is for printing strings
+    emit(code, "    ecall");                  // invoke the system call
   }
 
   // ASSEMBLY
@@ -516,7 +558,10 @@ as returns [StringBuilder code]
     {
       if(var == null){
         Identifier newId = new Identifier();
-        mainTable.table.put(newId.id, newId);
+        newId.id = id;
+        newId.type = Type.FLOAT; // Default to float for assembly
+        newId.hasBeenUsed = false;
+        addVariable(newId);
       }
       generateAssign(id, $rhs.code, register);
       $code = $rhs.code;
@@ -530,6 +575,11 @@ rhs[String register] returns [StringBuilder code]
   | KW_READ {
     $code = new StringBuilder();
     generateReadDouble($code, $register);
+  }
+  | STRING {
+    $code = new StringBuilder();
+    String label = addStringConstant($STRING.getText());
+    emit($code, "    la    " + $register + ", " + label);
   }
 ;
 
@@ -694,9 +744,26 @@ rhs[String register] returns [StringBuilder code]
 
 ps returns [StringBuilder code]
   : {String register = "fa0";}
-    KW_PRINT '(' expr[register] ')'
+    KW_PRINT '(' 
+    (
+      expr[register]
+      {
+        $code = $expr.code;
+        generatePrintDouble($code, register);
+      }
+    | STRING
+      {
+        $code = new StringBuilder();
+        generatePrintStringConstant($code, $STRING.getText());
+      }
+    )
+    ')'
+  | {String register = "fa0";}
+    KW_PRINT '(' STRING ',' expr[register] ')'
     {
-      $code = $expr.code;
+      $code = new StringBuilder();
+      generatePrintStringConstant($code, $STRING.getText());
+      $code.append($expr.code);
       generatePrintDouble($code, register);
     }
 ;

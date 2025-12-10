@@ -1,0 +1,7 @@
+<3 Test parentheses and expression precedence
+x :=) 2.0 :+) 3.0 :*) 4.0
+y :=) (2.0 :+) 3.0) :*) 4.0  
+:P("Without parens:")
+:P(x)
+:P("With parens:")
+:P(y)

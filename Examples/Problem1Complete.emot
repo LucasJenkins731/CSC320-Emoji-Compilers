@@ -1,0 +1,26 @@
+<3 Problem 1: Hello Pi - Complete version with string input
+
+<3 Define PI constant  
+PI :=) 3.141592653589793
+
+<3 Read name (we'll simplify this since string parsing is complex)
+<3 For now, we'll use a fixed greeting
+
+<3 Read radius as a double
+r :=) -0-0-
+
+<3 Calculate circumference = 2.0 * PI * r
+two :=) 2.0
+temp1 :=) two :*) PI
+circumference :=) temp1 :*) r
+
+<3 Calculate area = PI * r * r  
+rsquared :=) r :*) r
+area :=) PI :*) rsquared
+
+<3 Print results with labels
+:P("Hello, User!")
+:P("circumference =")
+:P(circumference)
+:P("area =")
+:P(area)

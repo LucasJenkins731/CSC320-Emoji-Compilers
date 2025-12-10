@@ -1,0 +1,4 @@
+<3 Test undefined variable usage (should error)
+x :=) 5.0
+y :=) z :+) 2.0  <3 z is not defined - should cause error
+:P(y)

@@ -1,0 +1,15 @@
+<3 Test all arithmetic operations
+a :=) 20.0
+b :=) 4.0
+sum :=) a :+) b
+diff :=) a :-) b  
+prod :=) a :*) b
+quot :=) a :/) b
+:P("a + b =")
+:P(sum)
+:P("a - b =")
+:P(diff)
+:P("a * b =")
+:P(prod) 
+:P("a / b =")
+:P(quot)
