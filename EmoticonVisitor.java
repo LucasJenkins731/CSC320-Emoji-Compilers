@@ -65,6 +65,18 @@ public interface EmoticonVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitFactor(EmoticonParser.FactorContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link EmoticonParser#ifstmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitIfstmt(EmoticonParser.IfstmtContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link EmoticonParser#condition}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitCondition(EmoticonParser.ConditionContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link EmoticonParser#operators}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

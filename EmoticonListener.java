@@ -98,6 +98,26 @@ public interface EmoticonListener extends ParseTreeListener {
 	 */
 	void exitFactor(EmoticonParser.FactorContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link EmoticonParser#ifstmt}.
+	 * @param ctx the parse tree
+	 */
+	void enterIfstmt(EmoticonParser.IfstmtContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link EmoticonParser#ifstmt}.
+	 * @param ctx the parse tree
+	 */
+	void exitIfstmt(EmoticonParser.IfstmtContext ctx);
+	/**
+	 * Enter a parse tree produced by {@link EmoticonParser#condition}.
+	 * @param ctx the parse tree
+	 */
+	void enterCondition(EmoticonParser.ConditionContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link EmoticonParser#condition}.
+	 * @param ctx the parse tree
+	 */
+	void exitCondition(EmoticonParser.ConditionContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link EmoticonParser#operators}.
 	 * @param ctx the parse tree
 	 */
