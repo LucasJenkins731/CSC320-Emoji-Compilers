@@ -1,0 +1,45 @@
+<3 Collatz Conjecture Implementation
+
+:P("=== COLLATZ CONJECTURE ===")
+
+<3 Read the starting number
+:P("Enter a number:")
+n :=) -0-0-
+
+steps :=) 0.0
+max_val :=) n
+one :=) 1.0
+two :=) 2.0
+three :=) 3.0
+zero :=) 0.0
+
+:P("Starting Collatz sequence for:")
+:P(n)
+
+<3 Main Collatz loop: while n != 1
+D:< (n :!=) one)
+  <3 Check if current n > max_val
+  :) (n :>) max_val)
+    max_val :=) n
+
+  <3 Check if n is even or odd
+  remainder :=) n :%) two
+  :) (remainder :==) zero)
+    <3 n is even: n = n / 2
+    n :=) n :/) two
+  :(
+    <3 n is odd: n = 3 * n + 1
+    temp :=) three :*) n
+    n :=) temp :+) one
+
+  steps :=) steps :+) one
+
+<3 Check final value 1 for max (though usually smaller)  
+:) (n :>) max_val)
+  max_val :=) n
+
+<3 Print results
+:P("steps =")
+:P(steps)
+:P("max =")
+:P(max_val)
