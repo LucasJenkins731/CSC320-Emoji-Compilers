@@ -226,7 +226,16 @@ public class EmoticonLexer extends Lexer {
 	        numsym++;
 	        System.out.println(numsym + " symbols :D");
 	        String label = ID_PREFIX + id;
-	        data_emit(label + ":    .double 0.0");
+	        
+	        if (identifier.isArray && identifier.arrayValues != null) {
+	          // Array: allocate space for all elements
+	          int arraySize = identifier.arrayValues.length;
+	          data_emit(label + ":    .space " + (arraySize * 8)); // 8 bytes per double
+	          System.out.println("Allocated array " + id + " with " + arraySize + " elements");
+	        } else {
+	          // Regular variable
+	          data_emit(label + ":    .double 0.0");
+	        }
 	      });
 	      if(numsym == 0) System.out.println("no symbols :(");
 	  }
@@ -493,6 +502,67 @@ public class EmoticonLexer extends Lexer {
 	      emit(code, "    feq.d t0, " + leftReg + ", " + rightReg);
 	      emit(code, "    bnez t0, " + jumpLabel);  // Jump if left == right
 	    }
+	  }
+
+	  // ASSEMBLY
+	  // Generate code to load array element into register
+	  StringBuilder generateLoad1DArrayElement(String register, String arrayName, String indexReg) {
+	    StringBuilder code = new StringBuilder();
+	    emit(code, "    # Load 1D array element " + arrayName + "[" + indexReg + "]");
+	    emit(code, "    fcvt.w.d t0, " + indexReg + "  # Convert index to int");
+	    emit(code, "    li t1, 8                    # Size of double");
+	    emit(code, "    mul t0, t0, t1              # Calculate offset");
+	    emit(code, "    la t1, " + ID_PREFIX + arrayName + "  # Load array base address");
+	    emit(code, "    add t0, t1, t0              # Add offset to base");
+	    emit(code, "    fld " + register + ", (t0)   # Load element");
+	    return code;
+	  }
+	  
+	  // Generate code to store register value into array element
+	  StringBuilder generateStore1DArrayElement(String register, String arrayName, String indexReg) {
+	    StringBuilder code = new StringBuilder();
+	    emit(code, "    # Store 1D array element " + arrayName + "[" + indexReg + "]");
+	    emit(code, "    fcvt.w.d t0, " + indexReg + "  # Convert index to int");
+	    emit(code, "    li t1, 8                    # Size of double");
+	    emit(code, "    mul t0, t0, t1              # Calculate offset");
+	    emit(code, "    la t1, " + ID_PREFIX + arrayName + "  # Load array base address");
+	    emit(code, "    add t0, t1, t0              # Add offset to base");
+	    emit(code, "    fsd " + register + ", (t0)   # Store element");
+	    return code;
+	  }
+	  
+	  // Generate code to load 2D array element
+	  StringBuilder generateLoad2DArrayElement(String register, String arrayName, String indexReg1, String indexReg2, int cols) {
+	    StringBuilder code = new StringBuilder();
+	    emit(code, "    # Load 2D array element " + arrayName + "[" + indexReg1 + "][" + indexReg2 + "]");
+	    emit(code, "    fcvt.w.d t0, " + indexReg1 + "  # Convert row index to int");
+	    emit(code, "    fcvt.w.d t1, " + indexReg2 + "  # Convert col index to int");
+	    emit(code, "    li t2, " + cols + "           # Number of columns");
+	    emit(code, "    mul t0, t0, t2              # row * cols");
+	    emit(code, "    add t0, t0, t1              # row * cols + col");
+	    emit(code, "    li t1, 8                    # Size of double");
+	    emit(code, "    mul t0, t0, t1              # Calculate offset");
+	    emit(code, "    la t1, " + ID_PREFIX + arrayName + "  # Load array base address");
+	    emit(code, "    add t0, t1, t0              # Add offset to base");
+	    emit(code, "    fld " + register + ", (t0)   # Load element");
+	    return code;
+	  }
+	  
+	  // Generate code to store register value into 2D array element
+	  StringBuilder generateStore2DArrayElement(String register, String arrayName, String indexReg1, String indexReg2, int cols) {
+	    StringBuilder code = new StringBuilder();
+	    emit(code, "    # Store 2D array element " + arrayName + "[" + indexReg1 + "][" + indexReg2 + "]");
+	    emit(code, "    fcvt.w.d t0, " + indexReg1 + "  # Convert row index to int");
+	    emit(code, "    fcvt.w.d t1, " + indexReg2 + "  # Convert col index to int");
+	    emit(code, "    li t2, " + cols + "           # Number of columns");
+	    emit(code, "    mul t0, t0, t2              # row * cols");
+	    emit(code, "    add t0, t0, t1              # row * cols + col");
+	    emit(code, "    li t1, 8                    # Size of double");
+	    emit(code, "    mul t0, t0, t1              # Calculate offset");
+	    emit(code, "    la t1, " + ID_PREFIX + arrayName + "  # Load array base address");
+	    emit(code, "    add t0, t1, t0              # Add offset to base");
+	    emit(code, "    fsd " + register + ", (t0)   # Store element");
+	    return code;
 	  }
 
 	  // ASSEMBLY

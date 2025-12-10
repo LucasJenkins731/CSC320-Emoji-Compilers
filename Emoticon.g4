@@ -128,7 +128,16 @@ grammar Emoticon;
         numsym++;
         System.out.println(numsym + " symbols :D");
         String label = ID_PREFIX + id;
-        data_emit(label + ":    .double 0.0");
+        
+        if (identifier.isArray && identifier.arrayValues != null) {
+          // Array: allocate space for all elements
+          int arraySize = identifier.arrayValues.length;
+          data_emit(label + ":    .space " + (arraySize * 8)); // 8 bytes per double
+          System.out.println("Allocated array " + id + " with " + arraySize + " elements");
+        } else {
+          // Regular variable
+          data_emit(label + ":    .double 0.0");
+        }
       });
       if(numsym == 0) System.out.println("no symbols :(");
   }
@@ -398,6 +407,67 @@ grammar Emoticon;
   }
 
   // ASSEMBLY
+  // Generate code to load array element into register
+  StringBuilder generateLoad1DArrayElement(String register, String arrayName, String indexReg) {
+    StringBuilder code = new StringBuilder();
+    emit(code, "    # Load 1D array element " + arrayName + "[" + indexReg + "]");
+    emit(code, "    fcvt.w.d t0, " + indexReg + "  # Convert index to int");
+    emit(code, "    li t1, 8                    # Size of double");
+    emit(code, "    mul t0, t0, t1              # Calculate offset");
+    emit(code, "    la t1, " + ID_PREFIX + arrayName + "  # Load array base address");
+    emit(code, "    add t0, t1, t0              # Add offset to base");
+    emit(code, "    fld " + register + ", (t0)   # Load element");
+    return code;
+  }
+  
+  // Generate code to store register value into array element
+  StringBuilder generateStore1DArrayElement(String register, String arrayName, String indexReg) {
+    StringBuilder code = new StringBuilder();
+    emit(code, "    # Store 1D array element " + arrayName + "[" + indexReg + "]");
+    emit(code, "    fcvt.w.d t0, " + indexReg + "  # Convert index to int");
+    emit(code, "    li t1, 8                    # Size of double");
+    emit(code, "    mul t0, t0, t1              # Calculate offset");
+    emit(code, "    la t1, " + ID_PREFIX + arrayName + "  # Load array base address");
+    emit(code, "    add t0, t1, t0              # Add offset to base");
+    emit(code, "    fsd " + register + ", (t0)   # Store element");
+    return code;
+  }
+  
+  // Generate code to load 2D array element
+  StringBuilder generateLoad2DArrayElement(String register, String arrayName, String indexReg1, String indexReg2, int cols) {
+    StringBuilder code = new StringBuilder();
+    emit(code, "    # Load 2D array element " + arrayName + "[" + indexReg1 + "][" + indexReg2 + "]");
+    emit(code, "    fcvt.w.d t0, " + indexReg1 + "  # Convert row index to int");
+    emit(code, "    fcvt.w.d t1, " + indexReg2 + "  # Convert col index to int");
+    emit(code, "    li t2, " + cols + "           # Number of columns");
+    emit(code, "    mul t0, t0, t2              # row * cols");
+    emit(code, "    add t0, t0, t1              # row * cols + col");
+    emit(code, "    li t1, 8                    # Size of double");
+    emit(code, "    mul t0, t0, t1              # Calculate offset");
+    emit(code, "    la t1, " + ID_PREFIX + arrayName + "  # Load array base address");
+    emit(code, "    add t0, t1, t0              # Add offset to base");
+    emit(code, "    fld " + register + ", (t0)   # Load element");
+    return code;
+  }
+  
+  // Generate code to store register value into 2D array element
+  StringBuilder generateStore2DArrayElement(String register, String arrayName, String indexReg1, String indexReg2, int cols) {
+    StringBuilder code = new StringBuilder();
+    emit(code, "    # Store 2D array element " + arrayName + "[" + indexReg1 + "][" + indexReg2 + "]");
+    emit(code, "    fcvt.w.d t0, " + indexReg1 + "  # Convert row index to int");
+    emit(code, "    fcvt.w.d t1, " + indexReg2 + "  # Convert col index to int");
+    emit(code, "    li t2, " + cols + "           # Number of columns");
+    emit(code, "    mul t0, t0, t2              # row * cols");
+    emit(code, "    add t0, t0, t1              # row * cols + col");
+    emit(code, "    li t1, 8                    # Size of double");
+    emit(code, "    mul t0, t0, t1              # Calculate offset");
+    emit(code, "    la t1, " + ID_PREFIX + arrayName + "  # Load array base address");
+    emit(code, "    add t0, t1, t0              # Add offset to base");
+    emit(code, "    fsd " + register + ", (t0)   # Store element");
+    return code;
+  }
+
+  // ASSEMBLY
   // Write the generated Java to file.
   void writeFile() {
     try (PrintWriter pw = new PrintWriter(ASSEMBLY_FILE, "UTF-8")) {
@@ -556,6 +626,7 @@ s returns [StringBuilder code]
  | ps {$code = $ps.code;}
  | ifstmt {$code = $ifstmt.code;}
  | whilestmt {$code = $whilestmt.code;}
+ | arraystmt {$code = $arraystmt.code;}
  ;
 
 // functioncallstmt : functioncall
@@ -599,6 +670,40 @@ blockStatement returns [StringBuilder code]
 
 as returns [StringBuilder code]
   : {String register = "fa0";}
+    IDENT '[' index1=expr["ft2"] ']' ('[' index2=expr["ft3"] ']')? ':=)' rhs[register]
+    {
+      // Array element assignment
+      $code = new StringBuilder();
+      String arrayName = $IDENT.getText();
+      boolean is2D = ($index2.ctx != null);
+      
+      Identifier arrayVar = lookupVariable(arrayName);
+      
+      if (arrayVar == null) {
+        error($IDENT, "Undefined array '" + arrayName + "'");
+      } else if (!arrayVar.isArray) {
+        error($IDENT, "'" + arrayName + "' is not an array");
+      } else {
+        arrayVar.hasBeenUsed = true;
+        
+        // Generate index calculation first
+        $code.append($index1.code); // Generate code for first index
+        if (is2D) {
+          $code.append($index2.code); // Generate code for second index
+        }
+        
+        // Generate RHS value
+        $code.append($rhs.code);
+        
+        // Generate store operation
+        if (is2D) {
+          $code.append(generateStore2DArrayElement(register, arrayName, "ft2", "ft3", arrayVar.arraySize));
+        } else {
+          $code.append(generateStore1DArrayElement(register, arrayName, "ft2"));
+        }
+      }
+    }
+  | {String register = "fa0";}
     IDENT
     {
       String id = $IDENT.getText();
@@ -1085,6 +1190,10 @@ factor[String register] returns [StringBuilder code]
       double value = Double.parseDouble($FLOAT.getText());
       $code = generateDoubleConstant($register, value);
     }
+  | arrayAccess[$register]
+    {
+      $code = $arrayAccess.code;
+    }
   | IDENT
     {
       //find if id has been used before
@@ -1105,9 +1214,42 @@ factor[String register] returns [StringBuilder code]
     }
   ;
 
+// Array access for both 1D and 2D arrays
+arrayAccess[String register] returns [StringBuilder code, String arrayName, String indexReg, boolean is2D]
+  : IDENT '[' index1=expr["ft2"] ']' ('[' index2=expr["ft3"] ']')?
+    {
+      $code = new StringBuilder();
+      $arrayName = $IDENT.getText();
+      $indexReg = "ft2";
+      $is2D = ($index2.ctx != null);
+      
+      Identifier arrayVar = lookupVariable($arrayName);
+      
+      if (arrayVar == null) {
+        error($IDENT, "Undefined array '" + $arrayName + "'");
+        $code = new StringBuilder();
+      } else if (!arrayVar.isArray) {
+        error($IDENT, "'" + $arrayName + "' is not an array");
+        $code = new StringBuilder();
+      } else {
+        arrayVar.hasBeenUsed = true;
+        $code.append($index1.code); // Generate code for first index
+        
+        if ($is2D) {
+          // 2D array access: array[i][j] 
+          $code.append($index2.code); // Generate code for second index
+          $code.append(generateLoad2DArrayElement($register, $arrayName, "ft2", "ft3", arrayVar.arraySize));
+        } else {
+          // 1D array access: array[i]
+          $code.append(generateLoad1DArrayElement($register, $arrayName, "ft2"));
+        }
+      }
+    }
+  ;
+
 // If statement with assembly generation
 ifstmt returns [StringBuilder code]
-  : KW_IF '(' condition ')' LBRACE ifbody=s RBRACE (KW_ELSE LBRACE elsebody=s RBRACE)?
+  : KW_IF '(' condition ')' ifbody=blockStatement (KW_ELSE elsebody=blockStatement)?
     {
       $code = new StringBuilder();
       
@@ -1168,6 +1310,38 @@ whilestmt returns [StringBuilder code]
       
       // End label
       emit($code, endLabel + ":");
+    }
+  ;
+
+// Array statement for array declarations
+arraystmt returns [StringBuilder code]
+  : KW_ARRAY IDENT ':=)' '[' size1=INT ']' ('[' size2=INT ']')?
+    {
+      $code = new StringBuilder();
+      String arrayName = $IDENT.getText();
+      int arraySize1 = Integer.parseInt($size1.getText());
+      
+      // Create array identifier
+      Identifier arrayId = new Identifier();
+      arrayId.id = arrayName;
+      arrayId.type = Type.ARRAY;
+      arrayId.isArray = true;
+      arrayId.arraySize = arraySize1;
+      arrayId.hasBeenUsed = false;
+      
+      if ($size2 != null) {
+        // 2D array
+        int arraySize2 = Integer.parseInt($size2.getText());
+        arrayId.arrayValues = new Object[arraySize1 * arraySize2]; // Flatten 2D to 1D
+        System.out.println("Declared 2D array " + arrayName + "[" + arraySize1 + "][" + arraySize2 + "]");
+      } else {
+        // 1D array  
+        arrayId.arrayValues = new Object[arraySize1];
+        System.out.println("Declared 1D array " + arrayName + "[" + arraySize1 + "]");
+      }
+      
+      addVariable(arrayId);
+      // Note: Assembly generation for arrays will be added to addSymbolsToData method
     }
   ;
 

@@ -1,0 +1,24 @@
+<3 Nested Loop Test
+
+n :=) 3.0
+zero :=) 0.0
+one :=) 1.0
+
+:P("Testing nested loops for 3x3 iteration")
+
+i :=) zero
+D:< (i :<) n) ><(((,^>
+  :P("Outer loop i =")
+  :P(i)
+  
+  j :=) zero
+  D:< (j :<) n) ><(((,^>
+    :P("  Inner loop j =")
+    :P(j)
+    j :=) j :+) one
+  <^,)))><
+  
+  i :=) i :+) one
+<^,)))><
+
+:P("Nested loops completed")

@@ -1,0 +1,35 @@
+<3 Working Problem 3: Collatz Steps
+
+<3 Read starting number
+n :=) -0-0-
+
+steps :=) 0.0
+max_val :=) n
+one :=) 1.0
+two :=) 2.0
+three_const :=) 3.0
+zero :=) 0.0
+
+<3 Main Collatz loop
+D:< (n :!=) one) ><(((,^>
+  <3 Update max value if current n is larger
+  :) (n :>) max_val)
+    max_val :=) n
+  
+  <3 Collatz step: if even divide by 2, if odd multiply by 3 and add 1
+  remainder :=) n :%) two
+  :) (remainder :==) zero)
+    n :=) n :/) two
+  :(
+    temp :=) three_const :*) n
+    n :=) temp :+) one
+  
+  <3 Increment step counter
+  steps :=) steps :+) one
+<^,)))><
+
+<3 Print results matching Python format
+:P("steps =")
+:P(steps)
+:P("max =")
+:P(max_val)

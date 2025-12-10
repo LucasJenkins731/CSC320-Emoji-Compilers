@@ -1,0 +1,12 @@
+<3 Array Access Test
+
+<3 Declare arrays
+(o_o) arr :=) [3]
+(o_o) mat :=) [2][2]
+
+<3 Test array access (read)
+i :=) 0.0
+val1 :=) arr[i]
+val2 :=) mat[i][i]
+
+:P("Array access test completed")
