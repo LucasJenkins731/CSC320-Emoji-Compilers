@@ -1107,7 +1107,7 @@ factor[String register] returns [StringBuilder code]
 
 // If statement with assembly generation
 ifstmt returns [StringBuilder code]
-  : KW_IF '(' condition ')' ifbody=s (KW_ELSE elsebody=s)?
+  : KW_IF '(' condition ')' LBRACE ifbody=s RBRACE (KW_ELSE LBRACE elsebody=s RBRACE)?
     {
       $code = new StringBuilder();
       
@@ -1143,7 +1143,7 @@ ifstmt returns [StringBuilder code]
 
 // While statement with assembly generation
 whilestmt returns [StringBuilder code]
-  : KW_WHILE '(' condition ')' body=blockStatement
+  : KW_WHILE '(' condition ')' body=blockStatement 
     {
       $code = new StringBuilder();
       
