@@ -40,7 +40,6 @@ public class TestDriver {
         // Write it to .asm file
         Files.writeString(Path.of(outputFile), asmCode);
 
-        System.out.println("Parsing completed!");
         System.out.println("Assembly written to: " + outputFile);
     }
 }

@@ -1,0 +1,127 @@
+<3 Simple sorted array search (Problem 7 - Simplified)
+
+<3 Declare variables  
+n :=) 5
+i :=) 0
+j :=) 0
+temp :=) 0
+queries :=) 0
+target :=) 0
+found :=) 0
+
+<3 Create array with fixed size 5
+(o_o) arr :=) [5]
+
+<3 Input array elements
+:P("Please enter 5 array elements:")
+arr[0] :=) -0-0-
+arr[1] :=) -0-0-
+arr[2] :=) -0-0-
+arr[3] :=) -0-0-
+arr[4] :=) -0-0-
+
+<3 Simple bubble sort (hardcoded for 5 elements)
+:) (arr[0] :>) arr[1]) ><(((,^>
+    temp :=) arr[0]
+    arr[0] :=) arr[1]
+    arr[1] :=) temp
+<^,)))><
+
+:) (arr[1] :>) arr[2]) ><(((,^>
+    temp :=) arr[1]
+    arr[1] :=) arr[2]
+    arr[2] :=) temp
+<^,)))><
+
+:) (arr[2] :>) arr[3]) ><(((,^>
+    temp :=) arr[2]
+    arr[2] :=) arr[3]
+    arr[3] :=) temp
+<^,)))><
+
+:) (arr[3] :>) arr[4]) ><(((,^>
+    temp :=) arr[3]
+    arr[3] :=) arr[4]
+    arr[4] :=) temp
+<^,)))><
+
+<3 Second pass
+:) (arr[0] :>) arr[1]) ><(((,^>
+    temp :=) arr[0]
+    arr[0] :=) arr[1]
+    arr[1] :=) temp
+<^,)))><
+
+:) (arr[1] :>) arr[2]) ><(((,^>
+    temp :=) arr[1]
+    arr[1] :=) arr[2]
+    arr[2] :=) temp
+<^,)))><
+
+:) (arr[2] :>) arr[3]) ><(((,^>
+    temp :=) arr[2]
+    arr[2] :=) arr[3]
+    arr[3] :=) temp
+<^,)))><
+
+<3 Third pass
+:) (arr[0] :>) arr[1]) ><(((,^>
+    temp :=) arr[0]
+    arr[0] :=) arr[1]
+    arr[1] :=) temp
+<^,)))><
+
+:) (arr[1] :>) arr[2]) ><(((,^>
+    temp :=) arr[1]
+    arr[1] :=) arr[2]
+    arr[2] :=) temp
+<^,)))><
+
+<3 Fourth pass  
+:) (arr[0] :>) arr[1]) ><(((,^>
+    temp :=) arr[0]
+    arr[0] :=) arr[1]
+    arr[1] :=) temp
+<^,)))><
+
+<3 Print sorted array
+:P("Sorted array:")
+:P(arr[0])
+:P(arr[1])
+:P(arr[2])
+:P(arr[3])
+:P(arr[4])
+
+<3 Search for target
+:P("Enter value to search:")
+target :=) -0-0-
+
+found :=) 0
+:) (arr[0] :==) target) ><(((,^>
+    found :=) 1
+<^,)))><
+
+:) (arr[1] :==) target) ><(((,^>
+    found :=) 2
+<^,)))><
+
+:) (arr[2] :==) target) ><(((,^>
+    found :=) 3
+<^,)))><
+
+:) (arr[3] :==) target) ><(((,^>
+    found :=) 4
+<^,)))><
+
+:) (arr[4] :==) target) ><(((,^>
+    found :=) 5
+<^,)))><
+
+:) (found :>) 0) ><(((,^>
+    :P("found at index")
+    :P(found :-) 1)
+<^,)))><
+
+:) (found :==) 0) ><(((,^>
+    :P("not found")
+<^,)))><
