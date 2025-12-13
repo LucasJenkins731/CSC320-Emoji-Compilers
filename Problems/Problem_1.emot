@@ -1,30 +1,19 @@
-OWO
-Program 1
-Hello, Pi!
-read in a string name
-read in a float radius
-float literal for Pi
-find circumference = 2 pi radius
-find area pi r^2
-print Hello, name
-print curcumference
-print area
-UWU
+<3 Problem 1 - Budget Planner
 
-name :=) -0-0-
+:P("income: ")
+income :=) -0-0-
+:P("rent: ")
+rent :=) -0-0-
+:P("food: ")
+food :=) -0-0-
+:P("fun: ")
+fun :=) -0-0-
 
-radius :=) 0.0
-radius :=) -0-0-
+total :=) rent :+) food :+) fun
+savings :=) income :-) total
 
-pi :=) 3.14
-
-circumference :=) 2 :*) pi :*) radius
-
-area :=) pi :*) (radius :*) radius)
-
-:P(name)
-
-:P(circumference)
-
-:P(area)
+:P("total =")
+:P(total)
+:P("savings =")
+:P(savings)
 

@@ -23,6 +23,30 @@ public interface EmoticonVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitS(EmoticonParser.SContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link EmoticonParser#returnstmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitReturnstmt(EmoticonParser.ReturnstmtContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link EmoticonParser#functionstmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctionstmt(EmoticonParser.FunctionstmtContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link EmoticonParser#paramList}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitParamList(EmoticonParser.ParamListContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link EmoticonParser#argList}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArgList(EmoticonParser.ArgListContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link EmoticonParser#blockStatement}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
@@ -65,11 +89,41 @@ public interface EmoticonVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitFactor(EmoticonParser.FactorContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link EmoticonParser#functioncall}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitFunctioncall(EmoticonParser.FunctioncallContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link EmoticonParser#arrayAccess}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArrayAccess(EmoticonParser.ArrayAccessContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link EmoticonParser#ifstmt}.
 	 * @param ctx the parse tree
 	 * @return the visitor result
 	 */
 	T visitIfstmt(EmoticonParser.IfstmtContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link EmoticonParser#elseifclause}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitElseifclause(EmoticonParser.ElseifclauseContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link EmoticonParser#whilestmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitWhilestmt(EmoticonParser.WhilestmtContext ctx);
+	/**
+	 * Visit a parse tree produced by {@link EmoticonParser#arraystmt}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitArraystmt(EmoticonParser.ArraystmtContext ctx);
 	/**
 	 * Visit a parse tree produced by {@link EmoticonParser#condition}.
 	 * @param ctx the parse tree

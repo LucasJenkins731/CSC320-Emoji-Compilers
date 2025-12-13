@@ -142,12 +142,20 @@ public class EmoticonLexer extends Lexer {
 	  
 	  class FunctionDef {
 	    String name;
-	    String paramName;
-	    Type paramType;
+	    String paramName;  // Keep for backward compatibility
+	    Type paramType;    // Keep for backward compatibility
+	    List<String> paramNames;  // New: multiple parameter names
+	    List<Type> paramTypes;    // New: multiple parameter types
 	    Type returnType;
 	    ParserRuleContext body;
 	    String javaCode;
 	    boolean hasReturn;
+	    
+	    // Constructor to initialize lists
+	    public FunctionDef() {
+	      paramNames = new ArrayList<>();
+	      paramTypes = new ArrayList<>();
+	    }
 	  }
 	  
 	  SymbolTable mainTable = new SymbolTable();

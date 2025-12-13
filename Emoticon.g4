@@ -44,12 +44,20 @@ grammar Emoticon;
   
   class FunctionDef {
     String name;
-    String paramName;
-    Type paramType;
+    String paramName;  // Keep for backward compatibility
+    Type paramType;    // Keep for backward compatibility
+    List<String> paramNames;  // New: multiple parameter names
+    List<Type> paramTypes;    // New: multiple parameter types
     Type returnType;
     ParserRuleContext body;
     String javaCode;
     boolean hasReturn;
+    
+    // Constructor to initialize lists
+    public FunctionDef() {
+      paramNames = new ArrayList<>();
+      paramTypes = new ArrayList<>();
+    }
   }
   
   SymbolTable mainTable = new SymbolTable();
@@ -637,7 +645,7 @@ program
         // Successful, so write out the generated code
         closeProgram();
         writeFile();     
-        System.err.println("Success");
+        //System.err.println("Success");
         
         // // Generate function definitions
         // for (FunctionDef func : functions.values()) {
@@ -780,6 +788,86 @@ functionstmt returns [StringBuilder code]
       
       System.out.println("Function '" + funcDef2.name + "' defined");
     }
+  | KW_FUNCTION name=IDENT '(' paramList ')' 
+    {
+      definingFunction = true;
+      functionDefDepth = 0;
+      FunctionDef func = new FunctionDef();
+      func.name = $name.getText();
+      
+      // Copy parameters from paramList
+      for (String param : $paramList.params) {
+        func.paramNames.add(param);
+        func.paramTypes.add(Type.FLOAT); // Default to FLOAT for now
+      }
+      
+      functions.put(func.name, func);
+      currentFunction = func;
+      
+      // Generate function label and parameter setup
+      func_emit("FUNC_" + func.name + ":");
+      func_emit("    # Function " + func.name + " with " + func.paramNames.size() + " parameters");
+      
+      // Store parameters (first few in fa0, fa1, fa2, fa3, rest on stack)
+      for (int i = 0; i < func.paramNames.size(); i++) {
+        String paramName = func.paramNames.get(i);
+        String paramLabel = "PARAM_" + func.name + "_" + paramName;
+        data_emit(paramLabel + ":    .double 0.0");
+        
+        if (i == 0) {
+          func_emit("    la    t0, " + paramLabel);
+          func_emit("    fsd   fa0, (t0)");
+        } else if (i == 1) {
+          func_emit("    la    t0, " + paramLabel);
+          func_emit("    fsd   fa1, (t0)");
+        } else if (i == 2) {
+          func_emit("    la    t0, " + paramLabel);
+          func_emit("    fsd   fa2, (t0)");
+        } else if (i == 3) {
+          func_emit("    la    t0, " + paramLabel);
+          func_emit("    fsd   fa3, (t0)");
+        } else {
+          // For more than 4 parameters, use stack (advanced feature)
+          func_emit("    # TODO: Handle parameter " + paramName + " from stack");
+        }
+      }
+      
+      System.out.println("Defining function '" + func.name + "' with " + func.paramNames.size() + " parameters");
+    }
+    body=blockStatement
+    {
+      definingFunction = false;
+      functionDefDepth = 0;
+      currentFunction = null;
+      FunctionDef funcDef = functions.get($name.getText());
+      funcDef.body = $body.ctx;
+      
+      $code = new StringBuilder();
+      // Generate function body assembly
+      func_sb.append($body.code.toString());
+      
+      // Add default return if no explicit return
+      func_emit("    # Default return (0.0)");
+      func_emit("    li    t0, 0");
+      func_emit("    fcvt.d.w fa0, t0");
+      func_emit("    ret");
+      
+      System.out.println("Function '" + funcDef.name + "' defined");
+    }
+  ;
+
+// Parameter list for multiparameter functions
+paramList returns [List<String> params]
+  : {$params = new ArrayList<>();}
+    first=IDENT {$params.add($first.getText());}
+    (COMMA rest=IDENT {$params.add($rest.getText());})*
+  ;
+
+// Argument list for multiparameter function calls
+argList returns [List<StringBuilder> args]
+  : {$args = new ArrayList<>();}
+    first=expr["fa0"] {$args.add($first.code);}
+    (COMMA rest=expr["fa0"] {$args.add($rest.code);})*
   ;
 
 // functioncallstmt : functioncall
@@ -1360,7 +1448,7 @@ factor[String register] returns [StringBuilder code]
       // Check if this is a function parameter inside a function
       boolean isParameter = false;
       if (definingFunction && var == null && currentFunction != null) {
-        // Check if this identifier matches the current function's parameter
+        // Check if this identifier matches the current function's single parameter (backward compatibility)
         if (currentFunction.paramName != null && currentFunction.paramName.equals(id)) {
           // Generate code to load parameter from global storage
           $code = new StringBuilder();
@@ -1368,6 +1456,19 @@ factor[String register] returns [StringBuilder code]
           emit($code, "    la    t0, " + paramLabel + "  # Load parameter address");
           emit($code, "    fld   " + $register + ", (t0)  # Load parameter value");
           isParameter = true;
+        }
+        // Check if this identifier matches any of the multiparameters
+        else if (!currentFunction.paramNames.isEmpty()) {
+          for (String paramName : currentFunction.paramNames) {
+            if (paramName.equals(id)) {
+              $code = new StringBuilder();
+              String paramLabel = "PARAM_" + currentFunction.name + "_" + paramName;
+              emit($code, "    la    t0, " + paramLabel + "  # Load parameter address");
+              emit($code, "    fld   " + $register + ", (t0)  # Load parameter value");
+              isParameter = true;
+              break;
+            }
+          }
         }
       }
       
@@ -1400,8 +1501,11 @@ functioncall[String register] returns [StringBuilder code]
         $code = new StringBuilder();
       } else {
         FunctionDef func = functions.get(funcName);
-        if (func.paramName == null) {
+        if (func.paramName == null && func.paramNames.isEmpty()) {
           error($IDENT, "function '" + funcName + "' does not expect parameters");
+          $code = new StringBuilder();
+        } else if (func.paramName == null && func.paramNames.size() != 1) {
+          error($IDENT, "function '" + funcName + "' expects " + func.paramNames.size() + " parameters, not 1");
           $code = new StringBuilder();
         } else {
           $code = new StringBuilder();
@@ -1421,14 +1525,67 @@ functioncall[String register] returns [StringBuilder code]
         $code = new StringBuilder();
       } else {
         FunctionDef func = functions.get(funcName);
-        if (func.paramName != null) {
-          error($IDENT, "function '" + funcName + "' expects a parameter");
+        if (func.paramName != null || !func.paramNames.isEmpty()) {
+          int expectedParams = func.paramName != null ? 1 : func.paramNames.size();
+          error($IDENT, "function '" + funcName + "' expects " + expectedParams + " parameter(s)");
           $code = new StringBuilder();
         } else {
           $code = new StringBuilder();
           // Call the function (no parameters)
           $code.append(generateFunctionCall(funcName, $register));
           System.out.println("Generated call to function '" + funcName + "' without parameters");
+        }
+      }
+    }
+  | IDENT '(' argList ')'
+    {
+      String funcName = $IDENT.getText();
+      if (!functions.containsKey(funcName)) {
+        error($IDENT, "function '" + funcName + "' not defined");
+        $code = new StringBuilder();
+      } else {
+        FunctionDef func = functions.get(funcName);
+        
+        if (func.paramNames.isEmpty()) {
+          error($IDENT, "function '" + funcName + "' does not expect parameters");
+          $code = new StringBuilder();
+        } else if ($argList.args.size() != func.paramNames.size()) {
+          error($IDENT, "function '" + funcName + "' expects " + func.paramNames.size() + 
+                " parameters but " + $argList.args.size() + " provided");
+          $code = new StringBuilder();
+        } else {
+          $code = new StringBuilder();
+          
+          // Generate argument evaluation code
+          for (int i = 0; i < $argList.args.size(); i++) {
+            if (i == 0) {
+              $code.append($argList.args.get(i)); // Result goes to fa0
+            } else if (i == 1) {
+              // Move fa0 to ft0, evaluate next arg to fa0, then move to fa1
+              $code.append("    fmv.d ft0, fa0\n");
+              $code.append($argList.args.get(i));
+              $code.append("    fmv.d fa1, fa0\n");
+              $code.append("    fmv.d fa0, ft0\n");
+            } else if (i == 2) {
+              $code.append("    fmv.d ft1, fa0\n");
+              $code.append($argList.args.get(i));
+              $code.append("    fmv.d fa2, fa0\n");
+              $code.append("    fmv.d fa0, ft1\n");
+            } else if (i == 3) {
+              $code.append("    fmv.d ft2, fa0\n");
+              $code.append($argList.args.get(i));
+              $code.append("    fmv.d fa3, fa0\n");
+              $code.append("    fmv.d fa0, ft2\n");
+            } else {
+              // For more than 4 parameters, use stack
+              $code.append("    # TODO: Handle parameter " + i + " via stack\n");
+            }
+          }
+          
+          // Call the function
+          $code.append(generateFunctionCall(funcName, $register));
+          System.out.println("Generated call to function '" + funcName + "' with " + 
+                           $argList.args.size() + " parameters");
         }
       }
     }

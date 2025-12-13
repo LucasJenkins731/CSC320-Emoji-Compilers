@@ -1,91 +1,78 @@
-<3 Read array size from input
-n :=) 0
+<3 Problem 5 - Matrix Multiplication
+
 n :=) -0-0-
 
-<3 Create arrays A and T (temp array for merging)
+<3 Create matrices A, B, and C (flattened as 1D arrays)
+<3 A[i*n + j] represents A[i][j]
 (o_o) A :=) [100]
-(o_o) T :=) [100]
+(o_o) B :=) [100]
+(o_o) C :=) [100]
 
-<3 Fill array with input values
-idx :=) 0
->:( idx :=) 0; idx :<) n; idx :=) idx :+) 1) ><(((,^>
-    val :=) 0.0
-    val :=) -0-0-
-    A[idx] :=) val
+<3 Read matrix A
+i :=) 0
+D:< (i :<) n) ><(((,^>
+    j :=) 0
+    D:< (j :<) n) ><(((,^>
+        idx :=) i :*) n :+) j
+        A[idx] :=) -0-0-
+        j :=) j :+) 1
+    <^,)))><
+    i :=) i :+) 1
 <^,)))><
 
-<3 Merge sort using iterative approach (bottom-up)
-<3 Start with subarray size 1, then 2, 4, 8, etc.
-size :=) 1
-D:< (size :<) n) ><(((,^>
-    <3 Process subarrays of current size
-    left :=) 0
-    D:< (left :<) n :-) 1) ><(((,^>
-        <3 Calculate mid and right boundaries
-        mid :=) left :+) size
-        right :=) left :+) size :+) size
-        
-        <3 Ensure mid doesn't exceed n
-        :) (mid :>) n) ><(((,^>
-            mid :=) n
-        <^,)))><
-        
-        <3 Ensure right doesn't exceed n
-        :) (right :>) n) ><(((,^>
-            right :=) n
-        <^,)))><
-        
-        <3 Merge A[left:mid] and A[mid:right]
-        i :=) left
-        j :=) mid
-        k :=) left
-        
-        <3 Merge while both halves have elements
-        D:< (i :<) mid) ><(((,^>
-            :) (j :>=) right) ><(((,^>
-                <3 Right half exhausted, copy from left
-                T[k] :=) A[i]
-                i :=) i :+) 1
-                k :=) k :+) 1
-            <^,)))><
-            :| (A[i] :<=) A[j]) ><(((,^>
-                <3 Left element is smaller or equal
-                T[k] :=) A[i]
-                i :=) i :+) 1
-                k :=) k :+) 1
-            <^,)))><
-            :( ><(((,^>
-                <3 Right element is smaller
-                T[k] :=) A[j]
-                j :=) j :+) 1
-                k :=) k :+) 1
-            <^,)))><
-        <^,)))><
-        
-        <3 Copy remaining elements from right half
-        D:< (j :<) right) ><(((,^>
-            T[k] :=) A[j]
-            j :=) j :+) 1
+<3 Read matrix B
+i :=) 0
+D:< (i :<) n) ><(((,^>
+    j :=) 0
+    D:< (j :<) n) ><(((,^>
+        idx :=) i :*) n :+) j
+        B[idx] :=) -0-0-
+        j :=) j :+) 1
+    <^,)))><
+    i :=) i :+) 1
+<^,)))><
+
+<3 Initialize matrix C with zeros
+i :=) 0
+D:< (i :<) n) ><(((,^>
+    j :=) 0
+    D:< (j :<) n) ><(((,^>
+        idx :=) i :*) n :+) j
+        C[idx] :=) 0.0
+        j :=) j :+) 1
+    <^,)))><
+    i :=) i :+) 1
+<^,)))><
+
+<3 Compute C = A * B
+i :=) 0
+D:< (i :<) n) ><(((,^>
+    j :=) 0
+    D:< (j :<) n) ><(((,^>
+        <3 Compute C[i][j]
+        s :=) 0.0
+        k :=) 0
+        D:< (k :<) n) ><(((,^>
+            a_idx :=) i :*) n :+) k
+            b_idx :=) k :*) n :+) j
+            s :=) s :+) (A[a_idx] :*) B[b_idx])
             k :=) k :+) 1
         <^,)))><
-        
-        <3 Copy merged result back to A
-        p :=) left
-        D:< (p :<) right) ><(((,^>
-            A[p] :=) T[p]
-            p :=) p :+) 1
-        <^,)))><
-        
-        <3 Move to next subarray pair
-        left :=) left :+) size :+) size
+        c_idx :=) i :*) n :+) j
+        C[c_idx] :=) s
+        j :=) j :+) 1
     <^,)))><
-    
-    <3 Double the subarray size
-    size :=) size :+) size
+    i :=) i :+) 1
 <^,)))><
 
-<3 Output sorted array
-out :=) 0
->:( out :=) 0; out :<) n; out :=) out :+) 1) ><(((,^>
-    :P(A[out])
+<3 Print matrix C
+i :=) 0
+D:< (i :<) n) ><(((,^>
+    j :=) 0
+    D:< (j :<) n) ><(((,^>
+        c_idx :=) i :*) n :+) j
+        :P(C[c_idx])
+        j :=) j :+) 1
+    <^,)))><
+    i :=) i :+) 1
 <^,)))><

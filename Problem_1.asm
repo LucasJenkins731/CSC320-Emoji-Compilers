@@ -3,68 +3,80 @@
 # =================================
     .data
 input_buffer: .space 100
-VAL0:    .double 0.0
-VAL1:    .double 3.14
-VAL2:    .double 2.0
-IDXarea:    .double 0.0
-IDXcircumference:    .double 0.0
-IDXname:    .double 0.0
-IDXpi:    .double 0.0
-IDXradius:    .double 0.0
+STR0:    .asciz "income: "
+STR1:    .asciz "rent: "
+STR2:    .asciz "food: "
+STR3:    .asciz "fun: "
+STR4:    .asciz "total ="
+STR5:    .asciz "savings ="
+IDXincome:    .double 0.0
+IDXtotal:    .double 0.0
+IDXsavings:    .double 0.0
+IDXrent:    .double 0.0
+IDXfood:    .double 0.0
+IDXfun:    .double 0.0
     .text
     .globl main
 main: 
+    la    a0, STR0
+    li    a7, 4
+    ecall
     li    a7, 7
     ecall
-    la t0,IDXname
+    la t0,IDXincome
     fsd fa0,(t0)
-    la t0,VAL0
-    fld fa0,(t0)
-    la t0,IDXradius
-    fsd fa0,(t0)
+    la    a0, STR1
+    li    a7, 4
+    ecall
     li    a7, 7
     ecall
-    la t0,IDXradius
+    la t0,IDXrent
     fsd fa0,(t0)
-    la t0,VAL1
+    la    a0, STR2
+    li    a7, 4
+    ecall
+    li    a7, 7
+    ecall
+    la t0,IDXfood
+    fsd fa0,(t0)
+    la    a0, STR3
+    li    a7, 4
+    ecall
+    li    a7, 7
+    ecall
+    la t0,IDXfun
+    fsd fa0,(t0)
+    la t0,IDXrent
     fld fa0,(t0)
-    la t0,IDXpi
+    la t0,IDXfood
+    fld ft0,(t0)
+    fadd.d fa0,fa0,ft0
+    la t0,IDXfun
+    fld ft0,(t0)
+    fadd.d fa0,fa0,ft0
+    la t0,IDXtotal
     fsd fa0,(t0)
-    la t0,VAL2
+    la t0,IDXincome
     fld fa0,(t0)
-    la t0,IDXpi
+    la t0,IDXtotal
     fld ft0,(t0)
-    fmul.d fa0,fa0,ft0
-    la t0,IDXradius
-    fld ft0,(t0)
-    fmul.d fa0,fa0,ft0
-    la t0,IDXcircumference
+    fsub.d fa0,fa0,ft0
+    la t0,IDXsavings
     fsd fa0,(t0)
-    la t0,IDXpi
-    fld fa0,(t0)
-    la t0,IDXradius
-    fld ft0,(t0)
-    la t0,IDXradius
-    fld ft1,(t0)
-    fmul.d ft0,ft0,ft1
-    fmul.d fa0,fa0,ft0
-    la t0,IDXarea
-    fsd fa0,(t0)
-    la t0,IDXname
+    la    a0, STR4
+    li    a7, 4
+    ecall
+    la t0,IDXtotal
     fld fa0,(t0)
     li    a7, 3
     ecall
     li    a0, 10
     li    a7, 11
     ecall
-    la t0,IDXcircumference
-    fld fa0,(t0)
-    li    a7, 3
+    la    a0, STR5
+    li    a7, 4
     ecall
-    li    a0, 10
-    li    a7, 11
-    ecall
-    la t0,IDXarea
+    la t0,IDXsavings
     fld fa0,(t0)
     li    a7, 3
     ecall

@@ -1,127 +1,117 @@
-<3 Simple sorted array search (Problem 7 - Simplified)
+<3 Problem 7 - Sorted Queries with multiparameter functions
 
-<3 Declare variables  
-n :=) 5
+<3 Global array declaration
+(o_o) A :=) [100]
+
+<3 Function to perform bubble sort on array range
+=^._.^= bubbleSort(start, count) ><(((,^>
+  pass :=) 0
+  D:< (pass :<) count) ><(((,^>
+    i :=) start
+    limit :=) start :+) count :-) pass :-) 1
+    D:< (i :<) limit) ><(((,^>
+      nextIdx :=) i :+) 1
+      :) (A[i] :>) A[nextIdx]) ><(((,^>
+        temp :=) A[i]
+        A[i] :=) A[nextIdx]
+        A[nextIdx] :=) temp
+      <^,)))><
+      i :=) i :+) 1
+    <^,)))><
+    pass :=) pass :+) 1
+  <^,)))><
+  return 0
+<^,)))><
+
+<3 Function to print array range
+=^._.^= printArray(start, count) ><(((,^>
+  :P("Sorted array:")
+  i :=) 0
+  D:< (i :<) count) ><(((,^>
+    idx :=) start :+) i
+    :P(A[idx])
+    i :=) i :+) 1
+  <^,)))><
+  return 0
+<^,)))><
+
+<3 Function to perform linear search in array range
+=^._.^= linearSearch(start, count, target) ><(((,^>
+  i :=) 0
+  D:< (i :<) count) ><(((,^>
+    idx :=) start :+) i
+    :) (A[idx] :==) target) ><(((,^>
+      return idx
+    <^,)))><
+    i :=) i :+) 1
+  <^,)))><
+  return -1
+<^,)))><
+
+<3 Function to calculate middle index for binary search
+=^._.^= getMidpoint(left, right) ><(((,^>
+  return (left :+) right) :/) 2
+<^,)))><
+
+<3 Function to perform simple binary search (iterative)
+=^._.^= binarySearchIterative(left, right, target) ><(((,^>
+  currentLeft :=) left
+  currentRight :=) right
+  
+  D:< (currentLeft :<=) currentRight) ><(((,^>
+    mid :=) (currentLeft :+) currentRight) :/) 2
+    :) (A[mid] :==) target) ><(((,^>
+      return mid
+    <^,)))><
+    
+    :) (target :<) A[mid]) ><(((,^>
+      currentRight :=) mid :-) 1
+    <^,)))><
+    :(
+    ><(((,^>
+      currentLeft :=) mid :+) 1
+    <^,)))><
+  <^,)))><
+  
+  return -1
+<^,)))><
+
+<3 Main program starts here
+n :=) -0-0-
+
+<3 Validate input
+D:< (n :<=) 0) ><(((,^>
+    :P("Array dimensions N must be positive. Try again.")
+    n :=) -0-0-
+<^,)))><
+
+<3 Read array elements
 i :=) 0
-j :=) 0
-temp :=) 0
-queries :=) 0
-target :=) 0
-found :=) 0
-
-<3 Create array with fixed size 5
-(o_o) arr :=) [5]
-
-<3 Input array elements
-:P("Please enter 5 array elements:")
-arr[0] :=) -0-0-
-arr[1] :=) -0-0-
-arr[2] :=) -0-0-
-arr[3] :=) -0-0-
-arr[4] :=) -0-0-
-
-<3 Simple bubble sort (hardcoded for 5 elements)
-:) (arr[0] :>) arr[1]) ><(((,^>
-    temp :=) arr[0]
-    arr[0] :=) arr[1]
-    arr[1] :=) temp
+D:< (i :<) n) ><(((,^>
+    A[i] :=) -0-0-
+    i :=) i :+) 1
 <^,)))><
 
-:) (arr[1] :>) arr[2]) ><(((,^>
-    temp :=) arr[1]
-    arr[1] :=) arr[2]
-    arr[2] :=) temp
-<^,)))><
-
-:) (arr[2] :>) arr[3]) ><(((,^>
-    temp :=) arr[2]
-    arr[2] :=) arr[3]
-    arr[3] :=) temp
-<^,)))><
-
-:) (arr[3] :>) arr[4]) ><(((,^>
-    temp :=) arr[3]
-    arr[3] :=) arr[4]
-    arr[4] :=) temp
-<^,)))><
-
-<3 Second pass
-:) (arr[0] :>) arr[1]) ><(((,^>
-    temp :=) arr[0]
-    arr[0] :=) arr[1]
-    arr[1] :=) temp
-<^,)))><
-
-:) (arr[1] :>) arr[2]) ><(((,^>
-    temp :=) arr[1]
-    arr[1] :=) arr[2]
-    arr[2] :=) temp
-<^,)))><
-
-:) (arr[2] :>) arr[3]) ><(((,^>
-    temp :=) arr[2]
-    arr[2] :=) arr[3]
-    arr[3] :=) temp
-<^,)))><
-
-<3 Third pass
-:) (arr[0] :>) arr[1]) ><(((,^>
-    temp :=) arr[0]
-    arr[0] :=) arr[1]
-    arr[1] :=) temp
-<^,)))><
-
-:) (arr[1] :>) arr[2]) ><(((,^>
-    temp :=) arr[1]
-    arr[1] :=) arr[2]
-    arr[2] :=) temp
-<^,)))><
-
-<3 Fourth pass  
-:) (arr[0] :>) arr[1]) ><(((,^>
-    temp :=) arr[0]
-    arr[0] :=) arr[1]
-    arr[1] :=) temp
-<^,)))><
+<3 Sort the array using multiparameter bubble sort
+result :=) bubbleSort(0, n)
 
 <3 Print sorted array
-:P("Sorted array:")
-:P(arr[0])
-:P(arr[1])
-:P(arr[2])
-:P(arr[3])
-:P(arr[4])
+result :=) printArray(0, n)
 
-<3 Search for target
-:P("Enter value to search:")
-target :=) -0-0-
-
-found :=) 0
-:) (arr[0] :==) target) ><(((,^>
-    found :=) 1
-<^,)))><
-
-:) (arr[1] :==) target) ><(((,^>
-    found :=) 2
-<^,)))><
-
-:) (arr[2] :==) target) ><(((,^>
-    found :=) 3
-<^,)))><
-
-:) (arr[3] :==) target) ><(((,^>
-    found :=) 4
-<^,)))><
-
-:) (arr[4] :==) target) ><(((,^>
-    found :=) 5
-<^,)))><
-
-:) (found :>) 0) ><(((,^>
-    :P("found at index")
-    :P(found :-) 1)
-<^,)))><
-
-:) (found :==) 0) ><(((,^>
-    :P("not found")
+<3 Process queries
+q :=) -0-0-
+queryCount :=) 0
+D:< (queryCount :<) q) ><(((,^>
+    target :=) -0-0-
+    result :=) binarySearchIterative(0, n :-) 1, target)
+    
+    :) (result :==) -1) ><(((,^>
+        :P("not found")
+    <^,)))><
+    :) (result :!=) -1) ><(((,^>
+        :P("found at index")
+        :P(result)
+    <^,)))><
+    
+    queryCount :=) queryCount :+) 1
 <^,)))><
